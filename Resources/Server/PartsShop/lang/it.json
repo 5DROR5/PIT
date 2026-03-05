@@ -1,0 +1,18 @@
+{
+  "parts_required_title": "Parti necessarie per l’acquisto",
+  "total_cost": "Costo totale",
+  "current_balance": "Saldo attuale",
+  "missing_amount": "Importo mancante",
+  "confirm_purchase": "Sei sicuro di voler completare l’acquisto?",
+  "btn_confirm": "Conferma",
+  "btn_cancel": "Annulla",
+  "btn_close": "Chiudi",
+  "vehicle_has_banned_parts": "Il veicolo contiene parti vietate",
+  "cannot_use_vehicle": "Questo veicolo non può essere utilizzato — queste parti non sono consentite. Seleziona una configurazione approvata.",
+  "banned_parts_list": "Parti vietate:",
+  "insufficient_funds": "Fondi insufficienti! Mancano: $${missing}",
+  "purchase_success": "Acquistate ${count} parti per $${cost}",
+  "series_banned": "La serie veicolo '${series}' è bloccata su questo server. Camion e autobus non sono ammessi.",
+  "vehicle_series_banned": "Serie veicolo bloccata",
+  "series_not_allowed": "Questa serie di veicoli non è consentita sul server"
+}
