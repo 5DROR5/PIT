@@ -1,0 +1,18 @@
+{
+  "parts_required_title": "חלקים נדרשים לרכישה",
+  "total_cost": "עלות כוללת",
+  "current_balance": "יתרה נוכחית",
+  "missing_amount": "חסר",
+  "confirm_purchase": "האם אתה בטוח שברצונך לקנות?",
+  "btn_confirm": "אישור",
+  "btn_cancel": "ביטול",
+  "btn_close": "סגור",
+  "vehicle_has_banned_parts": "רכב מכיל חלקים אסורים",
+  "cannot_use_vehicle": "לא ניתן להשתמש ברכב זה - חלקים אלו אינם מורשים. אנא בחר תצורה מותרת.",
+  "banned_parts_list": "חלקים אסורים:",
+  "insufficient_funds": "אין מספיק כסף! חסר: $${missing}",
+  "purchase_success": "נרכשו ${count} חלקים ב-$${cost}",
+  "series_banned": "סדרת רכב '${series}' חסומה בשרת זה. משאיות ואוטובוסים אינם מותרים.",
+  "vehicle_series_banned": "סדרת רכב חסומה",
+  "series_not_allowed": "סדרת רכב זו אינה מותרת בשרת"
+}
