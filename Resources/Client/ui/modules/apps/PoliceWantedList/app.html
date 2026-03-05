@@ -1,0 +1,29 @@
+<div id="police-wanted-container" class="police-wanted-root">
+  <link type="text/css" rel="stylesheet" href="/ui/modules/apps/PoliceWantedList/app.css"/>
+  
+  <div id="wanted-list-wrapper" ng-if="isPolice">
+    <table id="wanted-table">
+      <tr>
+        <th class="wanted-col-name">{{ t('wanted_list_title') }}</th>
+        <th class="wanted-col-timer">{{ t('time_label') }}</th>
+        <th class="wanted-col-type">{{ t('type_label') }}</th>
+        <th class="wanted-col-repairs">{{ t('repairs_label') }}</th>
+      </tr>
+      <tr ng-repeat="wanted in wantedPlayers track by wanted.pid" class="wanted-row">
+        <td class="wanted-col-name">{{ wanted.name }}</td>
+        <td class="wanted-col-timer" ng-class="{'low-time': wanted.remaining_seconds < 30}">
+          {{ formatTime(wanted.remaining_seconds) }}
+        </td>
+        <td class="wanted-col-type">
+          <span class="type-badge" ng-class="wanted.violation_type">
+            {{ t('violation_' + wanted.violation_type) }}
+          </span>
+        </td>
+        <td class="wanted-col-repairs">{{ wanted.repairs }}</td>
+      </tr>
+      <tr ng-if="wantedPlayers.length === 0">
+        <td colspan="4" class="no-wanted-row">{{ t('no_wanted_players') }}</td>
+      </tr>
+    </table>
+  </div>
+</div>
