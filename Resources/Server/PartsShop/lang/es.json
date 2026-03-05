@@ -1,0 +1,18 @@
+{
+  "parts_required_title": "Piezas necesarias para la compra",
+  "total_cost": "Costo total",
+  "current_balance": "Saldo actual",
+  "missing_amount": "Cantidad faltante",
+  "confirm_purchase": "¿Seguro que deseas realizar la compra?",
+  "btn_confirm": "Confirmar",
+  "btn_cancel": "Cancelar",
+  "btn_close": "Cerrar",
+  "vehicle_has_banned_parts": "El vehículo contiene piezas prohibidas",
+  "cannot_use_vehicle": "Este vehículo no puede usarse — estas piezas no están permitidas. Selecciona una configuración aprobada.",
+  "banned_parts_list": "Piezas prohibidas:",
+  "insufficient_funds": "¡No tienes suficiente dinero! Falta: $${missing}",
+  "purchase_success": "Compraste ${count} piezas por $${cost}",
+  "series_banned": "La serie de vehículo '${series}' está bloqueada en este servidor. Camiones y autobuses no están permitidos.",
+  "vehicle_series_banned": "Serie de vehículo bloqueada",
+  "series_not_allowed": "Esta serie de vehículo no está permitida en el servidor"
+}
