@@ -1,0 +1,21 @@
+{
+  "domElement": "<police-wanted-list></police-wanted-list>",
+  "name": "B Police Wanted List",
+  "types": [
+    "ui.apps.categories.multiplayer"
+  ],
+  "description": "Shows wanted players for police officers",
+  "css": {
+    "bottom": "10px",
+    "height": "450px",
+    "left": "",
+    "margin": "auto",
+    "position": "absolute",
+    "right": "10px",
+    "top": "",
+    "width": "320px"
+  },
+  "author": "5DROR5",
+  "version": "0.1",
+  "directive": "policeWantedList"
+}
