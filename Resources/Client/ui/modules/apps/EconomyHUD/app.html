@@ -1,0 +1,390 @@
+<div id="economy-hud-container" class="economy-app-root">
+  <link type="text/css" rel="stylesheet" href="/ui/modules/apps/EconomyHUD/app.css"/>
+  
+  <div class="welcome-overlay" ng-if="showWelcomeScreen" style="pointer-events: auto;">
+      <div class="welcome-box">
+          <div class="welcome-header">
+              <h1 ng-if="currentStep === 1">{{ t('step1_title') }}</h1>
+              <h1 ng-if="currentStep === 2">{{ t('step2_title') }}</h1>
+              <h1 ng-if="currentStep === 3">{{ t('step3_title') }}</h1>
+              <h1 ng-if="currentStep === 4">{{ t('step4_title') }}</h1>
+          </div>
+
+          <div class="welcome-content">
+              <div ng-if="currentStep === 1">
+                  <ul class="rules-list">
+                      <li>{{ t('step1_line1') }}</li>
+                      <li>{{ t('step1_line2') }}</li>
+                      <li>{{ t('step1_line3') }}</li>
+                  </ul>
+              </div>
+
+              <div ng-if="currentStep === 2">
+                  <h3>{{ t('step2_subtitle1') }}</h3>
+                  <ul class="rules-list">
+                      <li>{{ t('step2_income1') }}</li>
+                      <li>{{ t('step2_income2') }}</li>
+                  </ul>
+                  <h3>{{ t('step2_subtitle2') }}</h3>
+                  <ul class="rules-list">
+                      <li>{{ t('step2_arrest1') }}</li>
+                      <li>{{ t('step2_arrest2') }}</li>
+                      <li>{{ t('step2_arrest3') }}</li>
+                      <li>{{ t('step2_arrest4') }}</li>
+                  </ul>
+                  <h3>{{ t('step2_subtitle3') }}</h3>
+                  <ul class="rules-list">
+                      <li>{{ t('step2_repair1') }}</li>
+                      <li>{{ t('step2_repair2') }}</li>
+                      <li class="indent">{{ t('step2_repair2a') }}</li>
+                      <li class="indent">{{ t('step2_repair2b') }}</li>
+                  </ul>
+                  <div class="important-note">
+                      <p>{{ t('step2_pit_rule') }}</p>
+                      <p>{{ t('step2_roadblock_rule') }}</p>
+                      <p class="warning">{{ t('step2_ramming_warning') }}</p>
+                  </div>
+              </div>
+
+              <div ng-if="currentStep === 3">
+                  <h3>{{ t('step3_speed_title') }}</h3>
+                  <ul class="rules-list">
+                      <li>{{ t('step3_speed_desc') }}</li>
+                      <li>{{ t('step3_speed_repairs') }}</li>
+                      <li>{{ t('step3_speed_income') }}</li>
+                      <li>{{ t('step3_speed_bonus') }}</li>
+                  </ul>
+                  <h3>{{ t('step3_zigzag_title') }}</h3>
+                  <ul class="rules-list">
+                      <li>{{ t('step3_zigzag_desc') }}</li>
+                      <li>{{ t('step3_zigzag_repairs') }}</li>
+                      <li>{{ t('step3_zigzag_income') }}</li>
+                      <li>{{ t('step3_zigzag_bonus') }}</li>
+                  </ul>
+                  <h3>{{ t('step3_combo_title') }}</h3>
+                  <ul class="rules-list">
+                      <li>{{ t('step3_combo_repairs') }}</li>
+                      <li>{{ t('step3_combo_income') }}</li>
+                      <li>{{ t('step3_combo_bonus') }}</li>
+                  </ul>
+                  <div class="penalty-box">
+                      <h3>{{ t('step3_penalty_title') }}</h3>
+                      <ul class="rules-list">
+                          <li>{{ t('step3_penalty1') }}</li>
+                          <li>{{ t('step3_penalty2') }}</li>
+                          <li>{{ t('step3_penalty3') }}</li>
+                          <li>{{ t('step3_penalty4') }}</li>
+                      </ul>
+                  </div>
+                  <h3>{{ t('step3_repair_cond_title') }}</h3>
+                  <ul class="rules-list">
+                      <li>{{ t('step3_repair_cond1') }}</li>
+                      <li>{{ t('step3_repair_cond2') }}</li>
+                  </ul>
+              </div>
+
+              <div ng-if="currentStep === 4">
+                  <ul class="rules-list">
+                      <li>{{ t('step4_rule1') }}</li>
+                      <li>{{ t('step4_rule2') }}</li>
+                      <li>{{ t('step4_rule3') }}</li>
+                      <li>{{ t('step4_rule4') }}</li>
+                  </ul>
+              </div>
+          </div>
+
+          <div class="welcome-footer">
+              <div class="step-indicator">Step {{currentStep}} / 4</div>
+              <button class="next-button" ng-click="nextStep()" ng-if="currentStep < 4">{{ t('btn_next') }} ➔</button>
+              <button class="agree-button" ng-click="acceptRules()" ng-if="currentStep === 4">{{ t('btn_finish') }}</button>
+          </div>
+      </div>
+  </div>
+
+  <div class="money-transfer-overlay" ng-if="showTransferWindow" ng-click="closeTransferWindow($event)">
+      <div class="money-transfer-box" ng-click="$event.stopPropagation()">
+          <div class="money-transfer-header">
+              <h2>{{ t('transfer_window_title') }}</h2>
+              <button class="money-transfer-close-btn" ng-click="showTransferWindow = false; $event.stopPropagation()">✕</button>
+          </div>
+          
+          <div class="money-transfer-content">
+              <div class="transfer-field">
+                  <label>{{ t('transfer_recipient') }}</label>
+                  <input type="number" 
+                         ng-model="transferData.recipient" 
+                         placeholder="0"
+                         min="0"
+                         step="1"
+                         class="transfer-input">
+              </div>
+              
+              <div class="transfer-field">
+                  <label>{{ t('transfer_amount') }}</label>
+                  <input type="number" 
+                         ng-model="transferData.amount" 
+                         placeholder="0"
+                         min="1"
+                         step="1"
+                         class="transfer-input">
+              </div>
+              
+              <div class="transfer-buttons">
+                  <button class="transfer-send-btn" ng-click="sendMoney()">{{ t('transfer_send_button') }}</button>
+                  <button class="transfer-cancel-btn" ng-click="showTransferWindow = false">{{ t('transfer_cancel_button') }}</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div class="rank-panel-overlay" ng-if="showRankPanel" ng-click="closeRankPanel($event)">
+      <div class="rank-panel-box" ng-click="$event.stopPropagation()">
+          <div class="rank-panel-header">
+              <h2>🏆 {{ t('rank_panel_title') }}</h2>
+              <button class="rank-panel-close-btn" ng-click="showRankPanel = false; $event.stopPropagation()">✕</button>
+          </div>
+          
+          <div class="rank-panel-content">
+              <div class="current-rank-display">
+                  <div class="rank-badge" ng-class="'rank-' + rankData.rank">
+                      <span class="rank-number">{{ rankData.rank }}</span>
+                  </div>
+                  <div class="rank-info">
+                      <h3>{{ t(rankData.rank_name_key) }}</h3>
+                      <div class="rank-progress-bar">
+                          <div class="rank-progress-fill" ng-style="{'width': rankData.percent + '%'}"></div>
+                      </div>
+                      <span class="rank-percent">{{ rankData.percent }}% {{ t('complete') }}</span>
+                  </div>
+              </div>
+
+              <div class="tasks-section">
+                  <div class="tasks-column">
+                      <h4>🚔 {{ t('cop_tasks') }}</h4>
+                      <div class="task-item" ng-repeat="task in rankData.tasks | filter:{type:'police'}" ng-class="{'completed': task.complete}">
+                          <span class="task-name">{{ t(task.name_key, {target: task.target, target_minutes: task.target_minutes}) }}</span>
+                          <span class="task-progress">{{ task.progress }}/{{ task.target }}</span>
+                          <span class="task-check" ng-if="task.complete">✓</span>
+                      </div>
+                  </div>
+                  <div class="tasks-column">
+                      <h4>🏃 {{ t('wanted_tasks') }}</h4>
+                      <div class="task-item" ng-repeat="task in rankData.tasks | filter:{type:'civilian'}" ng-class="{'completed': task.complete}">
+                          <span class="task-name">{{ t(task.name_key, {target: task.target, target_minutes: task.target_minutes}) }}</span>
+                          <span class="task-progress">{{ task.progress }}/{{ task.target }}</span>
+                          <span class="task-check" ng-if="task.complete">✓</span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div class="points-notification" ng-if="pointsNotification.show" ng-class="{'glow': pointsNotification.glow}">
+      <span class="points-value">+{{ pointsNotification.points }}</span>
+      <span class="points-label">{{ t('points_label') }}</span>
+      <span class="points-task">{{ t(pointsNotification.task_name_key) }}</span>
+  </div>
+
+  <div class="rankup-overlay" ng-if="showRankUpCelebration" ng-click="showRankUpCelebration = false">
+      <div class="rankup-box" ng-click="$event.stopPropagation()">
+          <div class="rankup-icon">🎉</div>
+          <h2>{{ t('rank_up') }}!</h2>
+          <div class="rankup-ranks">
+              <span class="old-rank">{{ rankUpData.old_rank }}</span>
+              <span class="arrow">→</span>
+              <span class="new-rank">{{ rankUpData.new_rank }}</span>
+          </div>
+          <div class="rankup-reward">+${{ rankUpData.reward | number }}</div>
+          <button class="rankup-close" ng-click="showRankUpCelebration = false; $event.stopPropagation()">{{ t('awesome') }}!</button>
+      </div>
+  </div>
+
+  <div class="editing-mode-banner" ng-if="isEditingVehicle && !showWelcomeScreen">
+      <span class="editing-icon">🔧</span>
+      <span class="editing-text">{{ t('editing_mode_banner') }}</span>
+  </div>
+
+  <div class="airpolluter-alert"
+       ng-if="airPollutorAlert.show"
+       ng-class="{'ap-success': airPollutorAlert.success === true,
+                  'ap-fail':    airPollutorAlert.success === false}">
+    <div class="ap-alert-icon">☣️</div>
+    <div class="ap-alert-title">{{ airPollutorAlert.title }}</div>
+    <div class="ap-alert-body">{{ airPollutorAlert.message }}</div>
+  </div>
+
+  <div class="ap-status-panel" ng-if="apStatusPanel.visible && !showWelcomeScreen">
+      <div class="ap-status-header">
+          <span>☣️</span>
+          <span class="ap-status-title">{{ t('ap_status_title') }}</span>
+      </div>
+      <div ng-if="apStatusPanel.available">
+          <div class="ap-status-available">{{ t('ap_status_hold_hint') }}</div>
+          <div class="ap-touch-progress" ng-if="apStatusPanel.touch_progress > 0">
+              <div class="ap-touch-fill" ng-style="{'width': apStatusPanel.touch_progress + '%'}"></div>
+          </div>
+      </div>
+      <div ng-if="!apStatusPanel.available">
+          <div class="ap-status-reason" ng-repeat="reason in apStatusPanel.reasons">
+              ❌ {{ t(reason) }}
+          </div>
+          <div class="ap-status-cooldown" ng-if="apStatusPanel.cooldown_remaining > 0">
+              ⏱️ {{ t('ap_cooldown_label') }}: {{ formatCooldown(apStatusPanel.cooldown_remaining) }}
+          </div>
+      </div>
+      <div class="ap-status-players">
+          👥 {{ apStatusPanel.player_count }}/{{ apStatusPanel.required_players }} {{ t('ap_players_label') }}
+      </div>
+  </div>
+
+  <div class="main-hud-panel" ng-if="!showWelcomeScreen">
+      
+      <div class="hud-row hud-row-buttons" ng-class="{'tooltip-active': tooltipRow1Active}">
+          <div class="home-button-rect has-tooltip tooltip-bottom" 
+               ng-mouseenter="activateTooltipRow1()" 
+               ng-mouseleave="deactivateTooltipRow1()" 
+               ng-click="returnHome()">
+              🏠
+              <span class="custom-tooltip">{{ t('tooltip_home') }}</span>
+          </div>
+          <div class="actions-button-rect has-tooltip tooltip-bottom" 
+               ng-mouseenter="activateTooltipRow1()" 
+               ng-mouseleave="deactivateTooltipRow1()" 
+               ng-click="toggleSpawnsMenu()">
+              ➕
+              <span class="custom-tooltip">{{ t('show_spawn_menu') }}</span>
+          </div>
+          
+          <div class="spawn-buttons-inline" ng-class="{'open': spawnsMenuOpen}">
+              <div class="optional-spawn-button-rect has-tooltip tooltip-bottom" 
+                   ng-mouseenter="activateTooltipRow1()" 
+                   ng-mouseleave="deactivateTooltipRow1()" 
+                   ng-click="teleportToSpawn(1)">
+                  2
+                  <span class="custom-tooltip">{{ t('spawn_location') }} 2</span>
+              </div>
+              <div class="optional-spawn-button-rect has-tooltip tooltip-bottom" 
+                   ng-mouseenter="activateTooltipRow1()" 
+                   ng-mouseleave="deactivateTooltipRow1()" 
+                   ng-click="teleportToSpawn(2)">
+                  3
+                  <span class="custom-tooltip">{{ t('spawn_location') }} 3</span>
+              </div>
+              <div class="optional-spawn-button-rect has-tooltip tooltip-bottom" 
+                   ng-mouseenter="activateTooltipRow1()" 
+                   ng-mouseleave="deactivateTooltipRow1()" 
+                   ng-click="teleportToSpawn(3)">
+                  4
+                  <span class="custom-tooltip">{{ t('spawn_location') }} 4</span>
+              </div>
+          </div>
+      </div>
+      
+      <div class="hud-row hud-row-buttons" ng-class="{'tooltip-active': tooltipRow2Active}">
+          <div class="economy-ui-toggle has-tooltip tooltip-bottom" 
+               ng-mouseenter="activateTooltipRow2()" 
+               ng-mouseleave="deactivateTooltipRow2()" 
+               ng-click="toggleUI()">
+              <span ng-if="!isUIOpen">{{ t('open_ui') }}</span>
+              <span ng-if="isUIOpen">{{ t('close_ui') }}</span>
+              <span class="custom-tooltip">{{ isUIOpen ? t('tooltip_close') : t('tooltip_open') }}</span>
+          </div>
+          <div class="language-wrapper" 
+               ng-mouseenter="activateTooltipRow2()" 
+               ng-mouseleave="deactivateTooltipRow2()">
+              <div class="language-icon has-tooltip tooltip-bottom" ng-click="toggleLangMenu()">
+                  🌐
+                  <span class="custom-tooltip">{{ t('tooltip_language') }}</span>
+              </div>
+              <ul class="language-menu" 
+                  ng-class="{'open': isLangOpen}"
+                  ng-mouseenter="activateTooltipRow2()" 
+                  ng-mouseleave="deactivateTooltipRow2()">
+                <li ng-click="setLanguage('en')" title="English">🇺🇸</li>
+                <li ng-click="setLanguage('he')" title="עברית">🇮🇱</li>
+                <li ng-click="setLanguage('ar')" title="العربية">🇸🇦</li>
+                <li ng-click="setLanguage('de')" title="Deutsch">🇩🇪</li>
+                <li ng-click="setLanguage('it')" title="Italiano">🇮🇹</li>
+                <li ng-click="setLanguage('fr')" title="Français">🇫🇷</li>
+                <li ng-click="setLanguage('es')" title="Español">🇪🇸</li>
+                <li ng-click="setLanguage('ru')" title="Русский">🇷🇺</li>
+            </ul>
+          </div>
+          
+          <div class="repair-button-rect has-tooltip tooltip-bottom" 
+               ng-if="repairIcons > 0 && !isEditingVehicle" 
+               ng-mouseenter="activateTooltipRow2()" 
+               ng-mouseleave="deactivateTooltipRow2()" 
+               ng-click="repairVehicle()">
+              🔧
+              <span class="custom-tooltip">{{ t('tooltip_repair') }}</span>
+          </div>
+          <div class="wanted-toggle-button-rect has-tooltip tooltip-bottom" 
+               ng-if="showWantedToggle" 
+               ng-mouseenter="activateTooltipRow2()" 
+               ng-mouseleave="deactivateTooltipRow2()" 
+               ng-click="toggleWantedMode()" 
+               ng-class="{'disabled': !wantedEnabled}">
+              {{ wantedEnabled ? '✅' : '❌' }}
+              <span class="custom-tooltip">{{ getWantedTooltip() }}</span>
+          </div>
+          <div class="sync-vehicle-button-rect has-tooltip tooltip-bottom" 
+               ng-if="showSyncButton" 
+               ng-mouseenter="activateTooltipRow2()" 
+               ng-mouseleave="deactivateTooltipRow2()" 
+               ng-click="syncVehicle()">
+              🔄
+              <span class="custom-tooltip">{{ t('tooltip_sync') }}</span>
+          </div>
+      </div>
+      
+<div class="hud-row rank-bar-row has-tooltip" ng-click="openRankPanel()" ng-class="{'glow-bar': rankBarGlow}">
+          <div class="rank-bar-container">
+              <span class="rank-bar-label">{{ t(rankData.rank_name_key) }}</span>
+              <div class="rank-bar-track">
+                  <div class="rank-bar-fill" ng-style="{'width': rankData.percent + '%'}"></div>
+              </div>
+              <span class="rank-bar-percent">{{ rankData.percent }}%</span>
+          </div>
+          <span class="custom-tooltip">{{ t('tooltip_rank') }}</span>
+      </div>
+      
+      <div class="hud-row economy-data-row" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
+          <div class="balance-display clickable-balance" ng-click="openTransferWindow($event)">
+              <span class="currency-symbol">{{ t('currency_symbol') }}</span>
+              <span class="current-balance">{{ balance | number:2 }}</span>
+          </div>
+      </div>
+      
+      <div class="hud-row wanted-timer-row" ng-if="wantedTime > 0" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
+          <div id="floating-wanted-timer">
+              <span class="label">🚨 {{ t('wanted_label') }}</span>
+              <span class="time">{{ formatTime(wantedTime) }}</span>
+          </div>
+      </div>
+      
+      <div class="hud-row police-indicator-row" ng-if="policeNearby && wantedTime > 0" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
+          <div class="police-indicator">
+              <span class="police-icon">👮</span>
+          </div>
+      </div>
+      
+      <div class="hud-row bust-progress-row" ng-if="bustProgress.active" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
+          <div class="bust-progress-container">
+              <div class="bust-progress-label">{{ t('being_arrested') }}</div>
+              <div class="bust-progress-bar">
+                  <div class="bust-progress-fill" ng-style="{'width': bustProgress.percent + '%'}"></div>
+              </div>
+              <div class="bust-progress-text">{{ bustProgress.percent | number:0 }}%</div>
+          </div>
+      </div>
+      
+      <div class="hud-row repair-icons-row" ng-if="repairIcons > 0 && !isEditingVehicle" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
+          <div class="repair-icons-container">
+              <span class="repair-icon" ng-repeat="n in getRepairArray() track by $index">🔧</span>
+          </div>
+      </div>
+      
+  </div>
+</div>
