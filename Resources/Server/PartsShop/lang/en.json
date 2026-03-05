@@ -1,0 +1,18 @@
+{
+  "parts_required_title": "Required Parts for Purchase",
+  "total_cost": "Total Cost",
+  "current_balance": "Current Balance",
+  "missing_amount": "Missing Amount",
+  "confirm_purchase": "Are you sure you want to purchase?",
+  "btn_confirm": "Confirm",
+  "btn_cancel": "Cancel",
+  "btn_close": "Close",
+  "vehicle_has_banned_parts": "Vehicle contains banned parts",
+  "cannot_use_vehicle": "This vehicle cannot be used — these parts are not allowed. Please select an approved configuration.",
+  "banned_parts_list": "Banned Parts:",
+  "insufficient_funds": "Not enough money! Missing: $${missing}",
+  "purchase_success": "Purchased ${count} parts for $${cost}",
+  "series_banned": "Vehicle series '${series}' is blocked on this server. Trucks and buses are not permitted.",
+  "vehicle_series_banned": "Vehicle Series Blocked",
+  "series_not_allowed": "This vehicle series is not allowed on the server"
+}
