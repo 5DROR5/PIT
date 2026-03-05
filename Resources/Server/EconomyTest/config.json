@@ -1,0 +1,105 @@
+{
+  "features": {
+    "roleplay_enabled": true,
+    "money_per_minute_enabled": true,
+    "cool_message_enabled": true,
+    "speeding_bonus_enabled": true,
+    "zigzag_bonus_enabled": true,
+    "police_features_enabled": true,
+    "spawn_teleport_enabled": true,
+    "markers_enabled": true,
+    "ranks_enabled": true,
+    "playerlist_custom_data_enabled": true
+  },
+  
+  "general": {
+    "autosave_interval_ms": 120000
+  },
+
+  "money": {
+    "money_per_minute_interval_ms": 180000,
+    "money_per_minute_amount": 75,
+    "starting_money": 50000,
+    "cool_message_interval_ms": 200000
+  },
+
+  "civilian": {
+    "speeding_limit_kmh": 150,
+    "speeding_bonus_duration_ms": 240000,
+    "speeding_cooldown_ms": 1,
+    "speeding_bonus_per_second": 4,
+    "speeding_final_bonus_amount": 900,
+    "zigzag_bonus_duration_ms": 420000,
+    "zigzag_cooldown_ms": 1,
+    "zigzag_final_bonus_amount": 1500,
+    "zigzag_prorated_bonus": 7,
+    "min_speed_kmh_for_zigzag": 30,
+    "zigzag_min_turns": 4,
+    "zigzag_min_angle_degrees": 12,
+    "zigzag_max_turn_interval_seconds": 2.0,
+    "wanted_fail_penalty": 750,
+    "speeding_allowed_repairs": 0,
+    "zigzag_allowed_repairs": 0,
+    "combo_allowed_repairs": 1,
+    "max_speed_for_repair_kmh": 5
+  },
+
+  "police": {
+    "police_proximity_range_m": 150,
+    "busted_range_m": 25,
+    "busted_stop_time_ms": 7000,
+    "busted_speed_limit_kmh": 5,
+    "police_bonus_per_second": 8,
+    "bust_bonus_amount": 3000,
+    "police_allowed_repairs": 1,
+    "police_max_speed_for_repair_kmh": 5,
+    "police_no_wanted_nearby_range_m": 150,
+    "repair_proximity_limit_m": 50
+  },
+
+  "system": {
+    "repair_reset_time_seconds": 300,
+    "chase_accumulator_chunk_seconds": 10,
+    "teleport_cooldown_seconds": 5,
+    "repair_approval_window_seconds": 2,
+    "repair_proximity_limit_m": 50
+  },
+
+  "markers": {
+    "spawn_delay_ms": 60000,
+    "max_markers": 3,
+    "marker_type": 1,
+    "marker_scale": 10,
+    "marker_color": {
+      "r": 0,
+      "g": 255,
+      "b": 255,
+      "a": 200
+    },
+    "marker_reward_amount": 200
+  },
+
+  "timers": {
+    "welcome_checker_ms": 500,
+    "fast_marker_check_ms": 150,
+    "combined_checker_ms": 1000,
+    "role_checker_ms": 5000,
+    "zigzag_checker_ms": 500,
+    "money_sync_ms": 10000,
+    "rank_save_ms": 60000,
+    "rank_ui_update_ms": 2000,
+    "police_wanted_update_ms": 1000,
+    "editing_position_sync_ms": 200
+  },
+
+  "admins": ["BeamMP_name_of_the_player"],
+  
+  "moderators": ["BeamMP_name_of_the_player", "BeamMP_name_of_the_player"],
+
+  "air_polluter": {
+    "min_players": 4,
+    "cooldown_secs": 21600,
+    "hover_radius_m": 2,
+    "touch_radius_m": 2
+  }
+}
