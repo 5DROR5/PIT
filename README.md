@@ -1,6 +1,6 @@
 # PIT Economy System
 
-A BeamMP server mod for police chase roleplay — wanted system, economy, ranks, missions, and a parts shop.
+A BeamMP server mod for police chase roleplay — wanted system, economy, ranks, missions, a parts shop, and a performance limiter.
 
 ## Features
 
@@ -13,6 +13,7 @@ A BeamMP server mod for police chase roleplay — wanted system, economy, ranks,
 - **Minimap** — real-time wanted/police tracking
 - **Air Polluter** — hidden special mission with fog effects
 - **Multi-language** — Hebrew, English, Arabic, German, Italian, French, Spanish, Russian
+- **Performance limiter** — server-enforced vehicle rating cap with admin commands and optional community voting
 - **Multi-map** — West Coast USA, East Coast USA, Small Grid
 
 ## Requirements
@@ -25,10 +26,12 @@ A BeamMP server mod for police chase roleplay — wanted system, economy, ranks,
 
 1. Copy the `EconomyTest` folder to `Resources/Server/`
 2. Copy the `PartsShop` folder to `Resources/Server/`
-3. In both `EconomyTest/` and `PartsShop/`, copy `db.example.json` → `db.json` and fill in your database credentials
-4. Run the SQL schema to create the required tables (see `schema.sql`)
-5. Edit `EconomyTest/config.json` — set your `admins` and `moderators`
-6. Start your BeamMP server
+3. Copy the `PerformanceLimiter` folder to `Resources/Server/`
+4. In both `EconomyTest/` and `PartsShop/`, copy `db.example.json` → `db.json` and fill in your database credentials
+5. Run the SQL schema to create the required tables (see `schema.sql`)
+6. Edit `EconomyTest/config.json` — set your `admins` and `moderators`
+7. Edit `PerformanceLimiter/config.json` — set your `admins` and desired rating limit
+8. Start your BeamMP server
 
 ## Configuration
 
@@ -41,6 +44,12 @@ A BeamMP server mod for police chase roleplay — wanted system, economy, ranks,
 | `SpawnLocations.lua` | Spawn points and marker locations per map |
 | `PoliceSkins.lua` | Vehicle skins that grant the police role |
 | `RanksConfig.lua` | Rank names, task targets, and rewards |
+
+### PerformanceLimiter
+
+| File | Purpose |
+|------|---------|
+| `config.json` | Rating cap, display offset, admins, vote settings |
 
 ### PartsShop
 
