@@ -16,6 +16,18 @@ A BeamMP server mod for police chase roleplay — wanted system, economy, ranks,
 - **Performance limiter** — server-enforced vehicle rating cap with admin commands and optional community voting
 - **Multi-map** — West Coast USA, East Coast USA, Small Grid
 
+## Structure
+
+Each mod consists of a server-side component and a client-side UI package:
+
+| Mod | Server folder | Client package |
+|-----|--------------|----------------|
+| Economy / Wanted System | `EconomyTest/` | `UIMPIT.zip` |
+| Parts Shop | `PartsShop/` | `UIMPS.zip` |
+| Performance Limiter | `PerformanceLimiter/` | `UIMPI.zip` |
+
+Client packages are BeamMP UI mods and are placed in the server's `Resources/Client/` folder. BeamMP distributes them automatically to connecting players.
+
 ## Requirements
 
 - [BeamMP Server](https://github.com/BeamMP/BeamMP-Server)
@@ -24,14 +36,13 @@ A BeamMP server mod for police chase roleplay — wanted system, economy, ranks,
 
 ## Installation
 
-1. Copy the `EconomyTest` folder to `Resources/Server/`
-2. Copy the `PartsShop` folder to `Resources/Server/`
-3. Copy the `PerformanceLimiter` folder to `Resources/Server/`
-4. In both `EconomyTest/` and `PartsShop/`, copy `db.example.json` → `db.json` and fill in your database credentials
-5. Run the SQL schema to create the required tables (see `schema.sql`)
-6. Edit `EconomyTest/config.json` — set your `admins` and `moderators`
-7. Edit `PerformanceLimiter/config.json` — set your `admins` and desired rating limit
-8. Start your BeamMP server
+1. Copy the `EconomyTest`, `PartsShop`, and `PerformanceLimiter` folders to `Resources/Server/`
+2. Copy `UIMPIT.zip`, `UIMPS.zip`, and `UIMPI.zip` to `Resources/Client/`
+3. In both `EconomyTest/` and `PartsShop/`, copy `db.example.json` → `db.json` and fill in your database credentials
+4. Run the SQL schema to create the required tables (see `schema.sql`)
+5. Edit `EconomyTest/config.json` — set your `admins` and `moderators`
+6. Edit `PerformanceLimiter/config.json` — set your `admins` and desired rating limit
+7. Start your BeamMP server
 
 ## Configuration
 
