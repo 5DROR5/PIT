@@ -12,7 +12,7 @@ A BeamMP server mod for police chase roleplay — wanted system, economy, ranks,
 - **Parts shop** — parts purchase system with free/banned vehicle series enforcement
 - **Minimap** — real-time wanted/police tracking
 - **Air Polluter** — hidden special mission with fog effects
-- **Multi-language** — Hebrew, English, Arabic, German, Italian, French, Spanish, Russian
+- **Multi-language** — English, Arabic, German, Hebrew, Italian, French, Spanish, Russian
 - **Performance limiter** — server-enforced vehicle rating cap with admin commands and optional community voting
 - **Multi-map** — West Coast USA, East Coast USA, Small Grid
 
