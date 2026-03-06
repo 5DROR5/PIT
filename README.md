@@ -26,7 +26,7 @@ Each mod consists of a server-side component and a client-side UI package:
 | Parts Shop | `PartsShop/` | `UIMPS.zip` |
 | Performance Limiter | `PerformanceLimiter/` | `UIMPI.zip` |
 
-Client packages go in `Resources/Client/` and are distributed automatically to connecting players by BeamMP.
+Client packages go in `Resources/Client/` and are distributed automatically to connecting players.
 
 ## Requirements
 
