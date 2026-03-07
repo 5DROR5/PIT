@@ -77988,4 +77988,8 @@ return {
         name = "POLICE",
         value = 100
     },
+    ["fullsize_limo_skin_police"] = {
+        name = "POLICE",
+        value = 100
+    },
 }
