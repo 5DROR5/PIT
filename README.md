@@ -1,6 +1,6 @@
 # PIT - 🚗 Cops n Wanted 🚓
 
-A BeamMP server mod for police chase roleplay — wanted system, economy, ranks, missions, a parts shop, a performance limiter, and day/night sync.
+An open-source project dedicated to bringing fair, balanced, and cinematic multiplayer police chase gameplay to BeamMP
 
 ## Preview
 
