@@ -92,6 +92,12 @@ In `SpawnLocations.lua`, add an entry with the exact BeamNG map folder name:
 }
 ```
 
+## Credits
+
+- **Beams of Norway** — speed detection code reference
+- **[OfficialLambdax](https://github.com/OfficialLambdax)** — day/night sync implementation (learned from published code)
+- **[StanleyDudek](https://github.com/StanleyDudek)** — extensive help and published code examples that shaped much of this project
+
 ## License
 
 [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html)
