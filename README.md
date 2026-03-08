@@ -2,6 +2,10 @@
 
 A BeamMP server mod for police chase roleplay — wanted system, economy, ranks, missions, a parts shop, a performance limiter, and day/night sync.
 
+## Preview
+
+[![PIT Economy System - Gameplay Preview](https://img.youtube.com/vi/eaFKSADzcw8/maxresdefault.jpg)](https://www.youtube.com/watch?v=eaFKSADzcw8)
+
 ## Features
 
 - **Police / Civilian roles** — detected automatically by vehicle skin
