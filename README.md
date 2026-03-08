@@ -96,6 +96,9 @@ In `SpawnLocations.lua`, add an entry with the exact BeamNG map folder name:
 }
 ```
 
+## Community
+Have questions about the mods or want to play on the server? [Join the Discord](https://discord.gg/HVKcvAJYpZ)
+
 ## Credits
 
 - **Beams of Norway** — speed detection code reference
