@@ -51,4 +51,5 @@ return {
 --    "midsize_skin_police",
 --    "etki_skin_police",
 --    "moonhawk_skin_police",
+--    "fullsize_limo_skin_police",
 }
