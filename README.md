@@ -37,7 +37,7 @@ Client packages are BeamMP UI mods and are placed in the server's `Resources/Cli
 ## Requirements
 
 - [BeamMP Server](https://github.com/BeamMP/BeamMP-Server)
-- MySQL / MariaDB
+- MySQL  /  MariaDB
 - `luasql.mysql` Lua library
 
 ## Installation
