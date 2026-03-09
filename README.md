@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" alt="PIT Logo" width="400"/>
+</p>
+
 # PIT - 🚗 Cops n Wanted 🚓
 
 An open-source project dedicated to bringing fair, balanced, and cinematic multiplayer police chase gameplay to BeamMP
