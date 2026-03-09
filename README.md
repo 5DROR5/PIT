@@ -18,37 +18,120 @@ An open-source project dedicated to bringing fair, balanced, and cinematic multi
 - **Air Polluter** — hidden special mission with fog effects
 - **Multi-language** — English, Arabic, French, German, Hebrew, Italian, Russian, Spanish
 - **Performance limiter** — server-enforced vehicle rating cap with admin commands and optional community voting
-- **Day/Night sync** — server-controlled time cycle with configurable day/night speed
-- **Multi-map** — West Coast USA, East Coast USA
+- **Day/Night sync** *(optional)* — server-controlled time cycle, requires a map with night lighting support
+- **Multi-map** — West Coast USA, East Coast USA *(expandable to any map)*
 
 ## Structure
 
-Each mod consists of a server-side component and a client-side UI package:
+Each mod consists of a server-side component and a client-side package. The client Lua extensions handle game logic and server communication; UI apps (HTML/JS/CSS) are only present where a visual interface is needed.
 
 | Mod | Server folder | Client package |
 |-----|--------------|----------------|
-| Economy / Wanted System | `EconomyTest/` | `UIMPIT.zip` |
-| Parts Shop | `PartsShop/` | `UIMPS.zip` |
+| Economy / Wanted System / Parts Shop | `EconomyTest/` | `UIMPIT.zip` |
 | Performance Limiter | `PerformanceLimiter/` | `UIMPI.zip` |
-| Day/Night Sync | `DayNightSync/` | `MPDN.zip` |
+| Day/Night Sync *(optional)* | `DayNightSync/` | `MPDN.zip` |
 
-Client packages are BeamMP UI mods and are placed in the server's `Resources/Client/` folder. BeamMP distributes them automatically to connecting players.
+## File Structure
+
+<details>
+<summary>Click to expand</summary>
+<pre>
+Resources/
+├── Client/
+│   ├── UIMPIT.zip                          # Economy / Wanted System / Parts Shop
+│   │   ├── lua/ge/extensions/
+│   │   │   ├── key.lua                     # Core client logic & UI data bridge
+│   │   │   ├── minimap.lua                 # Minimap logic & rendering
+│   │   │   └── PartsShop.lua               # Parts Shop client logic
+│   │   ├── scripts/
+│   │   │   ├── EconomyUI/modScript.lua
+│   │   │   └── PartsShop/modScript.lua
+│   │   ├── settings/ui_apps/layouts/default/pit.uilayout.json
+│   │   └── ui/modules/apps/
+│   │       ├── BeamMP-PlayerList/
+│   │       │   ├── app.html
+│   │       │   ├── app.js
+│   │       │   ├── app.css
+│   │       │   ├── app.json
+│   │       │   ├── app.png
+│   │       │   └── redesign.css
+│   │       ├── EconomyHUD/
+│   │       │   ├── app.html
+│   │       │   ├── app.js
+│   │       │   ├── app.css
+│   │       │   ├── app.json
+│   │       │   └── app.png
+│   │       ├── PoliceWantedList/
+│   │       │   ├── app.html
+│   │       │   ├── app.js
+│   │       │   ├── app.css
+│   │       │   ├── app.json
+│   │       │   └── app.png
+│   │       └── PartsShop/
+│   │           ├── app.html
+│   │           ├── app.js
+│   │           ├── app.css
+│   │           ├── app.json
+│   │           └── app.png
+│   │
+│   ├── UIMPI.zip                           # Performance Limiter
+│   │   ├── lua/ge/extensions/performanceLimiter.lua
+│   │   ├── scripts/perf-ui/modScript.lua
+│   │   └── ui/modules/apps/perf/
+│   │       ├── app.html
+│   │       ├── app.js
+│   │       ├── app.css
+│   │       ├── app.json
+│   │       └── app.png
+│   │
+│   └── MPDN.zip                            # Day/Night Sync (optional)
+│       ├── lua/ge/extensions/mpdn.lua
+│       └── scripts/envsync/modScript.lua
+│
+└── Server/
+    ├── EconomyTest/                        # Economy, Wanted System, Parts Shop
+    │   ├── main.lua
+    │   ├── database.lua
+    │   ├── AirPolluter.lua
+    │   ├── MinimapSystem.lua
+    │   ├── PartsShop.lua
+    │   ├── SpawnLocations.lua
+    │   ├── PoliceSkins.lua
+    │   ├── RanksConfig.lua
+    │   ├── parts_config.lua
+    │   ├── free_vehicles.lua
+    │   ├── banned_vehicle_series.lua
+    │   ├── schema.sql
+    │   ├── config.json
+    │   ├── db.json                         # ⚠️ Never commit
+    │   └── lang/{ar,de,en,es,fr,he,it,ru}.json
+    │
+    ├── PerformanceLimiter/
+    │   ├── main.lua
+    │   └── config.json
+    │
+    └── DayNightSync/                       # Day/Night Sync (optional)
+        └── main.lua
+</pre>
+</details>
 
 ## Requirements
 
 - [BeamMP Server](https://github.com/BeamMP/BeamMP-Server)
-- MySQL  /  MariaDB
-- `luasql.mysql` Lua library
+- MySQL / MariaDB + `luasql.mysql` Lua library *(optional — falls back to local JSON storage)*
 
 ## Installation
 
-1. Copy the `EconomyTest`, `PartsShop`, and `PerformanceLimiter` folders to `Resources/Server/`
-2. Copy `UIMPIT.zip`, `UIMPS.zip`, and `UIMPI.zip` to `Resources/Client/`
-3. In both `EconomyTest/` and `PartsShop/`, copy `db.example.json` → `db.json` and fill in your database credentials
-4. Run the SQL schema to create the required tables (see `schema.sql`)
-5. Edit `EconomyTest/config.json` — set your `admins` and `moderators`
-6. Edit `PerformanceLimiter/config.json` — set your `admins` and desired rating limit
-7. Start your BeamMP server
+1. Copy the `EconomyTest` and `PerformanceLimiter` folders to `Resources/Server/`
+2. Copy `UIMPIT.zip` and `UIMPI.zip` to `Resources/Client/`
+3. Run the SQL schema to create the required tables (see `schema.sql`)
+4. Edit `EconomyTest/config.json` — set your `admins` and `moderators`
+5. Edit `PerformanceLimiter/config.json` — set your `admins` and desired rating limit
+6. Start your BeamMP server
+
+> **MySQL setup (optional):** Fill in your database credentials in `db.json` inside `EconomyTest/`. Without this file the server will automatically use local JSON storage instead.
+
+> **Day/Night Sync** (`DayNightSync` + `MPDN.zip`) is optional — only install it if your map supports night lighting. On maps without it, the night cycle will appear completely dark.
 
 ## Configuration
 
@@ -57,16 +140,13 @@ Client packages are BeamMP UI mods and are placed in the server's `Resources/Cli
 | File | Purpose |
 |------|---------|
 | `config.json` | Gameplay settings, timers, admins |
-| `db.json` | Database credentials **(never commit this file)** |
+| `db.json` | MySQL credentials **(never commit this file)** |
 | `SpawnLocations.lua` | Spawn points and marker locations per map |
 | `PoliceSkins.lua` | Vehicle skins that grant the police role |
 | `RanksConfig.lua` | Rank names, task targets, and rewards |
-
-### DayNightSync
-
-| File | Purpose |
-|------|---------|
-| `main.lua` | Cycle speed, sync interval, initial time preset |
+| `parts_config.lua` | All parts with their prices (`0` = free, `>0` = purchasable, `-1` = banned) |
+| `free_vehicles.lua` | Vehicle series that bypass the purchase system |
+| `banned_vehicle_series.lua` | Vehicle series that are completely prohibited |
 
 ### PerformanceLimiter
 
@@ -74,14 +154,20 @@ Client packages are BeamMP UI mods and are placed in the server's `Resources/Cli
 |------|---------|
 | `config.json` | Rating cap, display offset, admins, vote settings |
 
-### PartsShop
+### DayNightSync
 
 | File | Purpose |
 |------|---------|
-| `db.json` | Database credentials **(never commit this file)** |
-| `parts_config.lua` | All parts with their prices (`0` = free, `>0` = purchasable, `-1` = banned) |
-| `free_vehicles.lua` | Vehicle series that bypass the purchase system |
-| `banned_vehicle_series.lua` | Vehicle series that are completely prohibited |
+| `main.lua` | Cycle speed, sync interval, initial time preset |
+
+## Storage Backends
+
+| Backend | When active | Use case |
+|---------|------------|----------|
+| MySQL | `db.json` present and reachable | Multiple servers sharing one economy |
+| JSON | `db.json` absent or unreachable | Single-server or offline setup |
+
+The backend is selected automatically at startup with no code changes required.
 
 ## Adding a Map
 
