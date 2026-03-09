@@ -242,5 +242,23 @@
   "ap_reason_wanted":              "Kann nicht starten, während man gesucht wird",
   "ap_reason_editing":             "Kann nicht starten, während ein Fahrzeug bearbeitet wird",
   "ap_players_label":              "Spieler",
-  "ap_cooldown_label":             "Verfügbar in"
+  "ap_cooldown_label":             "Verfügbar in",
+
+
+  "parts_required_title":           "Erforderliche Teile für den Kauf",
+  "total_cost":                     "Gesamtkosten",
+  "current_balance":                "Aktueller Kontostand",
+  "missing_amount":                 "Fehlender Betrag",
+  "confirm_purchase":               "Sind Sie sicher, dass Sie kaufen möchten?",
+  "btn_confirm":                    "Bestätigen",
+  "btn_cancel":                     "Abbrechen",
+  "btn_close":                      "Schließen",
+  "vehicle_has_banned_parts":       "Fahrzeug enthält verbotene Teile",
+  "cannot_use_vehicle":             "Dieses Fahrzeug kann nicht verwendet werden — diese Teile sind nicht erlaubt. Bitte wählen Sie eine zulässige Konfiguration.",
+  "banned_parts_list":              "Verbotene Teile:",
+  "insufficient_funds":             "Nicht genug Geld! Fehlend: $${missing}",
+  "purchase_success":               "${count} Teile für $${cost} gekauft",
+  "series_banned":                  "Fahrzeugserie '${series}' ist auf diesem Server blockiert. LKWs und Busse sind nicht erlaubt.",
+  "vehicle_series_banned":          "Fahrzeugserie blockiert",
+  "series_not_allowed":             "Diese Fahrzeugserie ist auf dem Server nicht erlaubt"
 }
