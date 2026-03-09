@@ -165,7 +165,7 @@ Resources/
 | Backend | When active | Use case |
 |---------|------------|----------|
 | MySQL | `db.json` present and reachable | Multiple servers sharing one economy |
-| JSON | `db.json` absent or unreachable | Single-server or offline setup |
+| JSON | `db.json` absent or unreachable | Single-server |
 
 The backend is selected automatically at startup with no code changes required.
 
