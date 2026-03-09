@@ -12,18 +12,21 @@ An open-source project dedicated to bringing fair, balanced, and cinematic multi
 
 ## Features
 
-- **Police / Civilian roles** — detected automatically by vehicle skin
 - **Wanted system** — speeding and zigzag violations, bust mechanic, escape system
-- **Economy** — per-second income during chases, markers, money transfers
 - **Rank progression** — 5 ranks with task-based advancement for both roles
 - **Repair system** — limited repairs earned through gameplay
 - **Parts shop** — parts purchase system with free/banned vehicle series enforcement
 - **Minimap** — real-time wanted tracking
-- **Air Polluter** — hidden special mission with fog effects
 - **Multi-language** — English, Arabic, French, German, Hebrew, Italian, Russian, Spanish
 - **Performance limiter** — server-enforced vehicle rating cap with admin commands and optional community voting
-- **Day/Night sync** *(optional)* — server-controlled time cycle, requires a map with night lighting support
+- **Economy** — per-second income during chases, markers, money transfers
+- **Police / Civilian roles** — detected automatically by vehicle skin
 - **Multi-map** — West Coast USA, East Coast USA *(expandable to any map)*
+
+
+**Optional:**
+- **Air Polluter** — hidden special mission with fog effects
+- **Day/Night sync** — server-controlled time cycle, requires a map with night lighting support
 
 ## Structure
 
