@@ -27,7 +27,7 @@
   "transfer_success": "✅ Successfully sent $${amount} to ${recipient}!",
   "transfer_insufficient_funds": "⚠️ Insufficient funds!",
   "transfer_self": "⚠️ You cannot send money to yourself!",
-  "cool_player_message": "Follow the server rules. ^2Enjoying the server? Come join our new and awesome Discord community, we're waiting for you: ^e^lhttps://discord.gg/HVKcvAJYpZ",
+  "cool_player_message": "Follow the server rules",
   "added_money_per_minute": "You earned **$${amount}** for being with us! Your new balance: ${money}",
   "welcome_server": "Welcome to the server! Enjoy!",
   "welcome_police": "Welcome, officer! Maintain order.",
