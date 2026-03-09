@@ -193,7 +193,7 @@ Have questions about the mods or want to play on the server? [Join the Discord](
 
 ## Credits
 
-- **Beams of Norway** — speed detection code reference
+- **[beamsofnorway](https://github.com/beamsofnorway)** — speed detection code reference
 - **[OfficialLambdax](https://github.com/OfficialLambdax)** — day/night sync implementation (learned from published code)
 - **[StanleyDudek](https://github.com/StanleyDudek)** — extensive help and published code examples that shaped much of this project
 
