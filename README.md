@@ -129,7 +129,7 @@ Resources/
 
 ## Installation
 
-1. Place the `EconomyTest` and `PerformanceLimiter` folders in `Resources/Server/`
+1. Place the `EconomyTest` and `UIMPI` folders in `Resources/Server/`
 2. Place `UIMPIT.zip` and `UIMPI.zip` in `Resources/Client/`
 3. Restart your BeamMP server
 
