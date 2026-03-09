@@ -23,7 +23,7 @@ An open-source project dedicated to bringing fair, balanced, and cinematic multi
 
 ## Structure
 
-Each mod consists of a server-side component and a client-side package. The client Lua extensions handle game logic and server communication; UI apps (HTML/JS/CSS) are only present where a visual interface is needed.
+Each mod consists of a server-side component and a client-side package.
 
 | Mod | Server folder | Client package |
 |-----|--------------|----------------|
