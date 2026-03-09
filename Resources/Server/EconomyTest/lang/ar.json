@@ -242,5 +242,25 @@
   "ap_reason_wanted":              "لا يمكن البدء وأنت مطلوب",
   "ap_reason_editing":             "لا يمكن البدء أثناء تعديل المركبة",
   "ap_players_label":              "لاعبون",
-  "ap_cooldown_label":             "متاح خلال"
+  "ap_cooldown_label":             "متاح خلال",
+
+
+
+  "parts_required_title":         "قطع مطلوبة للشراء",
+  "part_item":                    "• ${name} .... $${price}",
+  "total_cost":                   "التكلفة الإجمالية",
+  "current_balance":              "الرصيد الحالي",
+  "confirm_purchase":             "هل أنت متأكد من شراء هذه القطع؟",
+  "btn_confirm":                  "تأكيد",
+  "btn_cancel":                   "إلغاء",
+  "btn_close":                    "إغلاق",
+  "purchase_success":             "✅ اشتريت ${count} قطع بمبلغ $${cost}!",
+  "insufficient_funds":           "❌ رصيد غير كافٍ! ينقص",
+  "vehicle_frozen":               "🔒 المركبة مجمدة حتى شراء القطع المطلوبة",
+  "free_vehicle":                 "✅ هذه المركبة مجانية للاستخدام! استمتع!",
+  "part_banned":                  "🚫 هذا الجزء محظور",
+  "vehicle_has_banned_parts":     "تحتوي هذه المركبة على قطع محظورة",
+  "cannot_use_vehicle":           "لا يمكن استخدام هذه المركبة",
+  "banned_parts_list":            "القطع المحظورة المكتشفة:"
+
 }
