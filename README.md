@@ -14,7 +14,7 @@ An open-source project dedicated to bringing fair, balanced, and cinematic multi
 - **Rank progression** — 5 ranks with task-based advancement for both roles
 - **Repair system** — limited repairs earned through gameplay
 - **Parts shop** — parts purchase system with free/banned vehicle series enforcement
-- **Minimap** — real-time wanted/police tracking
+- **Minimap** — real-time wanted tracking
 - **Air Polluter** — hidden special mission with fog effects
 - **Multi-language** — English, Arabic, French, German, Hebrew, Italian, Russian, Spanish
 - **Performance limiter** — server-enforced vehicle rating cap with admin commands and optional community voting
