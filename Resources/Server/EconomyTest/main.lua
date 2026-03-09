@@ -133,10 +133,11 @@ end
 -- EXTERNAL MODULES
 -- =============================================================================
 
-local ranks        = dofile(ROOT .. "/RanksConfig.lua")
-local locations    = dofile(ROOT .. "/SpawnLocations.lua")
-local AirPolluter  = dofile(ROOT .. "/AirPolluter.lua")
+local ranks         = dofile(ROOT .. "/RanksConfig.lua")
+local locations     = dofile(ROOT .. "/SpawnLocations.lua")
+local AirPolluter   = dofile(ROOT .. "/AirPolluter.lua")
 local MinimapSystem = dofile(ROOT .. "/MinimapSystem.lua")
+local PartsShop     = dofile(ROOT .. "/PartsShop.lua")
 
 
 -- =============================================================================
@@ -1970,6 +1971,7 @@ local function cmdSetLang(pid, lang_code)
     setLang(getUID(pid), lang_code)
     sendMessage(pid, translateForPlayer(pid, "language_changed"))
     sendTranslationsToClient(pid)
+    PartsShop.onPlayerJoin(pid)
     sendRankUpdate(pid)
 end
 
@@ -2143,6 +2145,7 @@ local function onPlayerJoin(pid)
     sendBustProgress(pid, 0, 0)
     sendWantedUI(pid, 0)
     sendExistingEditorsToNewPlayer(pid)
+    PartsShop.onPlayerJoin(pid)
 end
 
 local function onPlayerLeave(pid)
@@ -2197,6 +2200,7 @@ local function checkWelcomeMessages()
                 sendAllMarkersToPlayer(pid)
             end
             AirPolluter.onPlayerJoin(pid)
+            PartsShop.onPlayerJoin(pid)
             forPlayers(function(other_pid)
                 if other_pid ~= pid then updatePrefix(other_pid) end
             end)
@@ -2338,6 +2342,9 @@ end
 function ECON_onOptionalSpawn(pid, data) handleOptionalSpawn(pid, data) end
 
 
+function ECON_PartsShop_ConfirmPurchase(pid, data) PartsShop.onConfirmPurchase(pid, data) end
+function ECON_PartsShop_CancelPurchase(pid, _)     end
+
 -- =============================================================================
 -- INITIALIZATION
 -- =============================================================================
@@ -2382,6 +2389,21 @@ function ECON_onInit()
         players_editing_vehicle = players_editing_vehicle,
     })
     MP.CreateEventTimer("AIRPOLLUTER_tick", 300)
+
+        PartsShop.init({
+        log           = log,
+        MP            = MP,
+        DB            = DB,
+        encodeJSON    = encodeJSON,
+        decodeJSON    = decodeJSON,
+        triggerClient = triggerClient,
+        sendMessage   = sendMessage,
+        getUID        = getUID,
+        translations  = translations,
+    })
+    MP.RegisterEvent("PartsShop_ConfirmPurchase", "ECON_PartsShop_ConfirmPurchase")
+    MP.RegisterEvent("PartsShop_CancelPurchase",  "ECON_PartsShop_CancelPurchase")
+    MP.CreateEventTimer("ECON_db_tick", 5000)
 
     MP.CreateEventTimer("ECON_autosave",               config.general.autosave_interval_ms)
     MP.CreateEventTimer("ECON_cool_message",           config.money.cool_message_interval_ms)
@@ -2437,6 +2459,8 @@ function ECON_minimap_slow()           MinimapSystem.updateMinimapsSlow() end
 function AIRPOLLUTER_onTick()          AirPolluter.tick() end
 function ECON_police_wanted_update()   updateAllPoliceWantedLists() end
 function ECON_update_playerlist_data() sendPlayerListCustomData() end
+function ECON_autosave()               saveAllRankData(); DB.flush() end
+function ECON_db_tick()                DB.tick() end
 
 function ECON_editing_position_sync()
     for pid, _ in pairs(players_editing_vehicle) do
@@ -2454,12 +2478,18 @@ function ECON_onLeave(pid)             onPlayerLeave(pid) end
 function ECON_onChat(pid, senderName, msg)
     if string.sub(msg, 1, 1) == "/" then handleCommand(pid, msg); return 1 end
 end
-function ECON_onVehicleEdited(pid, vid) onVehicleEdited(pid, vid) end
+function ECON_onVehicleEdited(pid, vid, data)
+    onVehicleEdited(pid, vid)
+    PartsShop.onVehicleEdited(pid, vid, data)
+end
 function ECON_onChangeVehicle(pid)     onVehicleChange(pid) end
 function ECON_onVehicleReset(pid, vid) onVehicleReset(pid, vid) end
 function ECON_onPlayerExitVehicle(pid) onVehicleExit(pid) end
 function ECON_onVehicleDelete(pid)     onVehicleDelete(pid) end
-function ECON_onVehicleSpawn(pid, vid) onVehicleSpawn(pid, vid) end
+function ECON_onVehicleSpawn(pid, vid, data)
+    onVehicleSpawn(pid, vid)
+    PartsShop.onVehicleSpawn(pid, vid, data)
+end
 function NoRepair_onStateRequest(pid)  sendTeleportState(pid); sendSpawnPoint(pid) end
 function ECON_onUI_setLanguage(pid, lc) cmdSetLang(pid, lc) end
 function ECON_onRepairRequest(pid)     handleRepairRequest(pid) end
@@ -2494,6 +2524,8 @@ MP.RegisterEvent("ECON_PayTransfer",             "ECON_PayTransfer")
 MP.RegisterEvent("ECON_ToggleWanted",            "ECON_onToggleWanted")
 MP.RegisterEvent("ECON_editing_position_sync",   "ECON_editing_position_sync")
 MP.RegisterEvent("ECON_update_playerlist_data",  "ECON_update_playerlist_data")
+MP.RegisterEvent("ECON_autosave",                "ECON_autosave")
+MP.RegisterEvent("ECON_db_tick",                 "ECON_db_tick")
 MP.RegisterEvent("ECON_police_wanted_update",    "ECON_police_wanted_update")
 MP.RegisterEvent("ECON_rank_ui_update",          "ECON_rank_ui_update")
 MP.RegisterEvent("ECON_cool_message",            "ECON_cool_message")
