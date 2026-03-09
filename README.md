@@ -23,7 +23,7 @@ An open-source project dedicated to bringing fair, balanced, and cinematic multi
 
 ## Structure
 
-Each mod consists of a server-side component and a client-side package.
+Each mod consists of a server-side component and a client-side package. The client Lua extensions handle game logic and server communication; UI apps (HTML/JS/CSS) are only present where a visual interface is needed.
 
 | Mod | Server folder | Client package |
 |-----|--------------|----------------|
@@ -122,16 +122,15 @@ Resources/
 
 ## Installation
 
-1. Copy the `EconomyTest` and `PerformanceLimiter` folders to `Resources/Server/`
-2. Copy `UIMPIT.zip` and `UIMPI.zip` to `Resources/Client/`
-3. Run the SQL schema to create the required tables (see `schema.sql`)
-4. Edit `EconomyTest/config.json` — set your `admins` and `moderators`
-5. Edit `PerformanceLimiter/config.json` — set your `admins` and desired rating limit
-6. Start your BeamMP server
+1. Place the `EconomyTest` and `PerformanceLimiter` folders in `Resources/Server/`
+2. Place `UIMPIT.zip` and `UIMPI.zip` in `Resources/Client/`
+3. Restart your BeamMP server
 
-> **MySQL setup (optional):** Fill in your database credentials in `db.json` inside `EconomyTest/`. Without this file the server will automatically use local JSON storage instead.
-
-> **Day/Night Sync** (`DayNightSync` + `MPDN.zip`) is optional — only install it if your map supports night lighting. On maps without it, the night cycle will appear completely dark.
+**Optional steps:**
+- Run `schema.sql` and fill in `EconomyTest/db.json` to enable MySQL — without this the server runs on local JSON storage automatically
+- Edit `EconomyTest/config.json` to set your `admins` and `moderators`
+- Edit `PerformanceLimiter/config.json` to set your `admins` and desired rating limit
+- Place the `DayNightSync` folder in `Resources/Server/` and `MPDN.zip` in `Resources/Client/` to enable day/night sync — only if your map supports night lighting
 
 ## Configuration
 
@@ -165,7 +164,7 @@ Resources/
 | Backend | When active | Use case |
 |---------|------------|----------|
 | MySQL | `db.json` present and reachable | Multiple servers sharing one economy |
-| JSON | `db.json` absent or unreachable | Single-server |
+| JSON | `db.json` absent or unreachable | Single-server or offline setup |
 
 The backend is selected automatically at startup with no code changes required.
 
