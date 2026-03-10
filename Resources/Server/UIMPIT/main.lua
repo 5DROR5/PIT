@@ -9,8 +9,8 @@
 -- CONSTANTS
 -- =============================================================================
 
-local PLUGIN = "[EconomyTest]"
-local ROOT   = "Resources/Server/EconomyTest"
+local PLUGIN = "[UIMPIT]"
+local ROOT   = "Resources/Server/UIMPIT"
 
 local CurrentMap = nil
 
@@ -133,11 +133,11 @@ end
 -- EXTERNAL MODULES
 -- =============================================================================
 
-local ranks         = dofile(ROOT .. "/RanksConfig.lua")
-local locations     = dofile(ROOT .. "/SpawnLocations.lua")
-local AirPolluter   = dofile(ROOT .. "/AirPolluter.lua")
-local MinimapSystem = dofile(ROOT .. "/MinimapSystem.lua")
-local PartsShop     = dofile(ROOT .. "/PartsShop.lua")
+local ranks         = dofile(ROOT .. "/config/RanksConfig.lua")
+local locations     = dofile(ROOT .. "/config/SpawnLocations.lua")
+local AirPolluter   = dofile(ROOT .. "/modules/AirPolluter.lua")
+local MinimapSystem = dofile(ROOT .. "/modules/MinimapSystem.lua")
+local PartsShop     = dofile(ROOT .. "/modules/PartsShop.lua")
 
 
 -- =============================================================================
@@ -156,7 +156,7 @@ local function GetCurrentMap()
 end
 
 local function loadConfig()
-    config = loadJSON(ROOT .. "/config.json")
+    config = loadJSON(ROOT .. "/config/config.json")
     if not config or type(config) ~= "table" then
         log("WARNING: Failed to load config.json, using empty config")
         config = {}
@@ -241,7 +241,7 @@ pending_vehicle_changes = pending_vehicle_changes or {}
 -- DATABASE INTERFACE
 -- =============================================================================
 
-local DB = require("database")
+local DB = dofile(ROOT .. "/modules/database.lua")
 
 local function getMoney(uid)                return DB.getMoney(uid) end
 local function addMoney(uid, amt)           return DB.addMoney(uid, amt) end
@@ -1614,7 +1614,7 @@ end
 -- ROLE DETECTION
 -- =============================================================================
 
-local PoliceSkins = require("PoliceSkins")
+local PoliceSkins = dofile(ROOT .. "/config/PoliceSkins.lua")
 
 local function updatePlayerRole(pid)
     if not config.features.roleplay_enabled then return end
@@ -2350,7 +2350,7 @@ function ECON_PartsShop_CancelPurchase(pid, _)     end
 -- =============================================================================
 
 function ECON_onInit()
-    log("=== Initializing EconomyTest 4.0.0 ===")
+    log("=== Initializing UIMPIT 4.0.0 ===")
     if not DB.connect() then log("CRITICAL: Failed to connect to database!"); return end
 
     loadConfig()

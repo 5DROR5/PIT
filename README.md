@@ -34,7 +34,7 @@ Each mod consists of a server-side component and a client-side package.
 
 | Mod | Server folder | Client package |
 |-----|--------------|----------------|
-| Economy / Wanted System / Parts Shop | `EconomyTest/` | `UIMPIT.zip` |
+| Economy / Wanted System / Parts Shop | `UIMPIT/` | `UIMPIT.zip` |
 | Performance Limiter | `PerformanceLimiter/` | `UIMPI.zip` |
 | Day/Night Sync *(optional)* | `MPDN/` | `MPDN.zip` |
 
@@ -96,28 +96,33 @@ Resources/
 │       └── scripts/envsync/modScript.lua
 │
 └── Server/
-    ├── EconomyTest/                        # Economy, Wanted System, Parts Shop
+    ├── UIMPIT/                             # Economy, Wanted System, Parts Shop
     │   ├── main.lua
-    │   ├── database.lua
-    │   ├── AirPolluter.lua
-    │   ├── MinimapSystem.lua
-    │   ├── PartsShop.lua
-    │   ├── SpawnLocations.lua
-    │   ├── PoliceSkins.lua
-    │   ├── RanksConfig.lua
-    │   ├── parts_config.lua
-    │   ├── free_vehicles.lua
-    │   ├── banned_vehicle_series.lua
     │   ├── schema.sql
-    │   ├── config.json
-    │   ├── db.json                         # ⚠️ Never commit
-    │   └── lang/{ar,de,en,es,fr,he,it,ru}.json
+    │   ├── modules/
+    │   │   ├── AirPolluter.lua
+    │   │   ├── MinimapSystem.lua
+    │   │   ├── PartsShop.lua
+    │   │   └── database.lua
+    │   ├── config/
+    │   │   ├── config.json
+    │   │   ├── db.json                     # ⚠️ Never commit
+    │   │   ├── SpawnLocations.lua
+    │   │   ├── PoliceSkins.lua
+    │   │   ├── RanksConfig.lua
+    │   │   ├── parts_config.lua
+    │   │   ├── free_vehicles.lua
+    │   │   └── banned_vehicle_series.lua
+    │   ├── lang/
+    │   │   └── {ar,de,en,es,fr,he,it,ru}.json
+    │   └── data/                           # Created automatically at runtime
+    │       └── local_storage.json          # JSON backend player data
     │
     ├── PerformanceLimiter/
     │   ├── main.lua
     │   └── config.json
     │
-    └── MPDN/                       # Day/Night Sync (optional)
+    └── MPDN/                               # Day/Night Sync (optional)
         └── main.lua
 </pre>
 </details>
@@ -129,30 +134,30 @@ Resources/
 
 ## Installation
 
-1. Place the `EconomyTest` and `UIMPI` folders in `Resources/Server/`
+1. Place the `UIMPIT` and `PerformanceLimiter` folders in `Resources/Server/`
 2. Place `UIMPIT.zip` and `UIMPI.zip` in `Resources/Client/`
 3. Restart your BeamMP server
 
 **Optional steps:**
-- Run `schema.sql` and fill in `EconomyTest/db.json` to enable MySQL — without this the server runs on local JSON storage automatically
-- Edit `EconomyTest/config.json` to set your `admins` and `moderators`
+- Run `schema.sql` and fill in `UIMPIT/config/db.json` to enable MySQL — without this the server runs on local JSON storage automatically
+- Edit `UIMPIT/config/config.json` to set your `admins` and `moderators`
 - Edit `PerformanceLimiter/config.json` to set your `admins` and desired rating limit
-- Place the `DayNightSync` folder in `Resources/Server/` and `MPDN.zip` in `Resources/Client/` to enable day/night sync — only if your map supports night lighting
+- Place the `MPDN` folder in `Resources/Server/` and `MPDN.zip` in `Resources/Client/` to enable day/night sync — only if your map supports night lighting
 
 ## Configuration
 
-### EconomyTest
+### UIMPIT
 
 | File | Purpose |
 |------|---------|
-| `config.json` | Gameplay settings, timers, admins |
-| `db.json` | MySQL credentials **(never commit this file)** |
-| `SpawnLocations.lua` | Spawn points and marker locations per map |
-| `PoliceSkins.lua` | Vehicle skins that grant the police role |
-| `RanksConfig.lua` | Rank names, task targets, and rewards |
-| `parts_config.lua` | All parts with their prices (`0` = free, `>0` = purchasable, `-1` = banned) |
-| `free_vehicles.lua` | Vehicle series that bypass the purchase system |
-| `banned_vehicle_series.lua` | Vehicle series that are completely prohibited |
+| `config/config.json` | Gameplay settings, timers, admins |
+| `config/db.json` | MySQL credentials **(never commit this file)** |
+| `config/SpawnLocations.lua` | Spawn points and marker locations per map |
+| `config/PoliceSkins.lua` | Vehicle skins that grant the police role |
+| `config/RanksConfig.lua` | Rank names, task targets, and rewards |
+| `config/parts_config.lua` | All parts with their prices (`0` = free, `>0` = purchasable, `-1` = banned) |
+| `config/free_vehicles.lua` | Vehicle series that bypass the purchase system |
+| `config/banned_vehicle_series.lua` | Vehicle series that are completely prohibited |
 
 ### PerformanceLimiter
 
@@ -170,14 +175,14 @@ Resources/
 
 | Backend | When active | Use case |
 |---------|------------|----------|
-| MySQL | `db.json` present and reachable | Multiple servers sharing one economy |
-| JSON | `db.json` absent or unreachable | Single-server |
+| MySQL | `config/db.json` present and reachable | Multiple servers sharing one economy |
+| JSON | `config/db.json` absent or unreachable | Single-server |
 
 The backend is selected automatically at startup with no code changes required.
 
 ## Adding a Map
 
-In `SpawnLocations.lua`, add an entry with the exact BeamNG map folder name:
+In `Resources/Server/UIMPIT/config/SpawnLocations.lua`, add an entry with the exact BeamNG map folder name:
 
 ```lua
 ["your_map_name"] = {
