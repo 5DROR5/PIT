@@ -1171,7 +1171,7 @@ local function handleZigzag(pid, pos)
     if zigzag_cooldowns[pid] and (now - zigzag_cooldowns[pid] < config.civilian.zigzag_cooldown_ms) then return end
 
     local qx, qy, qz, qw = pos.rot[1] or 0, pos.rot[2] or 0, pos.rot[3] or 0, pos.rot[4] or 1
-    local yaw_angle = math.atan2(2.0*(qw*qz + qx*qy), 1.0 - 2.0*(qy*qy + qz*qz))
+    local yaw_angle = math.atan(2.0*(qw*qz + qx*qy), 1.0 - 2.0*(qy*qy + qz*qz))
 
     if not player_zigzag_state[pid] then
         player_zigzag_state[pid] = { last_angle = yaw_angle, consecutive_turns = 0, last_direction = 0, last_turn_time = now }
