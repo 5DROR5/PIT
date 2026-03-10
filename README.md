@@ -36,7 +36,7 @@ Each mod consists of a server-side component and a client-side package.
 |-----|--------------|----------------|
 | Economy / Wanted System / Parts Shop | `EconomyTest/` | `UIMPIT.zip` |
 | Performance Limiter | `PerformanceLimiter/` | `UIMPI.zip` |
-| Day/Night Sync *(optional)* | `DayNightSync/` | `MPDN.zip` |
+| Day/Night Sync *(optional)* | `MPDN/` | `MPDN.zip` |
 
 ## File Structure
 
@@ -117,7 +117,7 @@ Resources/
     │   ├── main.lua
     │   └── config.json
     │
-    └── DayNightSync/                       # Day/Night Sync (optional)
+    └── MPDN/                       # Day/Night Sync (optional)
         └── main.lua
 </pre>
 </details>
