@@ -1,7 +1,7 @@
 -- =============================================================================
 -- Day/Night Sync - Client Side
--- Part of: PIT Economy System
--- License: AGPL-3.0 (https://www.gnu.org/licenses/agpl-3.0.html)
+-- Copyright (c) 2026 5DROR5
+-- License: MIT (https://opensource.org/licenses/MIT)
 -- =============================================================================
 
 local M = {}
