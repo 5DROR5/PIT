@@ -5,7 +5,7 @@
 -- =============================================================================
 
 local M    = {}
-local ROOT = "Resources/Server/EconomyTest"
+local ROOT = "Resources/Server/UIMPIT"
 
 M.BACKEND_MYSQL = "mysql"
 M.BACKEND_JSON  = "json"
@@ -19,7 +19,11 @@ local backend = nil
 local conn    = nil
 local env     = nil
 
-local LOCAL_DB_PATH = ROOT .. "/local_storage.json"
+local LOCAL_DB_PATH = ROOT .. "/data/local_storage.json"
+
+local function ensureDataDir()
+    os.execute('mkdir "' .. ROOT .. '/data"')
+end
 local _store        = { players = {} }
 local _dirty        = false
 local _last_save    = 0
@@ -130,7 +134,7 @@ end
 -- =============================================================================
 
 local function mysql_load_config()
-    local s   = readFile(ROOT .. "/db.json")
+    local s = readFile(ROOT .. "/config/db.json")
     local cfg = s and jsonDec(s)
     return (type(cfg) == "table" and cfg.host) and cfg or nil
 end
@@ -181,6 +185,7 @@ end
 -- =============================================================================
 
 function M.connect()
+    ensureDataDir()
     if conn then
         local ok, res = pcall(conn.execute, conn, "SELECT 1")
         if ok and res then

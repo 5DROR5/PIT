@@ -4,7 +4,7 @@
 -- =============================================================================
 
 local M    = {}
-local ROOT = "Resources/Server/EconomyTest"
+local ROOT = "Resources/Server/UIMPIT"
 
 
 -- =============================================================================
@@ -45,7 +45,7 @@ end
 -- =============================================================================
 
 local function loadPartsConfig()
-    local path = ROOT .. "/parts_config.lua"
+    local path = ROOT .. "/config/parts_config.lua"
     if not fileExists(path) then _log("PartsShop: parts_config.lua not found"); return end
     local ok, cfg = pcall(dofile, path)
     if ok and type(cfg) == "table" then
@@ -58,7 +58,7 @@ local function loadPartsConfig()
 end
 
 local function loadFreeVehicles()
-    local path = ROOT .. "/free_vehicles.lua"
+    local path = ROOT .. "/config/free_vehicles.lua"
     if not fileExists(path) then return end
     local ok, list = pcall(dofile, path)
     if ok and type(list) == "table" then
@@ -68,7 +68,7 @@ local function loadFreeVehicles()
 end
 
 local function loadBannedVehicles()
-    local path = ROOT .. "/banned_vehicle_series.lua"
+    local path = ROOT .. "/config/banned_vehicle_series.lua"
     if not fileExists(path) then return end
     local ok, list = pcall(dofile, path)
     if ok and type(list) == "table" then
