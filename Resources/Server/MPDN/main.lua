@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Day/Night Sync - Server Side
--- Copyright (c) 2026 5DROR5
+-- Copyright (c) OfficialLambdax & 5DROR5
 -- License: MIT (https://opensource.org/licenses/MIT)
 -- =============================================================================
 
