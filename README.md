@@ -199,4 +199,5 @@ Have questions about the mods or want to play on the server? [Join the Discord](
 
 ## License
 
-[AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html)
+This project is licensed under [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html),  
+with the exception of the Day/Night Sync mod which is licensed under [MIT](https://opensource.org/licenses/MIT).
