@@ -204,5 +204,8 @@ Have questions about the mods or want to play on the server? [Join the Discord](
 
 ## License
 
-This project is licensed under [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html),  
-with the exception of the Day/Night Sync mod which is licensed under [MIT](https://opensource.org/licenses/MIT).
+| Mod | License |
+|-----|---------|
+| `UIMPIT` — Economy / Wanted System / Parts Shop | [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html) |
+| `UIMPI` — Performance Limiter | [The Unlicense](https://unlicense.org) (public domain) |
+| `MPDN` — Day/Night Sync | [MIT](https://opensource.org/licenses/MIT) |
