@@ -23,7 +23,6 @@ An open-source project dedicated to bringing fair, balanced, and cinematic multi
 - **Police / Civilian roles** — detected automatically by vehicle skin
 - **Multi-map** — West Coast USA, East Coast USA *(expandable to any map)*
 
-
 **Optional:**
 - **Air Polluter** — hidden special mission with fog effects
 - **Day/Night sync** — server-controlled time cycle, requires a map with night lighting support
@@ -35,7 +34,7 @@ Each mod consists of a server-side component and a client-side package.
 | Mod | Server folder | Client package |
 |-----|--------------|----------------|
 | Economy / Wanted System / Parts Shop | `UIMPIT/` | `UIMPIT.zip` |
-| Performance Limiter | `PerformanceLimiter/` | `UIMPI.zip` |
+| Performance Limiter | `UIMPI/` | `UIMPI.zip` |
 | Day/Night Sync *(optional)* | `MPDN/` | `MPDN.zip` |
 
 ## File Structure
@@ -43,87 +42,89 @@ Each mod consists of a server-side component and a client-side package.
 <details>
 <summary>Click to expand</summary>
 <pre>
-Resources/
-├── Client/
-│   ├── UIMPIT.zip                          # Economy / Wanted System / Parts Shop
-│   │   ├── lua/ge/extensions/
-│   │   │   ├── key.lua                     # Core client logic & UI data bridge
-│   │   │   ├── minimap.lua                 # Minimap logic & rendering
-│   │   │   └── PartsShop.lua               # Parts Shop client logic
-│   │   ├── scripts/
-│   │   │   ├── EconomyUI/modScript.lua
-│   │   │   └── PartsShop/modScript.lua
-│   │   ├── settings/ui_apps/layouts/default/pit.uilayout.json
-│   │   └── ui/modules/apps/
-│   │       ├── BeamMP-PlayerList/
-│   │       │   ├── app.html
-│   │       │   ├── app.js
-│   │       │   ├── app.css
-│   │       │   ├── app.json
-│   │       │   ├── app.png
-│   │       │   └── redesign.css
-│   │       ├── EconomyHUD/
-│   │       │   ├── app.html
-│   │       │   ├── app.js
-│   │       │   ├── app.css
-│   │       │   ├── app.json
-│   │       │   └── app.png
-│   │       ├── PoliceWantedList/
-│   │       │   ├── app.html
-│   │       │   ├── app.js
-│   │       │   ├── app.css
-│   │       │   ├── app.json
-│   │       │   └── app.png
-│   │       └── PartsShop/
-│   │           ├── app.html
-│   │           ├── app.js
-│   │           ├── app.css
-│   │           ├── app.json
-│   │           └── app.png
-│   │
-│   ├── UIMPI.zip                           # Performance Limiter
-│   │   ├── lua/ge/extensions/performanceLimiter.lua
-│   │   ├── scripts/perf-ui/modScript.lua
-│   │   └── ui/modules/apps/perf/
-│   │       ├── app.html
-│   │       ├── app.js
-│   │       ├── app.css
-│   │       ├── app.json
-│   │       └── app.png
-│   │
-│   └── MPDN.zip                            # Day/Night Sync (optional)
-│       ├── lua/ge/extensions/mpdn.lua
-│       └── scripts/envsync/modScript.lua
-│
-└── Server/
-    ├── UIMPIT/                             # Economy, Wanted System, Parts Shop
-    │   ├── main.lua
-    │   ├── schema.sql
-    │   ├── modules/
-    │   │   ├── AirPolluter.lua
-    │   │   ├── MinimapSystem.lua
-    │   │   ├── PartsShop.lua
-    │   │   └── database.lua
-    │   ├── config/
-    │   │   ├── config.json
-    │   │   ├── db.json                     # ⚠️ Never commit
-    │   │   ├── SpawnLocations.lua
-    │   │   ├── PoliceSkins.lua
-    │   │   ├── RanksConfig.lua
-    │   │   ├── parts_config.lua
-    │   │   ├── free_vehicles.lua
-    │   │   └── banned_vehicle_series.lua
-    │   ├── lang/
-    │   │   └── {ar,de,en,es,fr,he,it,ru}.json
-    │   └── data/                           # Created automatically at runtime
-    │       └── local_storage.json          # JSON backend player data
+BeamMP-Server/
+├── BeamMP-Server.exe
+├── config_editor.pyw                       # Optional GUI config editor (Windows)
+└── Resources/
+    ├── Client/
+    │   ├── UIMPIT.zip                          # Economy / Wanted System / Parts Shop
+    │   │   ├── lua/ge/extensions/
+    │   │   │   ├── key.lua                     # Core client logic & UI data bridge
+    │   │   │   ├── minimap.lua                 # Minimap logic & rendering
+    │   │   │   └── PartsShop.lua               # Parts Shop client logic
+    │   │   ├── scripts/
+    │   │   │   ├── EconomyUI/modScript.lua
+    │   │   │   └── PartsShop/modScript.lua
+    │   │   ├── settings/ui_apps/layouts/default/pit.uilayout.json
+    │   │   └── ui/modules/apps/
+    │   │       ├── BeamMP-PlayerList/
+    │   │       │   ├── app.html
+    │   │       │   ├── app.js
+    │   │       │   ├── app.css
+    │   │       │   ├── app.json
+    │   │       │   ├── app.png
+    │   │       │   └── redesign.css
+    │   │       ├── EconomyHUD/
+    │   │       │   ├── app.html
+    │   │       │   ├── app.js
+    │   │       │   ├── app.css
+    │   │       │   ├── app.json
+    │   │       │   └── app.png
+    │   │       ├── PoliceWantedList/
+    │   │       │   ├── app.html
+    │   │       │   ├── app.js
+    │   │       │   ├── app.css
+    │   │       │   ├── app.json
+    │   │       │   └── app.png
+    │   │       └── PartsShop/
+    │   │           ├── app.html
+    │   │           ├── app.js
+    │   │           ├── app.css
+    │   │           ├── app.json
+    │   │           └── app.png
+    │   │
+    │   ├── UIMPI.zip                           # Performance Limiter
+    │   │   ├── lua/ge/extensions/performanceLimiter.lua
+    │   │   ├── scripts/perf-ui/modScript.lua
+    │   │   └── ui/modules/apps/perf/
+    │   │       ├── app.html
+    │   │       ├── app.js
+    │   │       ├── app.css
+    │   │       ├── app.json
+    │   │       └── app.png
+    │   │
+    │   └── MPDN.zip                            # Day/Night Sync (optional)
+    │       ├── lua/ge/extensions/mpdn.lua
+    │       └── scripts/envsync/modScript.lua
     │
-    ├── PerformanceLimiter/
-    │   ├── main.lua
-    │   └── config.json
-    │
-    └── MPDN/                               # Day/Night Sync (optional)
-        └── main.lua
+    └── Server/
+        ├── UIMPIT/                             # Economy, Wanted System, Parts Shop
+        │   ├── main.lua
+        │   ├── schema.sql
+        │   ├── modules/
+        │   │   ├── AirPolluter.lua
+        │   │   ├── MinimapSystem.lua
+        │   │   ├── PartsShop.lua
+        │   │   └── database.lua
+        │   ├── config/
+        │   │   ├── config.json
+        │   │   ├── db.json                     # ⚠️ Never commit
+        │   │   ├── SpawnLocations.lua
+        │   │   ├── PoliceSkins.lua
+        │   │   ├── RanksConfig.lua
+        │   │   ├── parts_config.lua
+        │   │   ├── free_vehicles.lua
+        │   │   └── banned_vehicle_series.lua
+        │   └── lang/
+        │       ├── {ar,de,en,es,fr,he,it,ru}.json          # Mod translations
+        │       └── editor_{ar,de,en,es,fr,he,it,ru}.json   # Config editor translations
+        │
+        ├── UIMPI/
+        │   ├── main.lua
+        │   └── config.json
+        │
+        └── MPDN/                               # Day/Night Sync (optional)
+            └── main.lua
 </pre>
 </details>
 
@@ -134,14 +135,14 @@ Resources/
 
 ## Installation
 
-1. Place the `UIMPIT` and `PerformanceLimiter` folders in `Resources/Server/`
+1. Place the `UIMPIT` and `UIMPI` folders in `Resources/Server/`
 2. Place `UIMPIT.zip` and `UIMPI.zip` in `Resources/Client/`
 3. Restart your BeamMP server
 
 **Optional steps:**
 - Run `schema.sql` and fill in `UIMPIT/config/db.json` to enable MySQL — without this the server runs on local JSON storage automatically
 - Edit `UIMPIT/config/config.json` to set your `admins` and `moderators`
-- Edit `PerformanceLimiter/config.json` to set your `admins` and desired rating limit
+- Edit `UIMPI/config.json` to set your `admins` and desired rating limit
 - Place the `MPDN` folder in `Resources/Server/` and `MPDN.zip` in `Resources/Client/` to enable day/night sync — only if your map supports night lighting
 
 ## Configuration
@@ -158,6 +159,29 @@ Resources/
 | `config/parts_config.lua` | All parts with their prices (`0` = free, `>0` = purchasable, `-1` = banned) |
 | `config/free_vehicles.lua` | Vehicle series that bypass the purchase system |
 | `config/banned_vehicle_series.lua` | Vehicle series that are completely prohibited |
+
+### Config Editor *(optional, Windows)*
+
+![Config Editor](assets/config_editor.png)
+
+A graphical desktop editor that manages both `UIMPIT/config/config.json` and `UIMPI/config.json` — intended for server owners who prefer not to edit JSON manually.
+
+**Requirements:** Python 3.10+ and PySide6
+```
+pip install PySide6
+```
+
+**Run:** double-click `config_editor.pyw` from the server root, or:
+```
+python config_editor.pyw
+```
+
+On Linux, double-click may not work depending on your file manager. Run from terminal instead:
+```
+python config_editor.pyw
+```
+
+Reads and writes config files directly, with hover tooltips for every field.
 
 ### PerformanceLimiter
 
