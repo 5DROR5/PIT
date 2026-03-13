@@ -160,6 +160,32 @@ BeamMP-Server/
 | `config/free_vehicles.lua` | Vehicle series that bypass the purchase system |
 | `config/banned_vehicle_series.lua` | Vehicle series that are completely prohibited |
 
+### EconomyHUD — Discord & Rulebook Links *(optional, advanced)*
+
+The welcome screen (Step 4) supports optional buttons that open your Discord invite and server rulebook directly from inside the game.
+
+> ⚠️ This requires editing client-side UI files. Only do this if you are comfortable with JavaScript and JSON.
+
+**1.** In `Resources/Client/UIMPIT.zip` → `ui/modules/apps/EconomyHUD/app.js`, set your links near the top of the file:
+```javascript
+var LINKS_ENABLED = true;                                // enable the buttons
+var DISCORD_URL   = 'https://discord.gg/XXXXXXX';       // your Discord invite
+var RULEBOOK_URL  = 'https://yoursite.com/rules';        // your rulebook URL
+var SHOW_QR_CODES = false;                               // set to true if you add QR images (see below)
+```
+
+**2.** Add the 5 new translation keys to each language file in `Resources/Server/UIMPIT/lang/`.
+A helper script is provided for this — run it once from the server root:
+```
+python add_link_translations.py
+```
+
+**3. *(Optional — QR codes)*** If you want QR code images to appear alongside the buttons, place two PNG files in the `EconomyHUD/` folder:
+- `qr_discord.png`
+- `qr_rulebook.png`
+
+Then set `SHOW_QR_CODES = true` in `app.js`.
+
 ### Config Editor *(optional, Windows)*
 
 ![Config Editor](assets/config_editor.png)
