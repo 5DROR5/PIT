@@ -12,6 +12,26 @@ angular.module('beamng.apps')
     replace: true,
     controller: function($scope, $timeout) {
 
+      // Set to true to enable the Discord & Rulebook buttons in the welcome screen.
+      // Leave as false until you have filled in your own URLs below.
+      var LINKS_ENABLED = false;
+
+      // TODO: Replace with your own Discord invite link (e.g. 'https://discord.gg/XXXXXXX')
+      var DISCORD_URL  = 'https://discord.gg/XXXXXXX';
+
+      // TODO: Replace with your own rulebook/website URL (e.g. 'https://yoursite.com/rules')
+      var RULEBOOK_URL = 'https://yoursite.com/rules';
+
+      // Set to true if you have QR images in the EconomyHUD folder (qr_discord.png, qr_rulebook.png).
+      var SHOW_QR_CODES = false;
+
+      $scope.linksEnabled = LINKS_ENABLED;
+      $scope.showQrCodes  = SHOW_QR_CODES;
+
+      // BeamNG requires links to pass through its proxy for external URLs.
+      // Do not modify the proxy prefix below.
+      var BNG_PROXY = 'https://www.beamng.com/proxy.php?link=';
+
       // -------------------------------------------------------------------------
       // Initial state
       // -------------------------------------------------------------------------
@@ -220,6 +240,12 @@ angular.module('beamng.apps')
         "step4_rule2": "Drive realistically only",
         "step4_rule3": "No intentional ramming",
         "step4_rule4": "Use common sense at all times",
+        // Discord & Rulebook button labels (translatable via server)
+        "btn_discord":        "Join Discord",
+        "btn_rulebook":       "Server Rulebook",
+        "welcome_links_hint": "Scan the QR codes or click to open in your browser",
+        "qr_label_discord":   "Join Discord",
+        "qr_label_rulebook":  "Server Rulebook",
         "rank_panel_title": "Driver Rank",
         "complete": "Complete",
         "cop_tasks": "Police Tasks",
@@ -354,6 +380,27 @@ angular.module('beamng.apps')
 
       $scope.acceptRules = function() {
         $scope.showWelcomeScreen = false;
+      };
+
+      // -------------------------------------------------------------------------
+      // Discord & Rulebook links
+      // -------------------------------------------------------------------------
+
+      function openExternalLink(url) {
+        if (window.bngApi && typeof window.bngApi.engineLua === 'function') {
+          window.bngApi.engineLua('openWebBrowser("' + BNG_PROXY + url + '")');
+          window.bngApi.engineLua("Engine.Audio.playOnce('AudioGui','event:>UI>Main>Click_Tonal_01')");
+        } else {
+          console.error('[EconomyUI] bngApi not available for openWebBrowser');
+        }
+      }
+
+      $scope.openDiscord = function() {
+        openExternalLink(DISCORD_URL);
+      };
+
+      $scope.openRulebook = function() {
+        openExternalLink(RULEBOOK_URL);
       };
 
       // -------------------------------------------------------------------------
@@ -560,8 +607,8 @@ angular.module('beamng.apps')
         var recipient = $scope.transferData.recipient;
         var amount    = $scope.transferData.amount;
 
-        var recipientId = (typeof recipient === 'number') ? recipient : parseInt(recipient, 10);
-        var transferAmount = (typeof amount === 'number') ? amount : parseInt(amount, 10);
+        var recipientId    = (typeof recipient === 'number') ? recipient : parseInt(recipient, 10);
+        var transferAmount = (typeof amount === 'number')    ? amount    : parseInt(amount, 10);
 
         if (recipientId === null || isNaN(recipientId) || recipientId < 0) return;
         if (transferAmount === null || isNaN(transferAmount) || transferAmount <= 0) return;
