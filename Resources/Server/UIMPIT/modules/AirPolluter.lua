@@ -409,17 +409,17 @@ function AP.tick()
         return
     end
 
+    if now >= state.end_ms then
+        endMission(true)
+        return
+    end
+
     if not deps.isWanted(pid) then
         state.fog_intensity = 0
         broadcastFog(0)
         state.active    = false
         state.pid       = nil;  state.uid      = nil
         state.end_ms    = nil;  state.start_ms = nil
-        return
-    end
-
-    if now >= state.end_ms then
-        endMission(true)
         return
     end
 
