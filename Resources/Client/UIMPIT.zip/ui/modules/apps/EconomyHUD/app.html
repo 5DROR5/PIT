@@ -90,6 +90,32 @@
                       <li>{{ t('step4_rule3') }}</li>
                       <li>{{ t('step4_rule4') }}</li>
                   </ul>
+
+                  <div class="welcome-links-section" ng-if="linksEnabled">
+                      <div class="welcome-qr-row" ng-if="showQrCodes">
+                          <div class="welcome-qr-item">
+                              <img class="welcome-qr-img"
+                                   src="/ui/modules/apps/EconomyHUD/qr_discord.png"
+                                   alt="Discord QR"/>
+                              <p class="welcome-qr-label">{{ t('qr_label_discord') }}</p>
+                          </div>
+                          <div class="welcome-qr-item">
+                              <img class="welcome-qr-img"
+                                   src="/ui/modules/apps/EconomyHUD/qr_rulebook.png"
+                                   alt="Rulebook QR"/>
+                              <p class="welcome-qr-label">{{ t('qr_label_rulebook') }}</p>
+                          </div>
+                      </div>
+                      <p class="welcome-links-hint">{{ t('welcome_links_hint') }}</p>
+                      <div class="welcome-link-buttons">
+                          <button class="welcome-discord-btn" ng-click="openDiscord()">
+                              💬 {{ t('btn_discord') }}
+                          </button>
+                          <button class="welcome-rulebook-btn" ng-click="openRulebook()">
+                              📖 {{ t('btn_rulebook') }}
+                          </button>
+                      </div>
+                  </div>
               </div>
           </div>
 
@@ -339,7 +365,7 @@
           </div>
       </div>
       
-<div class="hud-row rank-bar-row has-tooltip" ng-click="openRankPanel()" ng-class="{'glow-bar': rankBarGlow}">
+      <div class="hud-row rank-bar-row has-tooltip" ng-click="openRankPanel()" ng-class="{'glow-bar': rankBarGlow}">
           <div class="rank-bar-container">
               <span class="rank-bar-label">{{ t(rankData.rank_name_key) }}</span>
               <div class="rank-bar-track">
