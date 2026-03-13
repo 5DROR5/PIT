@@ -164,7 +164,7 @@ BeamMP-Server/
 
 The welcome screen (Step 4) supports optional buttons that open your Discord invite and server rulebook directly from inside the game.
 
-> ⚠️ This requires editing client-side UI files. Only do this if you are comfortable with JavaScript and JSON.
+> ⚠️ This requires editing client-side UI files. Only do this if you are comfortable with JavaScript and JSON.  ![Welcome screen with Discord & Rulebook buttons](assets/welcome_links.png)
 
 **1.** In `Resources/Client/UIMPIT.zip` → `ui/modules/apps/EconomyHUD/app.js`, set your links near the top of the file:
 ```javascript
