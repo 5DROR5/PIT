@@ -104,7 +104,7 @@ angular.module('beamng.apps')
         "help_money": "/money - Display your current balance.",
         "help_who": "/who - Display the list of connected players.",
         "help_pay": "/pay <player number> <amount> - Send money to another player.",
-        "help_setlang": "/setlang <language code> - Change language (he, en, ar, it, de, fr, es, ru).",
+        "help_setlang": "/setlang <language code> - Change language (he, en, ar, de, it, fr, es, ru, cs, hu, ja_JP, pl_PL, pt_BR, pt_PT, sv_SE, tr_TR, uk, zh_Hans).",
         "help_repair": "/repair - (Command currently inactive)",
         "help_rank": "/rank - View your rank progress and tasks.",
         "help_stats": "/stats [player_id] - View player statistics.",
