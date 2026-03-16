@@ -260,7 +260,7 @@ local function setLastPolicePayment(uid, t) return DB.setLastPolicePayment(uid, 
 local translations = {}
 
 local function loadTranslations()
-    local langs = { "he", "en", "ar", "de", "it", "fr", "es", "ru" }
+    local langs = { "he", "en", "ar", "de", "it", "fr", "es", "ru", "cs", "hu", "ja_JP", "pl_PL", "pt_BR", "pt_PT", "sv_SE", "tr_TR", "uk", "zh_Hans" }
     for _, code in ipairs(langs) do
         local path = ROOT .. "/lang/" .. code .. ".json"
         translations[code] = fileExists(path) and loadJSON(path) or {}
@@ -1963,9 +1963,9 @@ local function cmdAddMoney(pid, to_str, amt_str)
 end
 
 local function cmdSetLang(pid, lang_code)
-    local valid_langs = { he=true, en=true, ar=true, de=true, it=true, fr=true, es=true, ru=true }
+    local valid_langs = { he=true, en=true, ar=true, de=true, it=true, fr=true, es=true, ru=true, cs=true, hu=true, ja_JP=true, pl_PL=true, pt_BR=true, pt_PT=true, sv_SE=true, tr_TR=true, uk=true, zh_Hans=true }
     if not valid_langs[lang_code] then
-        sendMessage(pid, translateForPlayer(pid, "lang_not_found", { supported_langs = "he, en, ar, de, it, fr, es, ru" }))
+        sendMessage(pid, translateForPlayer(pid, "lang_not_found", { supported_langs = "he, en, ar, de, it, fr, es, ru, cs, hu, ja_JP, pl_PL, pt_BR, pt_PT, sv_SE, tr_TR, uk, zh_Hans" }))
         return
     end
     setLang(getUID(pid), lang_code)
