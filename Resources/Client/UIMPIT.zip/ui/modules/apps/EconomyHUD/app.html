@@ -323,7 +323,7 @@
                   🌐
                   <span class="custom-tooltip">{{ t('tooltip_language') }}</span>
               </div>
-              <ul class="language-menu" 
+            <ul class="language-menu" 
                   ng-class="{'open': isLangOpen}"
                   ng-mouseenter="activateTooltipRow2()" 
                   ng-mouseleave="deactivateTooltipRow2()">
@@ -335,6 +335,16 @@
                 <li ng-click="setLanguage('fr')" title="Français">🇫🇷</li>
                 <li ng-click="setLanguage('es')" title="Español">🇪🇸</li>
                 <li ng-click="setLanguage('ru')" title="Русский">🇷🇺</li>
+                <li ng-click="setLanguage('cs')" title="Čeština">🇨🇿</li>
+                <li ng-click="setLanguage('hu')" title="Magyar">🇭🇺</li>
+                <li ng-click="setLanguage('ja_JP')" title="日本語">🇯🇵</li>
+                <li ng-click="setLanguage('pl_PL')" title="Polski">🇵🇱</li>
+                <li ng-click="setLanguage('pt_BR')" title="Português (BR)">🇧🇷</li>
+                <li ng-click="setLanguage('pt_PT')" title="Português (PT)">🇵🇹</li>
+                <li ng-click="setLanguage('sv_SE')" title="Svenska">🇸🇪</li>
+                <li ng-click="setLanguage('tr_TR')" title="Türkçe">🇹🇷</li>
+                <li ng-click="setLanguage('uk')" title="Українська">🇺🇦</li>
+                <li ng-click="setLanguage('zh_Hans')" title="中文">🇨🇳</li>
             </ul>
           </div>
           
