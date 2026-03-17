@@ -2355,6 +2355,11 @@ function ECON_onOptionalSpawn(pid, data) handleOptionalSpawn(pid, data) end
 function ECON_PartsShop_ConfirmPurchase(pid, data) PartsShop.onConfirmPurchase(pid, data) end
 function ECON_PartsShop_CancelPurchase(pid, _)     end
 
+function ECON_onRequestTranslations(pid)
+    if not (pid and MP and MP.IsPlayerConnected and MP.IsPlayerConnected(pid)) then return end
+    sendTranslationsToClient(pid)
+end
+
 -- =============================================================================
 -- INITIALIZATION
 -- =============================================================================
@@ -2532,6 +2537,7 @@ MP.RegisterEvent("AIRPOLLUTER_tick",             "AIRPOLLUTER_onTick")
 MP.RegisterEvent("ECON_OptionalSpawn",           "ECON_onOptionalSpawn")
 MP.RegisterEvent("ECON_PayTransfer",             "ECON_PayTransfer")
 MP.RegisterEvent("ECON_ToggleWanted",            "ECON_onToggleWanted")
+MP.RegisterEvent("ECON_RequestTranslations",     "ECON_onRequestTranslations")
 MP.RegisterEvent("ECON_editing_position_sync",   "ECON_editing_position_sync")
 MP.RegisterEvent("ECON_update_playerlist_data",  "ECON_update_playerlist_data")
 MP.RegisterEvent("ECON_autosave",                "ECON_autosave")
