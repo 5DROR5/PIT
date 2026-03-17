@@ -12,16 +12,16 @@ An open-source project dedicated to bringing fair, balanced, and cinematic multi
 
 ## Features
 
-- **Wanted system** — speeding and zigzag violations, bust mechanic, escape system
-- **Rank progression** — 5 ranks with task-based advancement for both roles
-- **Repair system** — limited repairs earned through gameplay
-- **Parts shop** — parts purchase system with free/banned vehicle series enforcement
-- **Minimap** — real-time wanted tracking
-- **Multi-language** — English, Arabic, French, German, Hebrew, Italian, Russian, Spanish
-- **Performance limiter** — server-enforced vehicle rating cap with admin commands and optional community voting
-- **Economy** — per-second income during chases, markers, money transfers
-- **Police / Civilian roles** — detected automatically by vehicle skin
-- **Multi-map** — West Coast USA, East Coast USA *(expandable to any map)*
+- **Wanted system** - speeding and zigzag violations, bust mechanic, escape system
+- **Rank progression** - 5 ranks with task-based advancement for both roles
+- **Repair system** - limited repairs earned through gameplay
+- **Parts shop** - parts purchase system with free/banned vehicle series enforcement
+- **Minimap** - real-time wanted tracking
+- **Multi-language** - Arabic, Chinese (Simplified), Czech, English, French, German, Hebrew, Hungarian, Italian, Japanese, Polish, Portuguese (Brazil), Portuguese (Portugal), Russian, Spanish, Swedish, Turkish, Ukrainian
+- **Performance limiter** - server-enforced vehicle rating cap with admin commands and optional community voting
+- **Economy** - per-second income during chases, markers, money transfers
+- **Police / Civilian roles** - detected automatically by vehicle skin
+- **Multi-map** - West Coast USA, East Coast USA *(expandable to any map)*
 
 **Optional:**
 - **Air Polluter** — hidden special mission with fog effects
