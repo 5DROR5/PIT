@@ -112,6 +112,7 @@ BeamMP-Server/
         │   │   ├── SpawnLocations.lua
         │   │   ├── PoliceSkins.lua
         │   │   ├── RanksConfig.lua
+        │   │   ├── MessageColors.lua
         │   │   ├── parts_config.lua
         │   │   ├── free_vehicles.lua
         │   │   └── banned_vehicle_series.lua
@@ -156,6 +157,7 @@ BeamMP-Server/
 | `config/SpawnLocations.lua` | Spawn points and marker locations per map |
 | `config/PoliceSkins.lua` | Vehicle skins that grant the police role |
 | `config/RanksConfig.lua` | Rank names, task targets, and rewards |
+| `config/MessageColors.lua` | Controls chat message color prefixes. Add a key to apply a color, remove it to send the message uncolored |
 | `config/parts_config.lua` | All parts with their prices (`0` = free, `>0` = purchasable, `-1` = banned) |
 | `config/free_vehicles.lua` | Vehicle series that bypass the purchase system |
 | `config/banned_vehicle_series.lua` | Vehicle series that are completely prohibited |
