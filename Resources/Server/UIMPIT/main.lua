@@ -1,6 +1,6 @@
 -- =============================================================================
 -- PIT Economy System — Server Core
--- Version: 4.0.1
+-- Version: 4.0.4
 -- License: AGPL-3.0 — https://www.gnu.org/licenses/agpl-3.0.html
 -- =============================================================================
 
@@ -138,6 +138,7 @@ local locations     = dofile(ROOT .. "/config/SpawnLocations.lua")
 local AirPolluter   = dofile(ROOT .. "/modules/AirPolluter.lua")
 local MinimapSystem = dofile(ROOT .. "/modules/MinimapSystem.lua")
 local PartsShop     = dofile(ROOT .. "/modules/PartsShop.lua")
+local msg_colors    = dofile(ROOT .. "/config/MessageColors.lua")
 
 
 -- =============================================================================
@@ -270,6 +271,15 @@ end
 
 local function translate(lang, key, vars)
     local text = (translations[lang] or {})[key] or (translations["en"] or {})[key] or key
+
+    if not text:match("^%^[a-zA-Z0-9]") then
+        local color = msg_colors.keys[key]
+        if not color and key:match("^marker_spawned_at_") then
+            color = msg_colors.marker_spawned_color
+        end
+        if color then text = color .. text end
+    end
+
     if vars then
         for k, v in pairs(vars) do
             text = text:gsub("${" .. k .. "}", tostring(v))
