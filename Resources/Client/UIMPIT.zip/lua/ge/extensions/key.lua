@@ -1091,16 +1091,18 @@ M.onWorldReadyState = function(newState)
                 "vehicleReset", "vehicleRecover", "loadHome", "recover_vehicle",
                 "recover_to_last_road", "recover_vehicle_alt",
                 "nodegrabberAction", "nodegrabberGrab", "nodegrabberRender",
-                "editorToggle", "objectEditorToggle", "editorSafeModeToggle", "pause",
+                "pause",
                 "toggleWalkingMode", "toggleBigMap"
             }
             extensions.core_input_actionFilter.setGroup("uimpit_economy_permanent", always_blocked_actions)
             core_input_actionFilter.addAction(0, "uimpit_economy_permanent", true)
 
             extensions.core_input_actionFilter.setGroup("uimpit_console_block", { "toggleConsoleNG", "toggleConsole" })
+            extensions.core_input_actionFilter.setGroup("uimpit_editor_block",  { "editorToggle", "objectEditorToggle", "editorSafeModeToggle" })
 
             M.updateConsolePermissions = function()
                 core_input_actionFilter.addAction(0, "uimpit_console_block", not is_admin)
+                core_input_actionFilter.addAction(0, "uimpit_editor_block",  not is_admin)
             end
             M.updateConsolePermissions()
         end
@@ -1241,7 +1243,7 @@ M.onUpdate = function(dt)
     end
 
     local inMP = MPCoreNetwork and type(MPCoreNetwork.isMPSession) == "function" and MPCoreNetwork.isMPSession()
-    if inMP and editor and editor.isEditorActive and editor.isEditorActive() then
+    if inMP and not is_admin and editor and editor.isEditorActive and editor.isEditorActive() then
         if editor.setEditorActive then editor.setEditorActive(false) end
     end
 end
