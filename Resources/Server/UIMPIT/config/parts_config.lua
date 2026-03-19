@@ -56,22 +56,6 @@ return {
         name = "4 Meter Swing",
         value = nil
     },
-    ["70R22_5"] = {
-        name = "275/70R22.5 Heavy Duty Rear Rear Tires",
-        value = 1000
-    },
-    ["70R22_5_alt"] = {
-        name = "275/70R22.5 Heavy Duty Steer Lift Axle Tires",
-        value = 500
-    },
-    ["75R22_5"] = {
-        name = "295/75R22.5 Heavy Duty Rear Rear Tires",
-        value = 1000
-    },
-    ["75R22_5_alt"] = {
-        name = "295/75R22.5 Heavy Duty Steer Lift Axle Tires",
-        value = 500
-    },
     ["8M"] = {
         name = "8 Meter Base",
         value = nil
@@ -32416,6 +32400,22 @@ return {
         name = "8.25R20 Bias Ply Front Tires",
         value = 500
     },
+    ["md_series_tire_F_275/70R22_5"] = {
+        name = "275/70R22.5 Heavy Duty Front Tires",
+        value = 500
+    },
+    ["md_series_tire_F_275/70R22_5_alt"] = {
+        name = "275/70R22.5 Heavy Duty Steer Front Tires",
+        value = 500
+    },
+    ["md_series_tire_F_295/75R22_5"] = {
+        name = "295/75R22.5 Heavy Duty Front Tires",
+        value = 500
+    },
+    ["md_series_tire_F_295/75R22_5_alt"] = {
+        name = "295/75R22.5 Heavy Duty Steer Front Tires",
+        value = 500
+    },
     ["md_series_tire_F_9R22.5_bias"] = {
         name = "9R22.5 Bias Ply Front Tires",
         value = 500
@@ -32434,6 +32434,14 @@ return {
     },
     ["md_series_tire_R_1_19_5_alt"] = {
         name = "9R19.5 Bar-Grip Bias Ply Rear Tires",
+        value = 1000
+    },
+    ["md_series_tire_R_1_275/70R22_5"] = {
+        name = "275/70R22.5 Heavy Duty Rear Tires",
+        value = 1000
+    },
+    ["md_series_tire_R_1_295/75R22_5"] = {
+        name = "295/75R22.5 Heavy Duty Rear Tires",
         value = 1000
     },
     ["md_series_tire_R_20x9_11R20"] = {
@@ -51916,6 +51924,10 @@ return {
         name = "Dynamic Textures",
         value = 1350
     },
+    ["scintilla_skin_fire_horse"] = {
+        name = "Fire Horse",
+        value = 1350
+    },
     ["scintilla_skin_gradient"] = {
         name = "Two-Color Gradient",
         value = 5000
@@ -54322,6 +54334,66 @@ return {
     },
     ["simple_traffic_roamer_wheels_R_04a_parked"] = {
         name = "Gavril Quest Alt Rear Wheels (Parked)",
+        value = nil
+    },
+    ["simple_traffic_robotvan"] = {
+        name = "Van",
+        value = nil
+    },
+    ["simple_traffic_robotvan_bumper_F"] = {
+        name = "Front Bumper",
+        value = nil
+    },
+    ["simple_traffic_robotvan_bumper_R"] = {
+        name = "Rear Bumper",
+        value = nil
+    },
+    ["simple_traffic_robotvan_electric_motor_F"] = {
+        name = "Electric Motor",
+        value = nil
+    },
+    ["simple_traffic_robotvan_hubcaps_F"] = {
+        name = "Front Hubcaps",
+        value = nil
+    },
+    ["simple_traffic_robotvan_hubcaps_R"] = {
+        name = "Rear Hubcaps",
+        value = nil
+    },
+    ["simple_traffic_robotvan_licenseplate_F"] = {
+        name = "Front License Plate",
+        value = 0
+    },
+    ["simple_traffic_robotvan_licenseplate_F_EU"] = {
+        name = "Front EU License Plate",
+        value = 0
+    },
+    ["simple_traffic_robotvan_licenseplate_R"] = {
+        name = "Rear License Plate",
+        value = 0
+    },
+    ["simple_traffic_robotvan_licenseplate_R_EU"] = {
+        name = "Rear EU License Plate",
+        value = 0
+    },
+    ["simple_traffic_robotvan_skin_bamboo_drive"] = {
+        name = "Bamboo Drive Livery",
+        value = 3
+    },
+    ["simple_traffic_robotvan_skin_carefulbot"] = {
+        name = "Carefulbot Livery",
+        value = 3
+    },
+    ["simple_traffic_robotvan_transmission_A"] = {
+        name = "Automatic Transmission",
+        value = nil
+    },
+    ["simple_traffic_robotvan_wheels_F_01a"] = {
+        name = "Van Steel Front Wheels",
+        value = nil
+    },
+    ["simple_traffic_robotvan_wheels_R_01a"] = {
+        name = "Van Steel Rear Wheels",
         value = nil
     },
     ["simple_traffic_steering"] = {
@@ -66472,6 +66544,22 @@ return {
         name = "11R22.5 Bias Ply Rear Front Tires",
         value = 500
     },
+    ["us_semi_tire_F2_275/70R22_5"] = {
+        name = "275/70R22.5 Heavy Duty Rear Front Tires",
+        value = 500
+    },
+    ["us_semi_tire_F2_275/70R22_5_alt"] = {
+        name = "275/70R22.5 Heavy Duty Steer Rear Front Tires",
+        value = 500
+    },
+    ["us_semi_tire_F2_295/75R22_5"] = {
+        name = "295/75R22.5 Heavy Duty Rear Front Tires",
+        value = 500
+    },
+    ["us_semi_tire_F2_295/75R22_5_alt"] = {
+        name = "295/75R22.5 Heavy Duty Steer Rear Front Tires",
+        value = 500
+    },
     ["us_semi_tire_F2_9R22.5_bias"] = {
         name = "9R22.5 Bias Ply Rear Front Tires",
         value = 500
@@ -66482,6 +66570,22 @@ return {
     },
     ["us_semi_tire_F_11R22.5_bias"] = {
         name = "11R22.5 Bias Ply Front Tires",
+        value = 500
+    },
+    ["us_semi_tire_F_275/70R22_5"] = {
+        name = "275/70R22.5 Heavy Duty Front Tires",
+        value = 500
+    },
+    ["us_semi_tire_F_275/70R22_5_alt"] = {
+        name = "275/70R22.5 Heavy Duty Steer Front Tires",
+        value = 500
+    },
+    ["us_semi_tire_F_295/75R22_5"] = {
+        name = "295/75R22.5 Heavy Duty Front Tires",
+        value = 500
+    },
+    ["us_semi_tire_F_295/75R22_5_alt"] = {
+        name = "295/75R22.5 Heavy Duty Steer Front Tires",
         value = 500
     },
     ["us_semi_tire_F_9R22.5_bias"] = {
@@ -66496,6 +66600,22 @@ return {
         name = "11R22.5 Bias Ply Lift Axle Tires",
         value = 500
     },
+    ["us_semi_tire_La_275/70R22_5"] = {
+        name = "275/70R22.5 Heavy Duty Lift Axle Tires",
+        value = 500
+    },
+    ["us_semi_tire_La_275/70R22_5_alt"] = {
+        name = "275/70R22.5 Heavy Duty Steer Lift Axle Tires",
+        value = 500
+    },
+    ["us_semi_tire_La_295/75R22_5"] = {
+        name = "295/75R22.5 Heavy Duty Lift Axle Tires",
+        value = 500
+    },
+    ["us_semi_tire_La_295/75R22_5_alt"] = {
+        name = "295/75R22.5 Heavy Duty Steer Lift Axle Tires",
+        value = 500
+    },
     ["us_semi_tire_La_9R22.5_bias"] = {
         name = "9R22.5 Bias Ply Lift Axle Tires",
         value = 500
@@ -66506,6 +66626,14 @@ return {
     },
     ["us_semi_tire_R_0_11R22.5_bias"] = {
         name = "11R22.5 Bias Ply Front Rear Tires",
+        value = 1000
+    },
+    ["us_semi_tire_R_0_275/70R22_5"] = {
+        name = "275/70R22.5 Heavy Duty Front Rear Tires",
+        value = 1000
+    },
+    ["us_semi_tire_R_0_295/75R22_5"] = {
+        name = "295/75R22.5 Heavy Duty Front Rear Tires",
         value = 1000
     },
     ["us_semi_tire_R_0_9R22.5_bias"] = {
@@ -66520,6 +66648,14 @@ return {
         name = "11R22.5 Bias Ply Rear Tires",
         value = 1000
     },
+    ["us_semi_tire_R_1_275/70R22_5"] = {
+        name = "275/70R22.5 Heavy Duty Rear Tires",
+        value = 1000
+    },
+    ["us_semi_tire_R_1_295/75R22_5"] = {
+        name = "295/75R22.5 Heavy Duty Rear Tires",
+        value = 1000
+    },
     ["us_semi_tire_R_1_9R22.5_bias"] = {
         name = "9R22.5 Bias Ply Rear Tires",
         value = 1000
@@ -66530,6 +66666,14 @@ return {
     },
     ["us_semi_tire_R_2_21R22.5_barGrip"] = {
         name = "11R22.5 Bar-Grip Bias Ply Rear Rear Tires",
+        value = 1000
+    },
+    ["us_semi_tire_R_2_275/70R22_5"] = {
+        name = "275/70R22.5 Heavy Duty Rear Rear Tires",
+        value = 1000
+    },
+    ["us_semi_tire_R_2_295/75R22_5"] = {
+        name = "295/75R22.5 Heavy Duty Rear Rear Tires",
         value = 1000
     },
     ["us_semi_tire_R_2_9R22.5_bias"] = {
