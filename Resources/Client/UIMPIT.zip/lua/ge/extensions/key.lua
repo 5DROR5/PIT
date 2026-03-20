@@ -1090,9 +1090,13 @@ M.onWorldReadyState = function(newState)
             local always_blocked_actions = {
                 "vehicleReset", "vehicleRecover", "loadHome", "recover_vehicle",
                 "recover_to_last_road", "recover_vehicle_alt",
-                "nodegrabberAction", "nodegrabberGrab", "nodegrabberRender",
+                "nodegrabberAction", "nodegrabberGrab", "nodegrabberRender", "nodegrabberStrength",
                 "pause",
-                "toggleWalkingMode", "toggleBigMap"
+                "toggleWalkingMode", "toggleBigMap",
+                "funBoost", "funBoostBackwards", "funFling", "funFlingDownward", "forceField", "funBoom",
+                "slower_motion", "faster_motion", "toggle_slow_motion",
+                "dropPlayerAtCamera", "dropPlayerAtCameraNoReset",
+                "reset_physics"
             }
             extensions.core_input_actionFilter.setGroup("uimpit_economy_permanent", always_blocked_actions)
             core_input_actionFilter.addAction(0, "uimpit_economy_permanent", true)
