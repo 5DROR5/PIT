@@ -522,6 +522,18 @@ angular.module('beamng.apps')
         }
       };
 
+      $scope.closeRankPanelBtn = function() {
+        $scope.$applyAsync(function() { $scope.showRankPanel = false; });
+      };
+
+      $scope.closeRankUpBtn = function() {
+        $scope.$applyAsync(function() { $scope.showRankUpCelebration = false; });
+      };
+
+      $scope.closeTransferWindowBtn = function() {
+        $scope.$applyAsync(function() { $scope.showTransferWindow = false; });
+      };
+
       $scope.getWantedTooltip = function() {
         return $scope.wantedEnabled ? $scope.t('tooltip_wanted_disable') : $scope.t('tooltip_wanted_enable');
       };
