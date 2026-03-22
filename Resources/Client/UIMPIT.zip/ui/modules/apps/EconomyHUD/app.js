@@ -886,7 +886,10 @@ angular.module('beamng.apps')
         if (savedLang && savedLang !== 'en') {
           window.bngApi.engineLua("setPlayerLanguage('" + savedLang + "')");
         }
-        window.bngApi.engineLua('TriggerServerEvent("ECON_RequestTranslations", "")');
+        window.bngApi.engineLua(
+          'TriggerServerEvent("ECON_RequestTranslations", ' +
+          'tostring(settings.getValue("userLanguage") or ""))'
+        );
       }
 
     }
