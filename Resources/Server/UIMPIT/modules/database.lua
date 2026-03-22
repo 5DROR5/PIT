@@ -104,7 +104,7 @@ local function j_player(uid, starting_money)
             name                      = "Unknown",
             money                     = tonumber(starting_money) or 0,
             role                      = "civilian",
-            lang                      = "en",
+            lang                      = nil,
             player_rank               = 1,
             task_progress             = "{}",
             last_police_payment       = 0,
@@ -261,7 +261,7 @@ function M.ensurePlayer(uid, name, _identifiers, starting_money)
         local sn = esc(name or "Unknown")
         q(string.format(
             "INSERT INTO players (uid, name, money, role, lang, created_at, last_seen, player_rank, task_progress) "
-            .. "VALUES (%s, %s, %d, 'civilian', 'en', NOW(), NOW(), 1, '{}') "
+            .. "VALUES (%s, %s, %d, 'civilian', NULL, NOW(), NOW(), 1, '{}') "
             .. "ON DUPLICATE KEY UPDATE name=%s, last_seen=NOW()",
             esc(uid), sn, tonumber(starting_money) or 0, sn))
     else
@@ -322,9 +322,9 @@ end
 function M.getLang(uid)
     if backend == M.BACKEND_MYSQL then
         local r = q1("SELECT lang FROM players WHERE uid=" .. esc(uid))
-        return r and r.lang or "en"
+        return r and (r.lang ~= "" and r.lang or nil) or nil
     else
-        return j_player(uid).lang or "en"
+        return j_player(uid).lang
     end
 end
 
