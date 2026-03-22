@@ -131,7 +131,7 @@
       <div class="money-transfer-box" ng-click="$event.stopPropagation()">
           <div class="money-transfer-header">
               <h2>{{ t('transfer_window_title') }}</h2>
-              <button class="money-transfer-close-btn" ng-click="showTransferWindow = false; $event.stopPropagation()">✕</button>
+              <button class="money-transfer-close-btn" ng-click="closeTransferWindowBtn()">✕</button>
           </div>
           
           <div class="money-transfer-content">
@@ -167,7 +167,7 @@
       <div class="rank-panel-box" ng-click="$event.stopPropagation()">
           <div class="rank-panel-header">
               <h2>🏆 {{ t('rank_panel_title') }}</h2>
-              <button class="rank-panel-close-btn" ng-click="showRankPanel = false; $event.stopPropagation()">✕</button>
+              <button class="rank-panel-close-btn" ng-click="closeRankPanelBtn()">✕</button>
           </div>
           
           <div class="rank-panel-content">
@@ -222,7 +222,7 @@
               <span class="new-rank">{{ rankUpData.new_rank }}</span>
           </div>
           <div class="rankup-reward">+${{ rankUpData.reward | number }}</div>
-          <button class="rankup-close" ng-click="showRankUpCelebration = false; $event.stopPropagation()">{{ t('awesome') }}!</button>
+          <button class="rankup-close" ng-click="closeRankUpBtn()">{{ t('awesome') }}!</button>
       </div>
   </div>
 
