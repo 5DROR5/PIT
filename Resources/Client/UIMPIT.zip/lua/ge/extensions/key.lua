@@ -915,8 +915,12 @@ local function on_perform_repair(payload)
     local veh = be:getPlayerVehicle(0)
     if not veh then return end
     pcall(function()
-        veh:queueLuaCommand("obj:resetBrokenFlexMesh()")
-        veh:queueLuaCommand("recovery.recoverInPlace()")
+        veh:queueLuaCommand([[
+            local x, y, z = obj:getPositionXYZ()
+            local front = obj:getDirectionVector()
+            local rot = quatFromDir(front, vec3(0,0,1))
+            obj:queueGameEngineLua("spawn.safeTeleport(getObjectByID("..obj:getId().."), vec3("..x..","..y..","..z.."), quat("..rot.x..","..rot.y..","..rot.z..","..rot.w.."))")
+        ]])
     end)
 end
 
