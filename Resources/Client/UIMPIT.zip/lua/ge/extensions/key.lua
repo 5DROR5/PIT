@@ -1053,7 +1053,8 @@ M.onExtensionLoaded = function()
 
     if TriggerServerEvent then
         TriggerServerEvent("NoRepair_RequestState",    "")
-        TriggerServerEvent("ECON_RequestTranslations", "")
+        local beamng_lang = (settings and settings.getValue and settings.getValue("userLanguage")) or ""
+        TriggerServerEvent("ECON_RequestTranslations", beamng_lang)
     end
 
     M.delay(0.5, function()
