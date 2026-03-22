@@ -913,7 +913,11 @@ end
 
 local function on_perform_repair(payload)
     local veh = be:getPlayerVehicle(0)
-    if veh then pcall(function() veh:queueLuaCommand("recovery.recoverInPlace()") end) end
+    if not veh then return end
+    pcall(function()
+        veh:queueLuaCommand("obj:resetBrokenFlexMesh()")
+        veh:queueLuaCommand("recovery.recoverInPlace()")
+    end)
 end
 
 local function applyStateFromServer(data)
