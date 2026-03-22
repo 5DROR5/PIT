@@ -258,6 +258,35 @@ local function setLastPolicePayment(uid, t) return DB.setLastPolicePayment(uid, 
 -- TRANSLATION SYSTEM
 -- =============================================================================
 
+local BEAMNG_LOCALE_MAP = {
+    ["he"]      = "he",      ["he-IL"]  = "he",
+    ["en"]      = "en",      ["en-US"]  = "en",      ["en-GB"]  = "en",
+    ["ar"]      = "ar",      ["ar-SA"]  = "ar",      ["ar-EG"]  = "ar",
+    ["de"]      = "de",      ["de-DE"]  = "de",      ["de-AT"]  = "de",      ["de-CH"] = "de",
+    ["it"]      = "it",      ["it-IT"]  = "it",
+    ["fr"]      = "fr",      ["fr-FR"]  = "fr",      ["fr-BE"]  = "fr",      ["fr-CH"] = "fr",
+    ["es"]      = "es",      ["es-ES"]  = "es",      ["es-MX"]  = "es",
+    ["ru"]      = "ru",      ["ru-RU"]  = "ru",
+    ["cs"]      = "cs",      ["cs-CZ"]  = "cs",
+    ["hu"]      = "hu",      ["hu-HU"]  = "hu",
+    ["ja"]      = "ja_JP",   ["ja-JP"]  = "ja_JP",
+    ["pl"]      = "pl_PL",   ["pl-PL"]  = "pl_PL",
+    ["pt-BR"]   = "pt_BR",
+    ["pt"]      = "pt_PT",   ["pt-PT"]  = "pt_PT",
+    ["sv"]      = "sv_SE",   ["sv-SE"]  = "sv_SE",
+    ["tr"]      = "tr_TR",   ["tr-TR"]  = "tr_TR",
+    ["uk"]      = "uk",      ["uk-UA"]  = "uk",
+    ["zh"]      = "zh_Hans", ["zh-CN"]  = "zh_Hans", ["zh-Hans"] = "zh_Hans",
+}
+
+local function resolveBeamNGLocale(beamng_lang)
+    if not beamng_lang or beamng_lang == "" then return nil end
+    local mapped = BEAMNG_LOCALE_MAP[beamng_lang]
+    if mapped then return mapped end
+    local prefix = beamng_lang:match("^([a-zA-Z]+)")
+    return prefix and BEAMNG_LOCALE_MAP[prefix:lower()]
+end
+
 local translations = {}
 
 local function loadTranslations()
@@ -2355,8 +2384,19 @@ function ECON_onOptionalSpawn(pid, data) handleOptionalSpawn(pid, data) end
 function ECON_PartsShop_ConfirmPurchase(pid, data) PartsShop.onConfirmPurchase(pid, data) end
 function ECON_PartsShop_CancelPurchase(pid, _)     end
 
-function ECON_onRequestTranslations(pid)
+function ECON_onRequestTranslations(pid, beamng_lang)
     if not (pid and MP and MP.IsPlayerConnected and MP.IsPlayerConnected(pid)) then return end
+    if beamng_lang and beamng_lang ~= "" then
+        local uid = getUID(pid)
+        if getLang(uid) == nil then
+            local mapped = resolveBeamNGLocale(beamng_lang)
+            if mapped and mapped ~= "en" then
+                setLang(uid, mapped)
+                log(string.format("Auto-detected language '%s' -> '%s' for player %s",
+                    beamng_lang, mapped, getPlayerName(pid)))
+            end
+        end
+    end
     sendTranslationsToClient(pid)
 end
 
