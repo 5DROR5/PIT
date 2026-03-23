@@ -351,7 +351,16 @@ angular.module('beamng.apps')
         "ap_reason_wanted":       "Cannot start while wanted",
         "ap_reason_editing":      "Cannot start while editing a vehicle",
         "ap_players_label":       "players",
-        "ap_cooldown_label":      "Available in"
+        "ap_cooldown_label":      "Available in",
+        "marker_spawned_at_fields_area":      "A repair marker has spawned at the Fields!",
+        "marker_spawned_at_city_gas_station": "A repair marker has spawned at the City Gas Station!",
+        "marker_spawned_at_narrow_city_road": "A repair marker has spawned on the Narrow City Road!",
+        "marker_spawned_at_fishing_village":  "A repair marker has spawned at the Fishing Village!",
+        "marker_spawned_at_western_trail":    "A repair marker has spawned on the Western Trail!",
+        "marker_spawned_at_north_dirt_trail": "A repair marker has spawned on the North Dirt Trail!",
+        "marker_spawned_at_near_tower":       "A repair marker has spawned near the Tower!",
+        "marker_spawned_at_tree_lined_path":  "A repair marker has spawned on the Tree-Lined Path!",
+        "marker_spawned_at_sawmill":          "A repair marker has spawned at the Sawmill!"
       };
 
       $scope.t = function(key, vars) {
