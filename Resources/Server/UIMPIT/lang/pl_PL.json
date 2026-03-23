@@ -260,5 +260,20 @@
   "purchase_success": "Kupiono ${count} części za $${cost}",
   "series_banned": "Seria pojazdów '${series}' jest zablokowana na tym serwerze. Ciężarówki i autobusy są niedozwolone.",
   "vehicle_series_banned": "Seria pojazdów zablokowana",
-  "series_not_allowed": "Ta seria pojazdów nie jest dozwolona na serwerze"
+  "series_not_allowed": "Ta seria pojazdów nie jest dozwolona na serwerze",
+  "marker_spawned_at_fields_area": "🌾 Marker naprawy pojawił się na Polach!",
+  "marker_spawned_at_city_gas_station": "⛽ Marker naprawy pojawił się na miejskiej stacji benzynowej!",
+  "marker_spawned_at_narrow_city_road": "🛣️ Marker naprawy pojawił się na wąskiej miejskiej drodze!",
+  "marker_spawned_at_fishing_village": "🎣 Marker naprawy pojawił się w wiosce rybackiej!",
+  "marker_spawned_at_western_trail": "🌲 Marker naprawy pojawił się na zachodnim szlaku!",
+  "marker_spawned_at_north_dirt_trail": "🏞️ Marker naprawy pojawił się na północnej drodze gruntowej!",
+  "marker_spawned_at_near_tower": "🗼 Marker naprawy pojawił się w pobliżu Wieży!",
+  "marker_spawned_at_tree_lined_path": "🌳 Marker naprawy pojawił się na alei drzew!",
+  "marker_spawned_at_sawmill": "🪵 Marker naprawy pojawił się w tartaku!",
+  "spawn_not_available": "⚠️ Ten punkt odrodzenia jest niedostępny.",
+  "btn_discord": "Dołącz do Discorda",
+  "btn_rulebook": "Regulamin serwera",
+  "welcome_links_hint": "Zeskanuj kody QR lub kliknij, aby otworzyć w przeglądarce",
+  "qr_label_discord": "Dołącz do Discorda",
+  "qr_label_rulebook": "Regulamin serwera"
 }
