@@ -1,0 +1,30 @@
+{
+  "title": "Welcome to the server",
+  "discordUrl": "https://discord.gg/XXXXXXX",
+  "holdAfterLoadSec": 0,
+  "slideshow": {
+    "enabled": true,
+    "intervalSec": 12,
+    "fadeSec": 3,
+    "shuffle": true,
+    "useStockImages": false,
+    "stockCount": 18,
+    "images": [
+      "/ui/scenic_route_loading/images/1.jpg",
+      "/ui/scenic_route_loading/images/2.jpg",
+      "/ui/scenic_route_loading/images/3.jpg",
+      "/ui/scenic_route_loading/images/4.jpg",
+      "/ui/scenic_route_loading/images/5.jpg",
+      "/ui/scenic_route_loading/images/5.jpg"
+    ]
+  },
+  "music": {
+    "enabled": true,
+    "volume": 0.45,
+    "fadeOutMs": 1500,
+    "tracks": [
+      "/ui/scenic_route_loading/music/police.mp3"
+    ],
+    "shuffle": true
+  }
+}
