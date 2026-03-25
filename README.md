@@ -26,6 +26,7 @@ An open-source project dedicated to bringing fair, balanced, and cinematic multi
 **Optional:**
 - **Air Polluter** — hidden special mission with fog effects
 - **Day/Night sync** — server-controlled time cycle, requires a map with night lighting support
+- **Loading Screen** — custom branded loading screen with slideshow, music, and police-themed progress bar
 
 ## Structure
 
@@ -36,6 +37,7 @@ Each mod consists of a server-side component and a client-side package.
 | Economy / Wanted System / Parts Shop | `UIMPIT/` | `UIMPIT.zip` |
 | Performance Limiter | `UIMPI/` | `UIMPI.zip` |
 | Day/Night Sync *(optional)* | `MPDN/` | `MPDN.zip` |
+| Loading Screen *(optional)* | — | `MPLC.zip` |
 
 ## File Structure
 
@@ -93,9 +95,24 @@ BeamMP-Server/
     │   │       ├── app.json
     │   │       └── app.png
     │   │
-    │   └── MPDN.zip                            # Day/Night Sync (optional)
-    │       ├── lua/ge/extensions/mpdn.lua
-    │       └── scripts/envsync/modScript.lua
+    │   ├── MPDN.zip                            # Day/Night Sync (optional)
+    │   │   ├── lua/ge/extensions/mpdn.lua
+    │   │   └── scripts/envsync/modScript.lua
+    │   │
+    │   └── MPLC.zip                            # Loading Screen (optional)
+    │       ├── lua/ge/extensions/srs/
+    │       │   └── loading.lua
+    │       ├── scripts/
+    │       │   └── modScript.lua
+    │       └── ui/scenic_route_loading/
+    │           ├── loading_config.json
+    │           ├── srs_loading.css
+    │           ├── srs_loading.js
+    │           ├── images/
+    │           │   ├── 1.jpg … 5.jpg           # Slideshow images
+    │           │   └── PIT1.gif … PIT4.gif     # Police animation overlay
+    │           └── music/
+    │               └── police.mp3
     │
     └── Server/
         ├── UIMPIT/                             # Economy, Wanted System, Parts Shop
@@ -145,6 +162,7 @@ BeamMP-Server/
 - Edit `UIMPIT/config/config.json` to set your `admins` and `moderators`
 - Edit `UIMPI/config.json` to set your `admins` and desired rating limit
 - Place the `MPDN` folder in `Resources/Server/` and `MPDN.zip` in `Resources/Client/` to enable day/night sync — only if your map supports night lighting
+- Place `MPLC.zip` in `Resources/Client/` to enable the custom loading screen — see [Loading Screen](#loading-screen-optional) for configuration
 
 ## Configuration
 
@@ -187,6 +205,37 @@ python add_link_translations.py
 - `qr_rulebook.png`
 
 Then set `SHOW_QR_CODES = true` in `app.js`.
+
+### Loading Screen *(optional)*
+
+A custom loading screen that replaces BeamNG's default with a branded slideshow, background music, and a police-themed animated progress bar.
+
+**Installation:** place `MPLC.zip` in `Resources/Client/` and restart the server. No server-side files are required.
+
+**Configuration** is done via `ui/scenic_route_loading/loading_config.json` inside the ZIP:
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `title` | `"Welcome to the server"` | Text shown in the top-right corner |
+| `holdAfterLoadSec` | `0` | Seconds to keep the screen visible after loading completes |
+| `slideshow.enabled` | `true` | Enable/disable the image slideshow |
+| `slideshow.intervalSec` | `12` | Seconds between image transitions |
+| `slideshow.fadeSec` | `3` | Cross-fade duration in seconds |
+| `slideshow.shuffle` | `true` | Randomize image order |
+| `slideshow.useStockImages` | `false` | Use BeamNG's built-in loading images |
+| `slideshow.stockCount` | `18` | How many stock images to include (if enabled) |
+| `slideshow.images` | `[...]` | List of custom image paths (JPG/PNG) |
+| `music.enabled` | `true` | Enable/disable background music |
+| `music.volume` | `0.45` | Playback volume (`0.0` – `1.0`) |
+| `music.fadeOutMs` | `1500` | Fade-out duration in milliseconds when loading ends |
+| `music.tracks` | `[...]` | List of audio file paths (MP3) |
+| `music.shuffle` | `true` | Randomize track order |
+
+**Adding your own images:** place JPG/PNG files in `ui/scenic_route_loading/images/` inside the ZIP and add their paths to `slideshow.images`.
+
+**Adding your own music:** place MP3 files in `ui/scenic_route_loading/music/` inside the ZIP and add their paths to `music.tracks`.
+
+> ℹ️ The progress bar reflects real loading progress across all BeamNG loading stages and will not reach 100% until loading is fully complete.
 
 ### Config Editor *(optional, Windows)*
 
@@ -253,7 +302,7 @@ Have questions about the mods or want to play on the server? [Join the Discord](
 - **[beamsofnorway](https://github.com/beamsofnorway)** — speed detection code reference
 - **[OfficialLambdax](https://github.com/OfficialLambdax)** — day/night sync implementation (learned from published code)
 - **[StanleyDudek](https://github.com/StanleyDudek)** — extensive help and published code examples that shaped much of this project
-
+  
 ## License
 
 | Mod | License |
@@ -261,3 +310,4 @@ Have questions about the mods or want to play on the server? [Join the Discord](
 | `UIMPIT` — Economy / Wanted System / Parts Shop | [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html) |
 | `UIMPI` — Performance Limiter | [The Unlicense](https://unlicense.org) (public domain) |
 | `MPDN` — Day/Night Sync | [MIT](https://opensource.org/licenses/MIT) |
+| `MPLC` — Loading Screen | [MIT](https://opensource.org/licenses/MIT) |
