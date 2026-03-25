@@ -9,6 +9,7 @@ An open-source project dedicated to bringing fair, balanced, and cinematic multi
 ## Preview
 
 [![PIT Economy System - Gameplay Preview](https://img.youtube.com/vi/eaFKSADzcw8/maxresdefault.jpg)](https://www.youtube.com/watch?v=eaFKSADzcw8)
+*▶ Click the image to watch the preview*
 
 ## Features
 
@@ -211,6 +212,7 @@ Then set `SHOW_QR_CODES = true` in `app.js`.
 A custom loading screen that replaces BeamNG's default with a branded slideshow, background music, and a police-themed animated progress bar.
 
 [![MPLC Loading Screen Preview](https://img.youtube.com/vi/sMdUT_TfHDs/maxresdefault.jpg)](https://youtu.be/sMdUT_TfHDs)
+*▶ Click the image to watch the preview*
 
 **Installation:** place `MPLC.zip` in `Resources/Client/` and restart the server. No server-side files are required.
 
