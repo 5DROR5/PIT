@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS players (
     name                      VARCHAR(64)   NOT NULL DEFAULT 'Unknown',
     money                     BIGINT        NOT NULL DEFAULT 0,
     role                      VARCHAR(16)   NOT NULL DEFAULT 'civilian',
-    lang                      VARCHAR(8)    NOT NULL DEFAULT 'en',
+    lang                      VARCHAR(10)   NOT NULL DEFAULT NULL,
     player_rank               INT           NOT NULL DEFAULT 1,
     task_progress             TEXT                   DEFAULT NULL,
     is_wanted                 TINYINT(1)    NOT NULL DEFAULT 0,
