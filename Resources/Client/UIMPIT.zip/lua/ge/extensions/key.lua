@@ -44,6 +44,7 @@ local is_admin        = false
 
 local player_roles    = {}
 local is_local_wanted = false
+local display_name_map = {}
 
 local blob_color_check_timer = 0
 
@@ -696,7 +697,7 @@ local function on_receive_translations(payload)
     if data.lang then current_lang = data.lang end
     if data.translations then
         server_translations = data.translations
-        local tdata = { lang = current_lang, translations = server_translations }
+        local tdata = { lang = current_lang, translations = server_translations, auth_required = data.auth_required }
         guiTrigger("EconomyUI_TranslationsUpdate", tdata)
         guiTrigger("POLICE_TranslationsUpdate",    tdata)
     end
@@ -863,7 +864,26 @@ local function on_receive_playerlist_data(payload)
         end
     end
 
+    for _, player in ipairs(data.players) do
+        if player.beammp_name and player.display_name then
+            display_name_map[player.beammp_name] = player.display_name
+        end
+    end
+    pcall(function()
+        if not (extensions and extensions.MPVehicleGE
+                and extensions.MPVehicleGE.getVehicles) then return end
+        local vehs = extensions.MPVehicleGE.getVehicles()
+        if not vehs then return end
+        for _, v in pairs(vehs) do
+            local ok, owner = pcall(function() return v:getOwner() end)
+            if ok and owner and owner.name and display_name_map[owner.name] then
+                v.customName = display_name_map[owner.name]
+            end
+        end
+    end)
+
     guiTrigger("PlayerList_CustomData", data)
+    guiTrigger("PIT_DisplayNames", display_name_map)
 end
 
 local function on_minimap_update(payload)
@@ -976,7 +996,21 @@ local function try_register()
     AddEventHandler("ECON_EditingModeUpdate",   on_editing_mode_update)
     AddEventHandler("ECON_SetVehicleSpawned",   on_set_vehicle_spawned)
     AddEventHandler("ECON_PlayerListData",      on_receive_playerlist_data)
-    AddEventHandler("ECON_MinimapUpdate",       on_minimap_update)
+    AddEventHandler("ECON_MinimapUpdate",       on_minimap_update)    
+    AddEventHandler("ECON_NotSyncedBy", function(payload)
+        local data = decodePayload(payload)
+        if type(data) == "table" then guiTrigger("PlayerList_NotSyncedBy", data) end
+    end)
+
+    AddEventHandler("ECON_AuthRequired", function(payload)
+        local data = decodePayload(payload)
+        if type(data) == "table" then guiTrigger("ECON_AuthRequired", data) end
+    end)
+
+    AddEventHandler("ECON_AuthResult", function(payload)
+        local data = decodePayload(payload)
+        if type(data) == "table" then guiTrigger("ECON_AuthResult", data) end
+    end)
 
     AddEventHandler("AIRPOLLUTER_SetMarker", function(payload)
         local data = decodePayload(payload)
@@ -1328,6 +1362,18 @@ end
 _G.requestOptionalSpawn = function(spawn_index)
     if type(TriggerServerEvent) == "function" then
         TriggerServerEvent('ECON_OptionalSpawn', jsonEncode({ spawn_index = spawn_index }))
+    end
+end
+
+_G.reportQueueToServer = function(pidsJson)
+    if type(TriggerServerEvent) == "function" then
+        TriggerServerEvent('ECON_QueueReport', pidsJson)
+    end
+end
+
+_G.reportPlayerSynced = function(syncedPidStr)
+    if type(TriggerServerEvent) == "function" then
+        TriggerServerEvent('ECON_PlayerSynced', syncedPidStr)
     end
 end
 

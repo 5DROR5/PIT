@@ -26,8 +26,9 @@ angular.module("beamng.apps").directive("perf", ['$timeout', '$interval', functi
             scope.rating          = 0;
             scope.class           = "D";
             scope.ratingRounded   = 0;
-            scope.serverMaxRating = 999;
-            scope.isVehicleAllowed = true;
+            scope.serverMaxRating     = 999;
+            scope.serverDisplayRating = 999;
+            scope.isVehicleAllowed    = true;
             scope.maxRPM          = 0;
             scope.gearboxType     = "N/A";
             scope.gearCount       = 0;
@@ -40,6 +41,17 @@ angular.module("beamng.apps").directive("perf", ['$timeout', '$interval', functi
             scope.userVote     = null;
             scope.maxVotes     = 0;
 
+            scope.bannerRow1     = "";
+            scope.bannerRow2Pre  = "Your car is ";
+            scope.bannerRow2Post = " over the allowed limit. Please lower your Performance Rating to continue.";
+            scope.bannerRow3     = "Tip: try reducing engine power, tire grip, or braking force — or switch to a different car.";
+
+            let translations = {
+                banner_limit: "For fair and fun gameplay, this server limits vehicles to a Performance Rating of {limit}.",
+                banner_over:  "Your car is {delta} over the allowed limit. Please lower your Performance Rating to continue.",
+                banner_tip:   "Tip: try reducing engine power, tire grip, or braking force — or switch to a different car."
+            };
+
             let voteTimer     = null;
             let voteDuration  = 60;
             let voteStartTime = 0;
@@ -49,10 +61,16 @@ angular.module("beamng.apps").directive("perf", ['$timeout', '$interval', functi
             // UTILITIES
             // =================================================================
             function parsePayload(payload) {
-                if (typeof payload === 'string') {
-                    return JSON.parse(payload);
-                }
+                if (typeof payload === 'string') return JSON.parse(payload);
                 return payload || {};
+            }
+
+            function applyTranslations() {
+                scope.bannerRow1 = translations.banner_limit.replace('{limit}', scope.serverDisplayRating);
+                let parts = translations.banner_over.split('{delta}');
+                scope.bannerRow2Pre  = parts[0] || '';
+                scope.bannerRow2Post = parts[1] || '';
+                scope.bannerRow3     = translations.banner_tip;
             }
 
             function scheduleUpdate() {
@@ -118,12 +136,14 @@ angular.module("beamng.apps").directive("perf", ['$timeout', '$interval', functi
                     scope.rating          = d.rating          || 0;
                     scope.class           = d.class           || "D";
                     scope.ratingRounded   = d.ratingRounded   || 0;
-                    scope.serverMaxRating = d.serverMaxRating || 999;
-                    scope.isVehicleAllowed = d.isVehicleAllowed !== false;
+                    scope.serverMaxRating     = d.serverMaxRating     || 999;
+                    scope.serverDisplayRating = d.serverDisplayRating || d.serverMaxRating || 999;
+                    scope.isVehicleAllowed    = d.isVehicleAllowed !== false;
                     scope.maxRPM          = d.maxRPM          || 0;
                     scope.gearboxType     = d.gearboxType     || "N/A";
                     scope.gearCount       = d.gearCount       || 0;
                     scope.inductionType   = d.inductionType   || "NA";
+                    applyTranslations();
                     scheduleUpdate();
                 } catch (e) {
                     console.error('[PerformanceLimiter-UI] Error parsing data:', e);
@@ -210,7 +230,7 @@ angular.module("beamng.apps").directive("perf", ['$timeout', '$interval', functi
 
             scope.endVote = function (dataJson) {
                 try {
-                    parsePayload(dataJson); // parse for future use
+                    parsePayload(dataJson);
                     scope.voteActive   = false;
                     scope.userVote     = null;
                     scope.voteOptions  = [];
@@ -230,6 +250,21 @@ angular.module("beamng.apps").directive("perf", ['$timeout', '$interval', functi
             scope.$on('PerfModVoteStarted',           function (event, data) { scope.startVote(data); });
             scope.$on('PerfModVoteUpdate',            function (event, data) { scope.updateVoteResults(data); });
             scope.$on('PerfModVoteEnded',             function (event, data) { scope.endVote(data); });
+
+            scope.$on('PerfModTranslations', function (event, data) {
+                try {
+                    let t = typeof data === 'string' ? JSON.parse(data) : data;
+                    if (t && typeof t === 'object') {
+                        if (t.banner_limit) translations.banner_limit = t.banner_limit;
+                        if (t.banner_over)  translations.banner_over  = t.banner_over;
+                        if (t.banner_tip)   translations.banner_tip   = t.banner_tip;
+                        applyTranslations();
+                        if (!scope.$$phase) scope.$apply();
+                    }
+                } catch (e) {
+                    console.error('[PerformanceLimiter-UI] Error applying translations:', e);
+                }
+            });
 
             let onVehicleChange = function () {
                 $timeout(function () {
@@ -252,16 +287,18 @@ angular.module("beamng.apps").directive("perf", ['$timeout', '$interval', functi
             scope.$on('VehicleConfigChanged', onVehicleChange);
 
             scope.$on('$destroy', function () {
-                updatePending    = false;
-                scope.voteActive = false;
+                updatePending     = false;
+                scope.voteActive  = false;
                 scope.voteOptions = [];
-                scope.userVote   = null;
+                scope.userVote    = null;
                 if (voteTimer) { $interval.cancel(voteTimer); voteTimer = null; }
             });
 
             // =================================================================
             // INITIALIZATION
             // =================================================================
+            applyTranslations();
+
             $timeout(function () {
                 try {
                     bngApi.engineLua(`
@@ -271,6 +308,9 @@ angular.module("beamng.apps").directive("perf", ['$timeout', '$interval', functi
                                 guihooks.trigger('PerformanceLimiterUpdateData', jsonEncode(data))
                             end
                             extensions.performanceLimiter.requestServerLimit()
+                            if extensions.performanceLimiter.applyTranslations then
+                                extensions.performanceLimiter.applyTranslations()
+                            end
                         end
                     `);
                 } catch (e) {

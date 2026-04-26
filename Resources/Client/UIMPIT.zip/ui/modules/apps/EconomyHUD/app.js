@@ -17,7 +17,7 @@ angular.module('beamng.apps')
       var LINKS_ENABLED = false;
 
       // TODO: Replace with your own Discord invite link (e.g. 'https://discord.gg/XXXXXXX')
-      var DISCORD_URL  = 'https://discord.gg/XXXXXXX';
+      var DISCORD_URL  = 'https://discord.gg/xxxxxxxx';
 
       // TODO: Replace with your own rulebook/website URL (e.g. 'https://yoursite.com/rules')
       var RULEBOOK_URL = 'https://yoursite.com/rules';
@@ -28,16 +28,20 @@ angular.module('beamng.apps')
       $scope.linksEnabled = LINKS_ENABLED;
       $scope.showQrCodes  = SHOW_QR_CODES;
 
-      // BeamNG requires links to pass through its proxy for external URLs.
-      // Do not modify the proxy prefix below.
-      var BNG_PROXY = 'https://www.beamng.com/proxy.php?link=';
-
       // -------------------------------------------------------------------------
       // Initial state
       // -------------------------------------------------------------------------
 
       $scope.showWelcomeScreen = true;
       $scope.currentStep       = 1;
+      $scope.authStep          = 'login';
+      $scope.authData          = { username: '', password: '' };
+      $scope.authError         = '';
+      $scope.authLoading       = false;
+      $scope.authRequired      = false;
+      $scope.hasSavedPassword  = !!(savedPasswordHash);
+      $scope.migrationToken    = savedMigrationToken || null;
+      $scope.tokenCopied       = false;
       $scope.isUIOpen          = true;
       $scope.isLangOpen        = false;
       $scope.spawnsMenuOpen    = false;
@@ -50,6 +54,21 @@ angular.module('beamng.apps')
       } catch(e) {
         console.warn('[EconomyUI] Could not read language from localStorage:', e);
       }
+
+      var savedUsername     = null;
+      var savedPasswordHash = null;
+      var deviceToken       = null;
+      var savedMigrationToken = null;
+      try {
+        savedUsername       = localStorage.getItem('pit_username');
+        savedPasswordHash   = localStorage.getItem('pit_password_hash');
+        savedMigrationToken = localStorage.getItem('pit_migration_token');
+        deviceToken         = localStorage.getItem('pit_device_token');
+        if (!deviceToken) {
+          deviceToken = crypto.randomUUID();
+          localStorage.setItem('pit_device_token', deviceToken);
+        }
+      } catch(e) {}
 
       $scope.selectedLang  = savedLang || 'en';
       $scope.policeNearby  = false;
@@ -360,7 +379,28 @@ angular.module('beamng.apps')
         "marker_spawned_at_north_dirt_trail": "A repair marker has spawned on the North Dirt Trail!",
         "marker_spawned_at_near_tower":       "A repair marker has spawned near the Tower!",
         "marker_spawned_at_tree_lined_path":  "A repair marker has spawned on the Tree-Lined Path!",
-        "marker_spawned_at_sawmill":          "A repair marker has spawned at the Sawmill!"
+        "marker_spawned_at_sawmill":          "A repair marker has spawned at the Sawmill!",
+        "auth_login_title":          "Sign In",
+        "auth_register_title":       "Create Account",
+        "auth_login":                "Sign In",
+        "auth_register":             "Register",
+        "auth_username":             "Username",
+        "auth_password":             "Password",
+        "auth_username_placeholder": "3-20 chars, letters/numbers/_/-",
+        "auth_password_placeholder": "Your password",
+        "auth_do_login":             "Sign In",
+        "auth_do_register":          "Create Account",
+        "auth_loading":              "Please wait...",
+        "auth_empty_fields":         "Please fill in all fields.",
+        "auth_username_length":      "Username must be 3-20 characters.",
+        "auth_username_invalid":     "Username: letters, numbers, _ or - only.",
+        "auth_username_taken":       "Username already taken.",
+        "auth_not_found":            "Username not found.",
+        "auth_wrong_password":       "Incorrect password.",
+        "auth_failed":               "Authentication failed.",
+        "auth_invalid":              "Invalid data.",
+        "tooltip_change_account":    "Change Account",
+        "auth_password_saved":       "Leave empty to sign in with saved password"
       };
 
       $scope.t = function(key, vars) {
@@ -376,6 +416,72 @@ angular.module('beamng.apps')
       // -------------------------------------------------------------------------
       // Welcome screen
       // -------------------------------------------------------------------------
+
+      function sha256hex(message) {
+        var buf = new TextEncoder().encode(message);
+        return crypto.subtle.digest('SHA-256', buf).then(function(hash) {
+          return Array.from(new Uint8Array(hash))
+            .map(function(b) { return b.toString(16).padStart(2, '0'); })
+            .join('');
+        });
+      }
+
+      $scope.submitAuth = function(mode) {
+        var username = ($scope.authData.username || '').trim();
+        var password = $scope.authData.password  || '';
+        if (!username) {
+          $scope.$applyAsync(function() { $scope.authError = $scope.t('auth_empty_fields'); });
+          return;
+        }
+        if (username.length < 3 || username.length > 20) {
+          $scope.$applyAsync(function() { $scope.authError = $scope.t('auth_username_length'); });
+          return;
+        }
+        if (!password && savedPasswordHash && savedUsername === username && mode === 'login') {
+          $scope.$applyAsync(function() { $scope.authLoading = true; $scope.authError = ''; });
+          var p = JSON.stringify({ mode: 'login', username: username, hash: savedPasswordHash, device_token: deviceToken });
+          if (window.bngApi) window.bngApi.engineLua('TriggerServerEvent("ECON_Auth", [==[' + p + ']==])');
+          return;
+        }
+        if (!password) {
+          $scope.$applyAsync(function() { $scope.authError = $scope.t('auth_empty_fields'); });
+          return;
+        }
+        $scope.$applyAsync(function() { $scope.authLoading = true; $scope.authError = ''; });
+        sha256hex(password).then(function(hash) {
+          if (window.bngApi && typeof window.bngApi.engineLua === 'function') {
+            var p = JSON.stringify({ mode: mode, username: username, hash: hash, device_token: deviceToken });
+            window.bngApi.engineLua('TriggerServerEvent("ECON_Auth", [==[' + p + ']==])');
+          }
+          try {
+            localStorage.setItem('pit_username',      username);
+            localStorage.setItem('pit_password_hash', hash);
+          } catch(e) {}
+        });
+      };
+
+      $scope.switchAuthStep = function(step) {
+        $scope.$applyAsync(function() { $scope.authStep = step; $scope.authError = ''; });
+      };
+
+      $scope.copyMigrationToken = function() {
+        var token = $scope.migrationToken;
+        if (!token) return;
+        try {
+          navigator.clipboard.writeText(token);
+        } catch(e) {
+          var el = document.createElement('textarea');
+          el.value = token;
+          document.body.appendChild(el);
+          el.select();
+          document.execCommand('copy');
+          document.body.removeChild(el);
+        }
+        $scope.$applyAsync(function() { $scope.tokenCopied = true; });
+        $timeout(function() {
+          $scope.$applyAsync(function() { $scope.tokenCopied = false; });
+        }, 2000);
+      };
 
       $scope.nextStep = function() {
         if ($scope.currentStep < 4) {
@@ -395,10 +501,19 @@ angular.module('beamng.apps')
       // Discord & Rulebook links
       // -------------------------------------------------------------------------
 
+      var BNG_PROXY = 'https://www.beamng.com/proxy.php?link=';
+
       function openExternalLink(url) {
         if (window.bngApi && typeof window.bngApi.engineLua === 'function') {
+          window.bngApi.engineLua('MPCoreNetwork.openURL("' + url + '")');
+        } else {
+          console.error('[EconomyUI] bngApi not available for openURL');
+        }
+      }
+
+      function openExternalLinkLegacy(url) {
+        if (window.bngApi && typeof window.bngApi.engineLua === 'function') {
           window.bngApi.engineLua('openWebBrowser("' + BNG_PROXY + url + '")');
-          window.bngApi.engineLua("Engine.Audio.playOnce('AudioGui','event:>UI>Main>Click_Tonal_01')");
         } else {
           console.error('[EconomyUI] bngApi not available for openWebBrowser');
         }
@@ -409,7 +524,7 @@ angular.module('beamng.apps')
       };
 
       $scope.openRulebook = function() {
-        openExternalLink(RULEBOOK_URL);
+        openExternalLinkLegacy(RULEBOOK_URL);
       };
 
       // -------------------------------------------------------------------------
@@ -700,6 +815,30 @@ angular.module('beamng.apps')
         }
       });
 
+      $scope.$on('PIT_DisplayNames', function(e, data) {
+        if (data) { window.pitDisplayNames = data; }
+      });
+
+      $scope.$on('ECON_AuthResult', function(e, data) {
+        if (!data) return;
+        $scope.$applyAsync(function() {
+          $scope.authLoading = false;
+          if (data.ok) {
+            $scope.authRequired = false;
+            if (data.migration_token) {
+              $scope.migrationToken = data.migration_token;
+              try { localStorage.setItem('pit_migration_token', data.migration_token); } catch(e) {}
+            }
+            if ($scope.currentStep === 0) { $scope.currentStep = 1; }
+            if (data.money !== undefined) { $scope.balance = data.money; }
+          } else {
+            $scope.authError  = $scope.t(data.error_key || 'auth_failed');
+            savedPasswordHash = null;
+            try { localStorage.removeItem('pit_password_hash'); } catch(e) {}
+          }
+        });
+      });
+
       $scope.$on('POLICE_RoleUpdate', function(e, data) {
         if (data && data.isPolice !== undefined) {
           $scope.$applyAsync(function() {
@@ -738,6 +877,15 @@ angular.module('beamng.apps')
               }
             });
           }
+          if (data.auth_required) {
+            $scope.$applyAsync(function() {
+              $scope.authRequired      = true;
+              $scope.showWelcomeScreen = true;
+              $scope.currentStep       = 0;
+              $scope.hasSavedPassword  = !!(savedPasswordHash);
+              if (savedUsername) { $scope.authData.username = savedUsername; }
+            });
+          }
         }
       });
 
@@ -770,6 +918,41 @@ angular.module('beamng.apps')
 
       try {
         if (typeof guihooks !== "undefined" && guihooks.on) {
+          guihooks.on("ECON_AuthRequired", function(data) {
+            if (!data || !data.required) return;
+            $scope.$applyAsync(function() {
+              $scope.isGuestAccount    = true;
+              $scope.authRequired      = true;
+              $scope.showWelcomeScreen = true;
+              $scope.currentStep       = 0;
+              if (savedUsername) { $scope.authData.username = savedUsername; }
+            });
+            if (savedUsername && savedPasswordHash && window.bngApi) {
+              var p = JSON.stringify({ mode: 'login', username: savedUsername, hash: savedPasswordHash });
+              window.bngApi.engineLua('TriggerServerEvent("ECON_Auth", [==[' + p + ']==])');
+            }
+          });
+
+          guihooks.on("ECON_AuthResult", function(data) {
+            if (!data) return;
+            $scope.$applyAsync(function() {
+              $scope.authLoading = false;
+              if (data.ok) {
+                $scope.authRequired = false;
+                if (data.migration_token) {
+                  $scope.migrationToken = data.migration_token;
+                  try { localStorage.setItem('pit_migration_token', data.migration_token); } catch(e) {}
+                }
+                if ($scope.currentStep === 0) { $scope.currentStep = 1; }
+                if (data.money !== undefined) { $scope.balance = data.money; }
+              } else {
+                $scope.authError  = $scope.t(data.error_key || 'auth_failed');
+                savedPasswordHash = null;
+                try { localStorage.removeItem('pit_password_hash'); } catch(e) {}
+              }
+            });
+          });
+
           guihooks.on("EconomyUI_WantedUpdate",    handleWantedPayload);
 
           guihooks.on("EconomyUI_PoliceProximity", function(p) {
@@ -801,7 +984,18 @@ angular.module('beamng.apps')
                     console.warn('[EconomyUI] Could not save language from guihooks:', e);
                   }
                 }
+                if (data.auth_required) {
+                  $scope.isGuestAccount    = true;
+                  $scope.authRequired      = true;
+                  $scope.showWelcomeScreen = true;
+                  $scope.currentStep       = 0;
+                  if (savedUsername) { $scope.authData.username = savedUsername; }
+                }
               });
+              if (data.auth_required && savedUsername && savedPasswordHash && window.bngApi) {
+                var p = JSON.stringify({ mode: 'login', username: savedUsername, hash: savedPasswordHash });
+                window.bngApi.engineLua('TriggerServerEvent("ECON_Auth", [==[' + p + ']==])');
+              }
             }
           });
 

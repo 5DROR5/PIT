@@ -178,10 +178,12 @@ local function collect()
         local inductionType = "NA"
 
         local engines = powertrain.getDevicesByCategory("engine")
-        if engines and engines[1] then
-            hp = engines[1].maxPower * 0.986
-            torque = engines[1].maxTorque
-            maxRPM = engines[1].maxRPM
+        if engines then
+            for _, e in ipairs(engines) do
+                hp     = hp     + (e.maxPower  or 0) * 0.986
+                torque = torque + (e.maxTorque or 0)
+                if (e.maxRPM or 0) > maxRPM then maxRPM = e.maxRPM end
+            end
         end
 
         weight = obj:calcBeamStats().total_weight

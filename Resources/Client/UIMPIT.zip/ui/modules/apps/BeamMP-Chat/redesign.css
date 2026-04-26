@@ -1,0 +1,185 @@
+.error {
+    color: red;
+}
+
+#chat-window {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    font-size: 1em;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    font-weight: bold;
+}
+
+ul#chat-list {
+    list-style: none;
+    padding-left: 0px;
+    overflow-y: scroll;
+    overflow-wrap: break-word;
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    margin-bottom: 0px;
+    width: 100%;
+}
+
+#chat-list::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+.chat-message {
+    padding: 4px 4px;
+    color: white;
+    background-color: transparent;
+    text-shadow: 0px 0px 4px #000, 0px 0px 6px #000, 0px 0px 8px #000;
+    border-radius: 6px;
+    transition: transform .12s ease, opacity .12s;
+}
+
+.chat-message:hover {
+    transform: translateY(-2px);
+}
+
+.chat-message-timestamp {
+    font-size: 0.7em;
+    line-height: 0.7em;
+    color: rgba(255, 255, 255, 0.8);
+    padding-right: 8px;
+}
+
+#chatbox {
+    display: flex;
+    min-height: 40px;
+    width: 250px;
+    background-color: rgba(30, 30, 30, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    transition: width 0.2s ease-in-out, background-color 0.3s ease;
+    transition-delay: 700ms;
+    align-items: center;
+}
+
+#chatbox:hover {
+    width: 100%;
+    transition-delay: 0ms;
+    background-color: rgba(30, 30, 30, 0.4);
+}
+
+#chat-input {
+    width: 100%;
+    height: auto;
+    background-color: transparent;
+    border: none;
+    padding-left: 10px;
+    color: white;
+    outline: none;
+    transition: 0.2s;
+}
+
+#chat-input::placeholder {
+    color: #BBBBBB;
+}
+
+.multiplayerChat .buttons {
+    color: #DDDDDD;
+    border: none;
+    background-color: transparent;
+    height: 100%;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.multiplayerChat .buttons:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: #FFFFFF;
+}
+
+.swap-buttons {
+    min-width: 25px;
+    text-align: center;
+}
+
+.color-0 {
+    color: #000000;
+}
+
+.color-1 {
+    color: #0000AA;
+}
+
+.color-2 {
+    color: #00AA00;
+}
+
+.color-3 {
+    color: #00AAAA;
+}
+
+.color-4 {
+    color: #AA0000;
+}
+
+.color-5 {
+    color: #AA00AA;
+}
+
+.color-6 {
+    color: #FFAA00;
+}
+
+.color-7 {
+    color: #AAAAAA;
+}
+
+.color-8 {
+    color: #555555;
+}
+
+.color-9 {
+    color: #5555FF;
+}
+
+.color-a {
+    color: #55FF55;
+}
+
+.color-b {
+    color: #55FFFF;
+}
+
+.color-c {
+    color: #FF5555;
+}
+
+.color-d {
+    color: #FF55FF;
+}
+
+.color-e {
+    color: #FFFF55;
+}
+
+.color-f {
+    color: #FFFFFF;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.line-through {
+    text-decoration: line-through;
+}
+
+.underline {
+    text-decoration: underline;
+}
+
+.italic {
+    font-style: italic;
+}

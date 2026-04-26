@@ -22,16 +22,16 @@ angular.module('beamng.apps')
       var serverTranslations = {};
 
       var fallbackText = {
-        "wanted_list_title":    "Wanted List",
-        "violation_speeding":   "Speeding",
-        "violation_zigzag":     "Zigzag",
-        "violation_both":       "Combo",
-        "no_wanted_players":    "No wanted players",
-        "time_label":           "Time",
-        "type_label":           "Type",
-        "repairs_label":        "Repairs",
+        "wanted_list_title":     "Wanted List",
+        "violation_speeding":    "Speeding",
+        "violation_zigzag":      "Zigzag",
+        "violation_both":        "Combo",
+        "no_wanted_players":     "No wanted players",
+        "time_label":            "Time",
+        "type_label":            "Type",
+        "repairs_label":         "Repairs",
         "violation_airpolluter": "Air Polluter",
-        "violation_unknown":    "?"
+        "violation_unknown":     "?"
       };
 
       // -------------------------------------------------------------------------
@@ -53,6 +53,11 @@ angular.module('beamng.apps')
         var minutes = Math.floor(totalSeconds / 60);
         var seconds = totalSeconds % 60;
         return (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+      };
+
+      $scope.getDisplayName = function(beammpName) {
+        return (window.pitDisplayNames && window.pitDisplayNames[beammpName])
+               || beammpName;
       };
 
       function updateDirection(lang) {
@@ -94,6 +99,15 @@ angular.module('beamng.apps')
             $scope.isPolice = data.isPolice;
             if (!$scope.isPolice) $scope.wantedPlayers = [];
           });
+        }
+      });
+
+      $scope.$on('PIT_DisplayNames', function(e, data) {
+        if (data) {
+          window.pitDisplayNames = data;
+          if ($scope.wantedPlayers.length > 0) {
+            $scope.$applyAsync(function() {});
+          }
         }
       });
 

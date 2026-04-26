@@ -60,6 +60,16 @@
         </div>
     </div>
 
+    <div class="over-limit-banner" ng-show="!isVehicleAllowed">
+        <div class="over-limit-row1">
+            &#128683; {{bannerRow1}}
+        </div>
+        <div class="over-limit-row2">
+            {{bannerRow2Pre}}<span class="over-limit-delta">{{rating - serverDisplayRating}}</span>{{bannerRow2Post}}
+        </div>
+        <div class="over-limit-row3">{{bannerRow3}}</div>
+    </div>
+
     <div class="vote-panel" ng-show="voteActive">
         <div class="vote-header">
             <span class="vote-title">🗳️ Performance Limit Vote</span>

@@ -1514,6 +1514,105 @@ body,
   to   { opacity: 1; transform: translateX(-50%) translateY(0)     scale(1);    }
 }
 
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.auth-tabs { display: flex; gap: 8px; }
+
+.auth-tab {
+  flex: 1; padding: 10px; border: none; border-radius: 8px;
+  background: rgba(255,255,255,0.08); color: #95a5a6;
+  font-size: 1em; font-weight: bold; cursor: pointer; transition: all 0.2s;
+}
+.auth-tab.active { background: #3498db; color: white; }
+.auth-tab:hover:not(.active) { background: rgba(255,255,255,0.15); color: white; }
+
+.auth-field { display: flex; flex-direction: column; gap: 6px; }
+.auth-field label { color: #ecf0f1; font-weight: 600; font-size: 0.95em; }
+
+.auth-input {
+  padding: 12px 15px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px; color: #ecf0f1; font-size: 1em; transition: all 0.3s ease;
+}
+.auth-input:focus {
+  outline: none; background: rgba(255,255,255,0.08);
+  border-color: #3498db; box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+}
+
+.auth-error {
+  color: #e74c3c; font-size: 0.9em; text-align: center; margin: 0;
+  padding: 8px; background: rgba(231,76,60,0.1);
+  border-radius: 6px; border: 1px solid rgba(231,76,60,0.3);
+}
+.auth-loading { color: #95a5a6; font-size: 0.9em; text-align: center; margin: 0; }
+.auth-hint    { color: #7f8c8d; font-size: 0.8em; margin-top: 4px; display: block; }
+
+.migration-token-box {
+  margin-top: 25px;
+  padding: 15px;
+  background: rgba(243, 156, 18, 0.08);
+  border: 1px solid rgba(243, 156, 18, 0.4);
+  border-radius: 8px;
+}
+.migration-token-title {
+  font-weight: bold;
+  color: #f39c12;
+  margin-bottom: 6px;
+}
+.migration-token-desc {
+  font-size: 0.85em;
+  color: #bdc3c7;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.migration-token-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+.migration-token-value {
+  flex: 1;
+  font-family: monospace;
+  font-size: 1.3em;
+  letter-spacing: 3px;
+  color: #f39c12;
+  font-weight: bold;
+}
+.migration-token-copy-btn {
+  background: rgba(243, 156, 18, 0.2);
+  border: 1px solid rgba(243, 156, 18, 0.5);
+  color: #f39c12;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s;
+  white-space: nowrap;
+  pointer-events: auto !important;
+}
+.migration-token-copy-btn:hover {
+  background: rgba(243, 156, 18, 0.35);
+}
+
+.account-button-rect {
+  background: rgba(52,73,94,0.7); backdrop-filter: blur(5px);
+  color: white; padding: 6px; border-radius: 8px; cursor: pointer;
+  font-size: 1.2em; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  transition: all 0.3s ease; display: flex; align-items: center;
+  justify-content: center; width: 30px; min-height: 20px;
+  position: relative; pointer-events: auto !important;
+}
+.account-button-rect:hover { transform: scale(1.1); background: rgba(52,73,94,0.9); }
+
 .welcome-links-section {
   margin-top: 25px;
   padding-top: 20px;

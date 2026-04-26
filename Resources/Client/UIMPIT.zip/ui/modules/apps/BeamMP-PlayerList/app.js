@@ -93,13 +93,16 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 							role: player.role,
 							rank: player.rank,
 							rank_prefix: player.rank_prefix,
-							is_wanted: player.is_wanted
+							is_wanted: player.is_wanted,
+							display_name: player.display_name
 						};
 					}
 				});
 				
 				if (players && players.length > 0) {
 					$scope.$broadcast('playerList', JSON.stringify(players));
+				} else if (typeof bngApi !== 'undefined' && bngApi.engineLua) {
+					bngApi.engineLua('UI.updatePlayersList()');
 				}
 			}
 		} catch (e) {
@@ -108,6 +111,18 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 	});
 
 	// --- PIT Economy System addition ---
+	$scope.$on('PlayerList_NotSyncedBy', function(event, data) {
+		$scope.notSyncedBy = {};
+		if (data && data.pids && Array.isArray(data.pids)) {
+			data.pids.forEach(function(pid) {
+				$scope.notSyncedBy[pid] = true;
+			});
+		}
+		if (players && players.length > 0) {
+			$scope.$broadcast('playerList', JSON.stringify(players));
+		}
+	});
+
 	function getRoleIcon(role) {
 		connected = false;
 		players = [];
@@ -200,6 +215,14 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 				if (keyA > keyB) return 1;
 				return 0;
 			});
+
+            parsedList = parsedList.map(function(p) {
+                var displayName = (window.pitDisplayNames && window.pitDisplayNames[p.name])
+                               || ($scope.customPlayerData[p.id] && $scope.customPlayerData[p.id].display_name);
+                var copy = Object.assign({}, p);
+                copy.formatted_name = displayName || p.name;
+                return copy;
+            });
 
 			for (let i = 0; i < parsedList.length; i++) {
 				var row = playersList.insertRow(playersList.rows.length);
@@ -346,6 +369,8 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 
 				if ($scope.queuedPlayers[parsedList[i].id] == true) {
 					row.style.setProperty('background-color', 'var(--bng-orange-shade1)');
+				} else if ($scope.notSyncedBy[parsedList[i].id]) {
+					row.style.setProperty('background-color', 'rgba(255, 60, 60, 0.35)');
 				}
 			}
 			
@@ -360,25 +385,41 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 	});
 
 	$scope.queuedPlayers = [];
+	$scope.notSyncedBy = {};
 
 	$scope.$on('setQueue', function(event, data) {
+		var prevQueued = Object.assign({}, $scope.queuedPlayers);
 		$scope.queuedPlayers = [];
 
 		if (!data.queuedPlayers) {
+			for (var key in prevQueued) {
+                if (prevQueued[key]) {
+                    bngApi.engineLua('if reportPlayerSynced then reportPlayerSynced(\'' + key + '\') end');
+                }
+            }
 			var rows = document.querySelectorAll('[id^="playerlist-row-"]');
 			for (let i = 0; i < rows.length; i++) {
 				rows[i].style.setProperty('background-color', 'transparent');
 			}
+			bngApi.engineLua('if reportQueueToServer then reportQueueToServer(\'[]\') end');
 			return;
 		}
 
+		var queuedPIDs = [];
+		for (var key in prevQueued) {
+			if (prevQueued[key] && !data.queuedPlayers[key]) {
+				bngApi.engineLua('if reportPlayerSynced then reportPlayerSynced(\'' + key + '\') end');
+			}
+		}
 		for (var key in data.queuedPlayers) {
 			$scope.queuedPlayers[key] = data.queuedPlayers[key];
 			var playerrow = document.getElementById("playerlist-row-" + key);
 			if (playerrow) {
 				playerrow.style.setProperty('background-color', data.queuedPlayers[key] ? 'var(--bng-orange-shade1)' : 'transparent');
 			}
+			if (data.queuedPlayers[key]) queuedPIDs.push(parseInt(key));
 		}
+		bngApi.engineLua('if reportQueueToServer then reportQueueToServer(\'' + JSON.stringify(queuedPIDs) + '\') end');
 	});
 
 	bngApi.engineLua('UI.updatePlayersList(); UI.sendQueue()');

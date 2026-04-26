@@ -1,0 +1,5 @@
+{
+  "banner_limit": "Dla uczciwej rozgrywki ten serwer ogranicza pojazdy do Oceny Wydajności {limit}.",
+  "banner_over": "Twój pojazd przekracza dozwolony limit o {delta}. Obniż Ocenę Wydajności, aby kontynuować.",
+  "banner_tip": "Wskazówka: zmniejsz moc silnika, przyczepność opon lub siłę hamowania — lub zmień pojazd."
+}

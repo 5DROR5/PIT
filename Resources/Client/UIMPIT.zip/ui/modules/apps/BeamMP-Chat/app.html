@@ -1,0 +1,12 @@
+<div ng-controller="Chat" id="Chat" class="bngApp multiplayerChat" ng-style="{'width': '100%', 'height': '100%', 'background-color': 'transparent'}" ng-init="init()">
+	<link id="chat-style" rel="stylesheet" type="text/css" href="/ui/modules/apps/BeamMP-Chat/redesign.css">
+    <div id="chat-window">
+        <ul id="chat-list"></ul>
+        <form id="chatbox">
+			<button id="send-button" class="buttons" ng-click="chatSend()">💬</button>
+			<input id="chat-input" type="text" ng-click="select()" placeholder="Chat here">
+			<button id="swap-button" class="buttons swap-buttons" ng-click="chatSwapHorizontal()">🡘</button>
+			<button id="swap-button" class="buttons swap-buttons" ng-click="chatSwapVertical()">🡙</button>
+		</form>
+    </div>
+</div>

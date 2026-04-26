@@ -24,7 +24,7 @@ local LOCAL_DB_PATH = ROOT .. "/data/local_storage.json"
 local function ensureDataDir()
     os.execute('mkdir "' .. ROOT .. '/data"')
 end
-local _store        = { players = {} }
+local _store        = { players = {}, accounts = {}, account_devices = {}, banned_devices = {} }
 local _dirty        = false
 local _last_save    = 0
 local AUTOSAVE_SECS = 30
@@ -35,6 +35,17 @@ local AUTOSAVE_SECS = 30
 -- =============================================================================
 
 local function log(msg) print("[DB] " .. tostring(msg)) end
+
+local function generateMigrationToken()
+    local chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    local t = {}
+    math.randomseed(os.time() + math.random(1000000))
+    for i = 1, 10 do
+        local idx = math.random(#chars)
+        t[i] = chars:sub(idx, idx)
+    end
+    return table.concat(t)
+end
 
 local function fileExists(path)
     local f = io.open(path, "r"); if f then f:close(); return true end; return false
@@ -77,7 +88,10 @@ local function j_load()
         local t = jsonDec(readFile(LOCAL_DB_PATH) or "")
         if type(t) == "table" then
             _store         = t
-            _store.players = _store.players or {}
+            _store.players         = _store.players         or {}
+            _store.accounts        = _store.accounts        or {}
+            _store.account_devices = _store.account_devices or {}
+            _store.banned_devices  = _store.banned_devices  or {}
             local n = 0; for _ in pairs(_store.players) do n = n + 1 end
             log(string.format("JSON backend: loaded %d player record(s)", n))
             return
@@ -122,6 +136,11 @@ local function j_player(uid, starting_money)
             total_playtime_seconds    = 0,
             login_count               = 0,
             purchased_parts           = {},
+            pit_username              = nil,
+            pit_password_hash         = nil,
+            pit_username_display      = nil,
+            migration_token           = nil,
+            guest_name                = nil,
         }
         _dirty = true
     end
@@ -207,6 +226,29 @@ function M.connect()
             pcall(conn.execute, conn, "SET SESSION interactive_timeout = 604800")
             backend = M.BACKEND_MYSQL
             log("Backend: MySQL (" .. cfg.host .. " / " .. cfg.database .. ")")
+            q([[CREATE TABLE IF NOT EXISTS account_devices (
+                id         INT         NOT NULL AUTO_INCREMENT,
+                token      VARCHAR(36) NOT NULL,
+                uid        VARCHAR(64) NOT NULL,
+                first_seen DATETIME    DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                UNIQUE KEY (token, uid),
+                INDEX (token)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4]])
+            q([[CREATE TABLE IF NOT EXISTS banned_devices (
+                token     VARCHAR(36) NOT NULL,
+                banned_at DATETIME    DEFAULT CURRENT_TIMESTAMP,
+                reason    TEXT,
+                banned_by VARCHAR(64),
+                PRIMARY KEY (token)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4]])
+            q([[CREATE TABLE IF NOT EXISTS pit_accounts (
+                username      VARCHAR(32) NOT NULL,
+                password_hash VARCHAR(64) NOT NULL,
+                uid           VARCHAR(64) NOT NULL,
+                created_at    TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (username)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4]])
             ensureColumn("players", "player_rank",               "INT NOT NULL DEFAULT 1")
             ensureColumn("players", "task_progress",             "TEXT DEFAULT NULL")
             ensureColumn("players", "last_police_payment",       "BIGINT DEFAULT 0")
@@ -219,6 +261,13 @@ function M.connect()
             ensureColumn("players", "total_money_spent",         "BIGINT DEFAULT 0")
             ensureColumn("players", "total_playtime_seconds",    "INT(11) DEFAULT 0")
             ensureColumn("players", "login_count",               "INT(11) DEFAULT 0")
+            ensureColumn("pit_accounts", "migration_token",      "VARCHAR(10) DEFAULT NULL")
+            ensureColumn("players", "pit_username",              "VARCHAR(32) DEFAULT NULL")
+            ensureColumn("players", "pit_password_hash",         "VARCHAR(64) DEFAULT NULL")
+            ensureColumn("players", "pit_username_display",      "VARCHAR(64) DEFAULT NULL")
+            ensureColumn("players", "migration_token",           "VARCHAR(10) DEFAULT NULL")
+            ensureColumn("players", "guest_name",                "VARCHAR(128) DEFAULT NULL")
+            ensureColumn("pit_accounts", "username_display",     "VARCHAR(64) DEFAULT NULL")
             return true
         end
         log("MySQL unavailable: " .. tostring(err) .. " — falling back to JSON")
@@ -524,6 +573,166 @@ function M.buyPart(uid, part_key, part_name, price)
         }
         _dirty = true
     end
+end
+
+-- =============================================================================
+-- DEVICE TOKEN SYSTEM
+-- =============================================================================
+
+function M.saveDeviceToken(uid, token)
+    if backend == M.BACKEND_MYSQL then
+        q(string.format("INSERT IGNORE INTO account_devices (token, uid) VALUES (%s, %s)",
+            esc(token), esc(uid)))
+    else
+        if not _store.account_devices then _store.account_devices = {} end
+        if not _store.account_devices[token] then _store.account_devices[token] = {} end
+        for _, d in ipairs(_store.account_devices[token]) do
+            if d.uid == uid then return end
+        end
+        table.insert(_store.account_devices[token], { uid = uid, first_seen = os.time() })
+        _dirty = true
+    end
+end
+
+function M.getTokenBanStatus(uid, token)
+    if backend == M.BACKEND_MYSQL then
+        local r = q1(string.format([[
+            SELECT bd.banned_at FROM banned_devices bd
+            JOIN account_devices ad ON ad.token = %s AND ad.uid = %s
+            WHERE bd.token = %s AND ad.first_seen > bd.banned_at LIMIT 1
+        ]], esc(token), esc(uid), esc(token)))
+        return r ~= nil
+    else
+        local bd = _store.banned_devices and _store.banned_devices[token]
+        if not bd then return false end
+        local devs = _store.account_devices and _store.account_devices[token]
+        if not devs then return false end
+        for _, d in ipairs(devs) do
+            if d.uid == uid and d.first_seen > bd.banned_at then return true end
+        end
+        return false
+    end
+end
+
+function M.banDevice(token, reason, banned_by)
+    if backend == M.BACKEND_MYSQL then
+        q(string.format(
+            "INSERT INTO banned_devices (token, reason, banned_by) VALUES (%s, %s, %s) "
+            .. "ON DUPLICATE KEY UPDATE banned_at=NOW(), reason=%s, banned_by=%s",
+            esc(token), esc(reason or ''), esc(banned_by or ''),
+            esc(reason or ''), esc(banned_by or '')))
+    else
+        if not _store.banned_devices then _store.banned_devices = {} end
+        _store.banned_devices[token] = {
+            banned_at = os.time(), reason = reason or '', banned_by = banned_by or ''
+        }
+        _dirty = true
+    end
+end
+
+-- =============================================================================
+-- ACCOUNT SYSTEM
+-- =============================================================================
+
+function M.getAccount(username)
+    if backend == M.BACKEND_MYSQL then
+        return q1(string.format(
+            "SELECT uid, pit_password_hash AS password_hash, pit_username_display AS username_display "
+            .. "FROM players WHERE pit_username=%s", esc(username)))
+    else
+        for uid, p in pairs(_store.players or {}) do
+            if p.pit_username == username then
+                return { uid = uid, password_hash = p.pit_password_hash, username_display = p.pit_username_display or username }
+            end
+        end
+        return nil
+    end
+end
+
+function M.createAccount(username, password_hash, username_display, starting_money)
+    local uid = "local_" .. username
+    if backend == M.BACKEND_MYSQL then
+        if q1(string.format(
+            "SELECT uid FROM players WHERE pit_username=%s", esc(username))) then
+            return false
+        end
+        q(string.format([[
+            INSERT INTO players
+                (uid, name, money, role, lang, created_at, last_seen, player_rank, task_progress,
+                 pit_username, pit_password_hash, pit_username_display)
+            VALUES (%s, %s, %d, 'civilian', NULL, NOW(), NOW(), 1, '{}', %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                pit_username=%s, pit_password_hash=%s, pit_username_display=%s, last_seen=NOW()
+        ]],
+            esc(uid), esc(username_display), tonumber(starting_money) or 0,
+            esc(username), esc(password_hash), esc(username_display),
+            esc(username), esc(password_hash), esc(username_display)
+        ))
+        return true
+    else
+        for _, p in pairs(_store.players or {}) do
+            if p.pit_username == username then return false end
+        end
+        local p = j_player(uid, tonumber(starting_money) or 0)
+        p.name                 = username_display
+        p.pit_username         = username
+        p.pit_password_hash    = password_hash
+        p.pit_username_display = username_display
+        _dirty = true
+        return true
+    end
+end
+
+function M.getMigrationToken(uid)
+    if not uid or not uid:match("^local_") then return nil end
+    if backend == M.BACKEND_MYSQL then
+        local r = q1(string.format(
+            "SELECT migration_token FROM players WHERE uid=%s", esc(uid)))
+        if r and r.migration_token and r.migration_token ~= "" then
+            return r.migration_token
+        end
+        local token = generateMigrationToken()
+        q(string.format(
+            "UPDATE players SET migration_token=%s WHERE uid=%s", esc(token), esc(uid)))
+        return token
+    else
+        local p = _store.players and _store.players[uid]
+        if not p then return nil end
+        if p.migration_token then return p.migration_token end
+        local token = generateMigrationToken()
+        p.migration_token = token
+        _dirty = true
+        return token
+    end
+end
+
+function M.saveGuestName(uid, guest_name)
+    if not uid or not guest_name or guest_name == "" then return end
+    if backend == M.BACKEND_MYSQL then
+        q(string.format(
+            "UPDATE players SET guest_name=%s WHERE uid=%s",
+            esc(guest_name), esc(uid)))
+    else
+        local p = _store.players and _store.players[uid]
+        if p and not p.guest_name then
+            p.guest_name = guest_name
+            _dirty = true
+        end
+    end
+end
+
+function M.cleanGuestPlayers()
+    if backend == M.BACKEND_MYSQL then
+        q("DELETE FROM players WHERE uid LIKE 'guest_%'")
+    else
+        for uid in pairs(_store.players or {}) do
+            if uid:match("^guest_") then
+                _store.players[uid] = nil
+                _dirty = true
+            end
+        end
+    end
+    log("Cleaned guest player records")
 end
 
 return M

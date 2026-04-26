@@ -1,0 +1,180 @@
+.error {
+    color: red;
+}
+
+#chat-window {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    font-size: 1em;
+    font-family: sans-serif, Arial, Helvetica;
+}
+
+#chat-input {
+    width: 100%;
+    height: auto;
+    background-color: rgba(0, 0, 0, 0.25);
+    border: 2px solid rgba(175, 175, 175, 0.45);
+    padding-left: 5px;
+    color: white;
+    transition: 0.20s;
+}
+
+#chat-input::placeholder {
+    color: #DDDDDD;
+}
+
+#chat-input:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.multiplayerChat .buttons {
+    color: #DDDDDD;
+    border: 2px solid rgba(175, 175, 175, 0.45);
+    transition: 0.20s;
+    background-color: rgba(0, 0, 0, 0.45);
+    height: 100%;
+}
+
+.multiplayerChat .buttons:hover {
+    background-color: rgba(0, 0, 0, 0.65);
+    color: #FFFFFF;
+}
+
+.swap-buttons {
+    min-width: 23px;
+    text-align: center;
+}
+
+#chatbox {
+    display: flex;
+    min-height: 40px;
+    width: 250px;
+    transition: 0.13s;
+    transition-delay: 700ms;
+    align-items: center;
+}
+
+#chatbox:hover {
+    width: 100%;
+    transition-delay: 0ms;
+}
+
+ul#chat-list {
+    list-style: none;
+    padding-left: 0px;
+    overflow-y: scroll;
+    overflow-wrap: break-word;
+}
+
+#chat-list {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    margin-bottom: 0px;
+    width: 100%;
+}
+
+.chat-message {
+    padding: 3px 0px;
+    background-color: rgba(0, 0, 0, 0.60);
+}
+
+.chat-message:nth-child(2n+1) {
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+.chat-message-timestamp {
+    font-size: 0.7em;
+    line-height: 0.7em;
+    color: rgba(255, 255, 255, 0.6);
+    padding-right: 5px;
+}
+
+#chat-list::-webkit-scrollbar {
+    width: 0px;
+    /* Remove scrollbar space */
+    background: transparent;
+    /* Optional: just make scrollbar invisible */
+}
+
+.color-0 {
+    color: #000000;
+}
+
+.color-1 {
+    color: #0000AA;
+}
+
+.color-2 {
+    color: #00AA00;
+}
+
+.color-3 {
+    color: #00AAAA;
+}
+
+.color-4 {
+    color: #AA0000;
+}
+
+.color-5 {
+    color: #AA00AA;
+}
+
+.color-6 {
+    color: #FFAA00;
+}
+
+.color-7 {
+    color: #AAAAAA;
+}
+
+.color-8 {
+    color: #555555;
+}
+
+.color-9 {
+    color: #5555FF;
+}
+
+.color-a {
+    color: #55FF55;
+}
+
+.color-b {
+    color: #55FFFF;
+}
+
+.color-c {
+    color: #FF5555;
+}
+
+.color-d {
+    color: #FF55FF;
+}
+
+.color-e {
+    color: #FFFF55;
+}
+
+.color-f {
+    color: #FFFFFF;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.line-through {
+    text-decoration: line-through;
+}
+
+.underline {
+    text-decoration: underline;
+}
+
+.italic {
+    font-style: italic;
+}

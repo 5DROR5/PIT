@@ -1,0 +1,5 @@
+{
+  "banner_limit": "Für ein faires Spielerlebnis begrenzt dieser Server Fahrzeuge auf eine Leistungsbewertung von {limit}.",
+  "banner_over": "Dein Fahrzeug überschreitet das erlaubte Limit um {delta}. Bitte senke deine Leistungsbewertung, um fortzufahren.",
+  "banner_tip": "Tipp: Reduziere Motorleistung, Reifenhaftung oder Bremskraft – oder wechsle das Fahrzeug."
+}

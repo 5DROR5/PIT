@@ -1,0 +1,5 @@
+{
+  "banner_limit": "Para um jogo justo, este servidor limita os veículos a um Índice de Desempenho de {limit}.",
+  "banner_over": "Seu veículo excede o limite permitido em {delta}. Reduza seu Índice de Desempenho para continuar.",
+  "banner_tip": "Dica: tente reduzir a potência do motor, a aderência dos pneus ou a força de frenagem — ou troque de veículo."
+}

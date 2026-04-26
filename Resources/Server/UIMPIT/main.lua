@@ -197,12 +197,47 @@ end
 -- PLAYER HELPERS
 -- =============================================================================
 
+local players_pending_auth  = {}
+local player_auth_uids      = {}
+local player_display_names  = {}
+
+local function generateGuestUID()
+    local chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+    local t = {}
+    math.randomseed(os.time() + math.random(999999))
+    for i = 1, 8 do
+        local idx = math.random(#chars)
+        t[i] = chars:sub(idx, idx)
+    end
+    return "guest_" .. table.concat(t)
+end
+
+local guest_uid_cache = {}
+
 local function getUID(pid)
+    if player_auth_uids[pid] then return player_auth_uids[pid] end
     local ids = (MP and MP.GetPlayerIdentifiers) and MP.GetPlayerIdentifiers(pid) or {}
-    return ids.beammp or ids.steam or ids.license or ("pid:" .. pid)
+    if ids.beammp or ids.steam or ids.license then
+        return ids.beammp or ids.steam or ids.license
+    end
+    if not guest_uid_cache[pid] then
+        guest_uid_cache[pid] = generateGuestUID()
+    end
+    return guest_uid_cache[pid]
 end
 
 local function getPlayerName(pid)
+    if player_display_names and player_display_names[pid] then
+        return player_display_names[pid]
+    end
+    if MP and MP.GetPlayerName then
+        local ok, name = pcall(MP.GetPlayerName, pid)
+        return ok and name or ("Player" .. pid)
+    end
+    return "Player" .. pid
+end
+
+local function getBeammpName(pid)
     if MP and MP.GetPlayerName then
         local ok, name = pcall(MP.GetPlayerName, pid)
         return ok and name or ("Player" .. pid)
@@ -322,11 +357,17 @@ local function translateForPlayer(pid, key, vars)
     return translate(lang, key, vars)
 end
 
+local pending_auth_langs = {}
+
 local function sendTranslationsToClient(pid)
     local uid       = getUID(pid)
-    local lang      = getLang(uid) or "en"
+    local lang      = getLang(uid) or pending_auth_langs[pid] or "en"
     local lang_data = translations[lang] or translations["en"] or {}
-    local payload   = encodeJSON({ lang = lang, translations = lang_data })
+    local payload   = encodeJSON({
+        lang          = lang,
+        translations  = lang_data,
+        auth_required = (players_pending_auth ~= nil and players_pending_auth[pid] == true),
+    })
     if payload then triggerClient(pid, "ECON_TranslationsUpdate", payload) end
 end
 
@@ -527,8 +568,9 @@ local function isAdmin(pid)
     if pid == -1 then return true end
     if not MP.GetPlayerName then return false end
     local name = MP.GetPlayerName(pid) or ""
+    local display = player_display_names and player_display_names[pid] or ""
     for _, admin in ipairs(config.admins or {}) do
-        if admin == name then return true end
+        if admin == name or admin == display then return true end
     end
     return false
 end
@@ -537,8 +579,9 @@ local function isModerator(pid)
     if pid == -1 then return false end
     if not MP.GetPlayerName then return false end
     local name = MP.GetPlayerName(pid) or ""
+    local display = player_display_names and player_display_names[pid] or ""
     for _, mod in ipairs(config.moderators or {}) do
-        if mod == name then return true end
+        if mod == name or mod == display then return true end
     end
     return false
 end
@@ -572,6 +615,7 @@ local editing_vehicle_ids      = {}
 local police_repair_counters   = {}
 local bust_progress            = {}
 local approved_repairs         = {}
+local player_queue_reports     = {}
 local active_markers           = {}
 local next_marker_spawn_time   = 0
 local player_spawn_indices     = {}
@@ -854,6 +898,8 @@ local function performSuccessfulEscape(pid)
 
     broadcastMessage(translateForPlayer(-1, "wanted_escape_global", { player = getPlayerName(pid) }))
     clearWanted(pid)
+    speeding_cooldowns[pid] = now
+    zigzag_cooldowns[pid]   = now
     pending_escape_players[pid] = nil
     sendWantedUI(pid, 0)
     updatePrefix(pid)
@@ -1034,7 +1080,7 @@ updatePrefix = function(pid)
     elseif role == "police"   then prefix = "[COP]"
     elseif role == "civilian" then prefix = "[CIV]" end
 
-    local payload = encodeJSON({ playerName = getPlayerName(pid), prefix = rank_prefix .. " " .. prefix, pid = pid })
+    local payload = encodeJSON({ playerName = getBeammpName(pid), prefix = rank_prefix .. " " .. prefix, pid = pid })
     if payload then
         forPlayers(function(other_pid) triggerClient(other_pid, "updatePlayerPrefix", payload) end)
     end
@@ -1054,17 +1100,63 @@ sendPlayerListCustomData = function()
         local rank        = player_rank_cache[uid] or getRank(uid) or 1
         local rank_config = ranks[rank]
         table.insert(custom_data, {
-            id          = pid,
-            role        = role,
-            rank        = rank,
-            rank_prefix = rank_config and rank_config.prefix or "[RK]",
-            is_wanted   = isWanted(pid),
+            id           = pid,
+            role         = role,
+            rank         = rank,
+            rank_prefix  = rank_config and rank_config.prefix or "[RK]",
+            is_wanted    = isWanted(pid),
+            display_name = getPlayerName(pid),
+            beammp_name  = getBeammpName(pid),
         })
     end)
     local payload = encodeJSON({ players = custom_data })
     if payload then broadcastClientEvent("ECON_PlayerListData", payload) end
 end
 
+
+-- =============================================================================
+-- QUEUE SYNC SYSTEM
+-- =============================================================================
+
+local function sendNotSyncedByList(target_pid)
+    if not (MP and MP.IsPlayerConnected and MP.IsPlayerConnected(target_pid)) then return end
+    local not_synced_by = {}
+    for reporter_pid, queued_set in pairs(player_queue_reports) do
+        if reporter_pid ~= target_pid and queued_set[target_pid] then
+            table.insert(not_synced_by, reporter_pid)
+        end
+    end
+    local payload = encodeJSON({ pids = not_synced_by })
+    if payload then triggerClient(target_pid, "ECON_NotSyncedBy", payload) end
+end
+
+function ECON_PlayerSynced(pid, raw)
+    local synced_pid = tonumber(raw)
+    if not synced_pid then return end
+    if player_queue_reports[pid] then
+        player_queue_reports[pid][synced_pid] = nil
+    end
+    if MP.IsPlayerConnected(synced_pid) then
+        sendNotSyncedByList(synced_pid)
+    end
+end
+
+function ECON_QueueReport(pid, raw)
+    if not (pid and MP and MP.IsPlayerConnected and MP.IsPlayerConnected(pid)) then return end    
+    local queued_list = decodeJSON(raw)
+    if type(queued_list) ~= "table" then return end
+    local queued_set = {}
+    for _, target_pid in ipairs(queued_list) do
+        local tpid = tonumber(target_pid)
+        if tpid then queued_set[tpid] = true end
+    end
+    player_queue_reports[pid] = queued_set
+    local affected = { [pid] = true }
+    for tpid in pairs(queued_set) do affected[tpid] = true end
+    for tpid in pairs(affected) do
+        if MP.IsPlayerConnected(tpid) then sendNotSyncedByList(tpid) end
+    end
+end
 
 -- =============================================================================
 -- SPAWN & TELEPORT SYSTEM
@@ -1858,7 +1950,7 @@ local function updateAllPlayers()
     local proximity_range_sq = config.police.police_proximity_range_m ^ 2
 
     for pid, _ in pairs(all_players) do
-        if MP.IsPlayerConnected(pid) then
+        if MP.IsPlayerConnected(pid) and not players_pending_auth[pid] then
             local uid       = getUID(pid)
             local role      = getRole(uid)
             local ok, pos   = pcall(MP.GetPositionRaw, pid, 0)
@@ -2164,9 +2256,24 @@ end
 -- =============================================================================
 
 local function onPlayerJoin(pid)
-    players_awaiting_welcome[pid] = true
     local identifiers = (MP and MP.GetPlayerIdentifiers) and MP.GetPlayerIdentifiers(pid) or {}
-    local uid         = getUID(pid)
+    local function isRealId(s)
+        return s and s ~= '' and not s:lower():match('^guest')
+    end
+    local has_real_id = isRealId(identifiers.beammp)
+                     or isRealId(identifiers.steam)
+                     or isRealId(identifiers.license)
+
+    if not has_real_id then
+        players_pending_auth[pid] = true
+        triggerClient(pid, "ECON_AuthRequired", encodeJSON({ required = true }))
+        return
+    end
+
+    players_awaiting_welcome[pid] = true
+    player_display_names[pid]     = getPlayerName(pid)
+    sendPlayerListCustomData()
+    local uid = getUID(pid)
     DB.ensurePlayer(uid, getPlayerName(pid), identifiers, config.money.starting_money)
     pcall(function() DB.incrementLoginCount(uid) end)
     clearWanted(pid)
@@ -2188,6 +2295,12 @@ local function onPlayerJoin(pid)
 end
 
 local function onPlayerLeave(pid)
+    players_pending_auth[pid]  = nil
+    player_auth_uids[pid]      = nil
+    player_display_names[pid]  = nil
+    pending_auth_langs[pid]    = nil
+    guest_uid_cache[pid]       = nil
+
     local uid = getUID(pid)
 
     last_teleport_time[pid]        = nil
@@ -2211,6 +2324,16 @@ local function onPlayerLeave(pid)
     wanted_disabled_players[pid]   = nil
     pending_escape_players[pid]    = nil
     player_spawn_indices[pid]      = nil
+    local was_queued_by = {}
+    if player_queue_reports[pid] then
+        for tpid in pairs(player_queue_reports[pid]) do
+            table.insert(was_queued_by, tpid)
+        end
+    end
+    player_queue_reports[pid] = nil
+    for _, tpid in ipairs(was_queued_by) do
+        if MP.IsPlayerConnected(tpid) then sendNotSyncedByList(tpid) end
+    end
 
     AirPolluter.onPlayerLeave(pid)
 
@@ -2227,7 +2350,7 @@ end
 
 local function checkWelcomeMessages()
     for pid, _ in pairs(players_awaiting_welcome) do
-        if MP.IsPlayerConnected(pid) then
+        if MP.IsPlayerConnected(pid) and not players_pending_auth[pid] then
             sendMessage(pid, translateForPlayer(pid, "welcome_server"))
             sendMoneyUpdate(pid)
             updatePrefix(pid)
@@ -2388,9 +2511,11 @@ function ECON_onRequestTranslations(pid, beamng_lang)
     if not (pid and MP and MP.IsPlayerConnected and MP.IsPlayerConnected(pid)) then return end
     if beamng_lang and beamng_lang ~= "" then
         local uid = getUID(pid)
-        if getLang(uid) == nil then
-            local mapped = resolveBeamNGLocale(beamng_lang)
-            if mapped and mapped ~= "en" then
+        local mapped = resolveBeamNGLocale(beamng_lang)
+        if mapped and mapped ~= "en" then
+            if uid:match("^guest_pid_") or players_pending_auth[pid] then
+                pending_auth_langs[pid] = mapped
+            elseif getLang(uid) == nil then
                 setLang(uid, mapped)
                 log(string.format("Auto-detected language '%s' -> '%s' for player %s",
                     beamng_lang, mapped, getPlayerName(pid)))
@@ -2398,6 +2523,112 @@ function ECON_onRequestTranslations(pid, beamng_lang)
         end
     end
     sendTranslationsToClient(pid)
+
+    -- client ready: re-send auth request if still pending
+    if players_pending_auth and players_pending_auth[pid] then
+        triggerClient(pid, "ECON_AuthRequired", encodeJSON({ required = true }))
+    end
+end
+
+-- =============================================================================
+-- AUTH SYSTEM
+-- =============================================================================
+
+local function isValidUsername(s)
+    return type(s) == "string" and #s >= 3 and #s <= 20 and s:match("^[%w_%-]+$")
+end
+
+local function isValidHash(s)
+    return type(s) == "string" and #s == 64 and s:match("^[%x]+$")
+end
+
+function ECON_Auth(pid, raw)
+    if not (pid and MP and MP.IsPlayerConnected and MP.IsPlayerConnected(pid)) then return end
+    if not players_pending_auth[pid] then return end
+
+    local data = decodeJSON(raw)
+    if not data or not data.mode or not data.username or not data.hash then
+        triggerClient(pid, "ECON_AuthResult", encodeJSON({ ok = false, error_key = "auth_invalid" }))
+        return
+    end
+
+    local mode     = data.mode
+    local username_display = data.username:match("^%s*(.-)%s*$")
+    local username         = username_display:lower()
+    local hash     = data.hash
+    local token    = (type(data.device_token) == "string" and #data.device_token == 36)
+                     and data.device_token or ""
+
+    if not isValidUsername(username) then
+        triggerClient(pid, "ECON_AuthResult", encodeJSON({ ok = false, error_key = "auth_username_invalid" }))
+        return
+    end
+    if not isValidHash(hash) then
+        triggerClient(pid, "ECON_AuthResult", encodeJSON({ ok = false, error_key = "auth_invalid" }))
+        return
+    end
+
+    local uid = nil
+
+    if mode == "register" then
+        if not DB.createAccount(username, hash, username_display, config.money.starting_money) then
+            triggerClient(pid, "ECON_AuthResult", encodeJSON({ ok = false, error_key = "auth_username_taken" }))
+            return
+        end
+        uid = "local_" .. username
+        player_display_names[pid] = username_display
+    else
+        local acc = DB.getAccount(username)
+        if not acc then
+            triggerClient(pid, "ECON_AuthResult", encodeJSON({ ok = false, error_key = "auth_not_found" }))
+            return
+        end
+        if acc.password_hash ~= hash then
+            triggerClient(pid, "ECON_AuthResult", encodeJSON({ ok = false, error_key = "auth_wrong_password" }))
+            return
+        end
+        uid = acc.uid
+        player_display_names[pid] = acc.username_display or username_display
+    end
+    
+    if token ~= "" and DB.getTokenBanStatus(uid, token) then
+        triggerClient(pid, "ECON_AuthResult", encodeJSON({ ok = false, error_key = "auth_device_banned" }))
+        return
+    end
+    player_auth_uids[pid]         = uid
+    players_pending_auth[pid]     = nil
+    players_awaiting_welcome[pid] = true
+
+    local identifiers = (MP and MP.GetPlayerIdentifiers) and MP.GetPlayerIdentifiers(pid) or {}
+    DB.ensurePlayer(uid, getPlayerName(pid), identifiers, config.money.starting_money)
+    pcall(function() DB.incrementLoginCount(uid) end)
+    clearWanted(pid)
+
+    player_rank_cache[uid] = getRank(uid) or 1
+    player_task_cache[uid] = getTaskProgress(uid) or {}
+
+    sendPoliceRole(pid)
+    sendTeleportState(pid)
+    sendSpawnPoint(pid)
+    sendMoneyUpdate(pid)
+    updatePrefix(pid)
+    sendRepairIcons(pid)
+    sendPoliceProximity(pid, false)
+    sendBustProgress(pid, 0, 0)
+    sendWantedUI(pid, 0)
+    sendExistingEditorsToNewPlayer(pid)
+    PartsShop.onPlayerJoin(pid)
+
+    if token ~= "" then pcall(function() DB.saveDeviceToken(uid, token) end) end
+    pcall(function() DB.saveGuestName(uid, getBeammpName(pid)) end)
+    if getLang(uid) == nil and pending_auth_langs[pid] then
+        setLang(uid, pending_auth_langs[pid])
+    end
+    pending_auth_langs[pid] = nil
+    local migration_token = DB.getMigrationToken(uid)
+    triggerClient(pid, "ECON_AuthResult", encodeJSON({ ok = true, money = getMoney(uid), display_name = player_display_names[pid], migration_token = migration_token }))
+    log(string.format("Auth [%s] pid=%d uid=%s token=%s", mode, pid, uid, token ~= "" and token:sub(1,8).."..." or "none"))
+    sendPlayerListCustomData()
 end
 
 -- =============================================================================
@@ -2413,6 +2644,7 @@ function ECON_onInit()
     spawn_teleport_enabled = config.features.spawn_teleport_enabled
     next_marker_spawn_time = os.time() * 1000 + config.markers.spawn_delay_ms
 
+    pcall(function() DB.cleanGuestPlayers() end)
     AirPolluter.init({
         log                     = log,
         MP                      = MP,
@@ -2578,6 +2810,9 @@ MP.RegisterEvent("ECON_OptionalSpawn",           "ECON_onOptionalSpawn")
 MP.RegisterEvent("ECON_PayTransfer",             "ECON_PayTransfer")
 MP.RegisterEvent("ECON_ToggleWanted",            "ECON_onToggleWanted")
 MP.RegisterEvent("ECON_RequestTranslations",     "ECON_onRequestTranslations")
+MP.RegisterEvent("ECON_Auth",                    "ECON_Auth")
+MP.RegisterEvent("ECON_QueueReport",             "ECON_QueueReport")
+MP.RegisterEvent("ECON_PlayerSynced",            "ECON_PlayerSynced")
 MP.RegisterEvent("ECON_editing_position_sync",   "ECON_editing_position_sync")
 MP.RegisterEvent("ECON_update_playerlist_data",  "ECON_update_playerlist_data")
 MP.RegisterEvent("ECON_autosave",                "ECON_autosave")

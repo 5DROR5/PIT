@@ -4,6 +4,7 @@
   <div class="welcome-overlay" ng-if="showWelcomeScreen" style="pointer-events: auto;">
       <div class="welcome-box">
           <div class="welcome-header">
+              <h1 ng-if="currentStep === 0">{{ t(authStep === 'register' ? 'auth_register_title' : 'auth_login_title') }}</h1>
               <h1 ng-if="currentStep === 1">{{ t('step1_title') }}</h1>
               <h1 ng-if="currentStep === 2">{{ t('step2_title') }}</h1>
               <h1 ng-if="currentStep === 3">{{ t('step3_title') }}</h1>
@@ -11,12 +12,44 @@
           </div>
 
           <div class="welcome-content">
+              <div ng-if="currentStep === 0 && authRequired">
+                  <div class="auth-form">
+                      <div class="auth-tabs">
+                          <button class="auth-tab" ng-class="{'active': authStep==='login'}"    ng-click="switchAuthStep('login')">{{ t('auth_login') }}</button>
+                          <button class="auth-tab" ng-class="{'active': authStep==='register'}" ng-click="switchAuthStep('register')">{{ t('auth_register') }}</button>
+                      </div>
+                      <div class="auth-field">
+                          <label>{{ t('auth_username') }}</label>
+                          <input type="text"     ng-model="authData.username" placeholder="{{ t('auth_username_placeholder') }}" class="auth-input" maxlength="20"/>
+                      </div>
+                      <div class="auth-field">
+                          <label>{{ t('auth_password') }}</label>
+                          <input type="password" ng-model="authData.password"
+                                 placeholder="{{ hasSavedPassword && authData.username === (authData.username || '') ? '••••••••' : t('auth_password_placeholder') }}"
+                                 class="auth-input"/>
+                          <small ng-if="hasSavedPassword" class="auth-hint">{{ t('auth_password_saved') }}</small>
+                      </div>
+                      <p class="auth-error"   ng-if="authError">{{ authError }}</p>
+                      <p class="auth-loading" ng-if="authLoading">{{ t('auth_loading') }}</p>
+                  </div>
+              </div>
+
               <div ng-if="currentStep === 1">
                   <ul class="rules-list">
                       <li>{{ t('step1_line1') }}</li>
                       <li>{{ t('step1_line2') }}</li>
                       <li>{{ t('step1_line3') }}</li>
                   </ul>
+                  <div class="migration-token-box" ng-if="migrationToken">
+                      <div class="migration-token-title">{{ t('migration_token_title') }}</div>
+                      <div class="migration-token-desc">{{ t('migration_token_desc') }}</div>
+                      <div class="migration-token-row">
+                          <span class="migration-token-value">{{ migrationToken }}</span>
+                          <button class="migration-token-copy-btn" ng-click="copyMigrationToken()">
+                              {{ tokenCopied ? t('migration_token_copied') : t('migration_token_copy') }}
+                          </button>
+                      </div>
+                  </div>
               </div>
 
               <div ng-if="currentStep === 2">
@@ -120,9 +153,11 @@
           </div>
 
           <div class="welcome-footer">
-              <div class="step-indicator">Step {{currentStep}} / 4</div>
-              <button class="next-button" ng-click="nextStep()" ng-if="currentStep < 4">{{ t('btn_next') }} ➔</button>
-              <button class="agree-button" ng-click="acceptRules()" ng-if="currentStep === 4">{{ t('btn_finish') }}</button>
+              <div class="step-indicator" ng-if="currentStep > 0">Step {{currentStep}} / 4</div>
+              <div class="step-indicator" ng-if="currentStep === 0">🔐</div>
+              <button class="next-button"  ng-click="submitAuth(authStep)" ng-if="currentStep === 0 && !authLoading">{{ t(authStep === 'register' ? 'auth_do_register' : 'auth_do_login') }} ➤</button>
+              <button class="next-button"  ng-click="nextStep()"           ng-if="currentStep > 0 && currentStep < 4">{{ t('btn_next') }} ➤</button>
+              <button class="agree-button" ng-click="acceptRules()"        ng-if="currentStep === 4">{{ t('btn_finish') }}</button>
           </div>
       </div>
   </div>
