@@ -1,7 +1,7 @@
 // =============================================================================
-// PIT Economy System — HUD Controller
-// Version: 1.1
-// License: AGPL-3.0 — https://www.gnu.org/licenses/agpl-3.0.html
+// PIT Economy System - HUD Controller
+// Version: 5.0
+// License: AGPL-3.0 - https://www.gnu.org/licenses/agpl-3.0.html
 // =============================================================================
 
 angular.module('beamng.apps')
@@ -32,21 +32,34 @@ angular.module('beamng.apps')
       // Initial state
       // -------------------------------------------------------------------------
 
-      $scope.showWelcomeScreen = true;
-      $scope.currentStep       = 1;
-      $scope.authStep          = 'login';
-      $scope.authData          = { username: '', password: '' };
-      $scope.authError         = '';
-      $scope.authLoading       = false;
-      $scope.authRequired      = false;
-      $scope.hasSavedPassword  = !!(savedPasswordHash);
-      $scope.migrationToken    = savedMigrationToken || null;
-      $scope.tokenCopied       = false;
-      $scope.isUIOpen          = true;
-      $scope.isLangOpen        = false;
-      $scope.spawnsMenuOpen    = false;
-      $scope.balance           = 0;
-      $scope.wantedTime        = 0;
+      window.PIT_ECON_SESSION = window.PIT_ECON_SESSION || {
+        welcomeDone:  false,
+        authDone:     false,
+        translations: null,
+        inServer:     null
+      };
+      var SESSION = window.PIT_ECON_SESSION;
+
+      function resetPitSession() {
+        SESSION.welcomeDone  = false;
+        SESSION.authDone     = false;
+        SESSION.translations = null;
+      }
+
+      if (!window.PIT_ECON_SESSION_WATCHER) {
+        window.PIT_ECON_SESSION_WATCHER = setInterval(function() {
+          if (!window.bngApi || typeof window.bngApi.engineLua !== 'function') return;
+          window.bngApi.engineLua(
+            'extensions.MPCoreNetwork and extensions.MPCoreNetwork.isMPSession and extensions.MPCoreNetwork.isMPSession() or false',
+            function(res) {
+              if (res !== true && res !== false) return;
+              var prev = SESSION.inServer;
+              SESSION.inServer = res;
+              if (prev === true && res === false) { resetPitSession(); }
+            }
+          );
+        }, 4000);
+      }
 
       var savedLang = null;
       try {
@@ -70,6 +83,24 @@ angular.module('beamng.apps')
         }
       } catch(e) {}
 
+      $scope.showWelcomeScreen = !SESSION.welcomeDone;
+      $scope.currentStep       = SESSION.welcomeDone ? 4 : 1;
+      $scope.authStep          = 'login';
+      $scope.authData          = { username: savedUsername || '', password: '' };
+      $scope.authError         = '';
+      $scope.authLoading       = false;
+      $scope.authRequired      = false;
+      $scope.hasSavedPassword  = !!(savedPasswordHash);
+      $scope.migrationToken    = savedMigrationToken || null;
+      $scope.tokenCopied       = false;
+      $scope.isUIOpen          = true;
+      $scope.minimalStyle      = false;
+      try { $scope.minimalStyle = localStorage.getItem('pit_minimal_style') === 'true'; } catch(e) {}
+      $scope.isLangOpen        = false;
+      $scope.spawnsMenuOpen    = false;
+      $scope.balance           = 0;
+      $scope.wantedTime        = 0;
+
       $scope.selectedLang  = savedLang || 'en';
       $scope.policeNearby  = false;
       $scope.bustProgress  = { active: false, percent: 0 };
@@ -79,25 +110,37 @@ angular.module('beamng.apps')
       $scope.wantedEnabled    = true;
       $scope.showWantedToggle = false;
       $scope.isPolice         = false;
+      $scope.navEnabled      = false;
+      var navPreference      = false;
+      var prevWantedForNav   = 0;
+      var prevPoliceForNav   = false;
+      try { navPreference = localStorage.getItem('pit_nav_preference') === 'true'; } catch(e) {}
 
       $scope.showSyncButton    = false;
       $scope.isEditingVehicle  = false;
 
       $scope.rankData = {
-        rank: 1, rank_name_key: 'rank_1_name', prefix: '[Rookie]',
-        percent: 0, completed: 0, total: 0, tasks: [], max_rank: 5
+        rank: 1, rank_name_key: 'rank_1_name', prefix: '[I]',
+        percent: 0, completed: 0, total: 0, tasks: [], max_rank: 20,
+        total_points: 0, pts_to_next: 0, next_prefix: '[II]',
+        milestones_done: 0, milestones_total: 0
       };
       $scope.showRankPanel          = false;
       $scope.rankBarGlow            = false;
-      $scope.pointsNotification     = { show: false, points: 0, task_name_key: '', glow: false };
+      $scope.pointsNotifications    = [];
       $scope.showRankUpCelebration  = false;
       $scope.rankUpData             = { old_rank: 0, new_rank: 0, reward: 0, new_prefix: '' };
+
+      $scope.taskGroups             = { available: [], done: [], locked: [] };
+      var COUNTUP_MS                = 2500;
 
       $scope.showTransferWindow = false;
       $scope.transferData       = { recipient: '', amount: 0 };
 
       $scope.airPollutorAlert = { show: false, title: '', message: '', success: null };
       $scope.apStatusPanel    = { visible: false };
+      $scope.powerupInventory = { spike_strip: 0 };
+      $scope.copInventories   = {};
 
       // -------------------------------------------------------------------------
       // Air Polluter alert helper
@@ -116,7 +159,7 @@ angular.module('beamng.apps')
       // Translations
       // -------------------------------------------------------------------------
 
-      var serverTranslations = {};
+      var serverTranslations = SESSION.translations || {};
 
       var fallbackText = {
         "help_title": "Economy Mod Help:",
@@ -299,9 +342,16 @@ angular.module('beamng.apps')
         "task_wanted_combo_1": "Combo escape 2 times",
         "task_wanted_combo_2": "Combo escape 8 times",
         "task_wanted_combo_3": "Combo escape 15 times",
-        "rank_up_message": "RANK UP! You reached rank ${rank}! Reward: **$${reward}**",
-        "rank_up_broadcast": "${player} reached rank ${rank}!",
-        "points_label": "pts",
+        "rank_up_message":    "RANK UP! You reached rank ${rank}! Reward: **$${reward}**",
+        "rank_up_broadcast":  "${player} reached rank ${rank}!",
+        "points_label":       "pts",
+        "milestones_label":   "Milestones",
+        "tasks_role_police":      "Police",
+        "tasks_role_wanted":      "Wanted",
+        "tasks_role_global":      "Global",
+        "tasks_group_completed":  "Completed",
+        "tasks_group_available":  "Available",
+        "tasks_group_locked":     "Locked",
         "task_cop_markers_1": "Collect 5 markers",
         "task_cop_markers_2": "Collect 10 markers",
         "task_cop_markers_3": "Collect 18 markers",
@@ -322,40 +372,48 @@ angular.module('beamng.apps')
         "task_wanted_markers_chase_3": "Collect 7 markers while chased",
         "task_wanted_markers_chase_4": "Collect 12 markers while chased",
         "task_wanted_markers_chase_5": "Collect 20 markers while chased",
-        "wanted_global_speeding": "${player} committed excessive speeding and became WANTED!",
-        "wanted_global_zigzag": "${player} committed reckless driving and became WANTED!",
-        "wanted_fail_global": "${player} failed the WANTED mission!",
-        "wanted_escape_global": "${player} has successfully escaped!",
-        "editing_mode_banner": "Editing Mode Active | Vehicle Won't Sync Until You Press Sync",
-        "tooltip_home": "Home",
-        "tooltip_repair": "Repair Vehicle",
-        "tooltip_wanted_enable": "Enable Wanted Challenges",
-        "tooltip_wanted_disable": "Disable Wanted Challenges",
-        "tooltip_sync": "Send Vehicle to Sync",
-        "tooltip_language": "Language",
-        "tooltip_open": "Open",
-        "tooltip_close": "Close",
-        "tooltip_rank": "Driver Rank",
-        "wanted_cleared_editing": "Your wanted status was cleared because you entered edit mode",
+        "pts_action_marker_capture":       "Marker captured",
+        "pts_action_close_marker_capture": "Close marker!",
+        "pts_action_bust":                 "Criminal arrested",
+        "pts_action_escape":               "Escaped!",
+        "pts_action_zigzag_pressure":      "Zigzag pressure",
+        "pts_action_combo_escape":         "Combo escape!",
+        "pts_action_cop_marker_chase":     "Marker during chase",
+        "pts_action_wanted_marker_chase":  "Marker while fleeing",
+        "wanted_global_speeding":  "${player} committed excessive speeding and became WANTED!",
+        "wanted_global_zigzag":    "${player} committed reckless driving and became WANTED!",
+        "wanted_fail_global":      "${player} failed the WANTED mission!",
+        "wanted_escape_global":    "${player} has successfully escaped!",
+        "editing_mode_banner":     "Editing Mode Active | Vehicle Won't Sync Until You Press Sync",
+        "tooltip_home":            "Home",
+        "tooltip_repair":          "Repair Vehicle",
+        "tooltip_wanted_enable":   "Enable Wanted Challenges",
+        "tooltip_wanted_disable":  "Disable Wanted Challenges",
+        "tooltip_sync":            "Send Vehicle to Sync",
+        "tooltip_language":        "Language",
+        "tooltip_open":            "Open",
+        "tooltip_close":           "Close",
+        "tooltip_rank":            "Driver Rank",
+        "wanted_cleared_editing":  "Your wanted status was cleared because you entered edit mode",
         "editing_wanted_disabled": "Challenge mode disabled during editing",
-        "editing_wanted_enabled": "Challenge mode re-enabled after editing",
-        "editing_wanted_blocked": "Cannot enter challenge mode while editing vehicle",
-        "spawn_not_available": "This spawn location is not available on the current map",
-        "spawn_location": "Spawn Location",
-        "show_spawn_menu": "Actions",
-        "hide_spawn_menu": "Actions",
-        "transfer_window_title": "Transfer Money",
-        "transfer_recipient": "Player ID:",
-        "transfer_amount": "Amount:",
-        "transfer_send_button": "Send Money",
-        "transfer_cancel_button": "Cancel",
-        "transfer_limit_reached": "Transfer limit reached! You can send max $10,000 to this player per hour.",
-        "transfer_moderator_limit": "Transfer limit reached! Moderators can send max $50,000 per player per hour.",
-        "transfer_invalid_amount": "Please enter a valid amount.",
-        "transfer_invalid_recipient": "Please enter a valid player ID.",
-        "transfer_success": "Successfully sent $${amount} to ${recipient}!",
-        "transfer_insufficient_funds": "Insufficient funds!",
-        "transfer_self": "You cannot send money to yourself!",
+        "editing_wanted_enabled":  "Challenge mode re-enabled after editing",
+        "editing_wanted_blocked":  "Cannot enter challenge mode while editing vehicle",
+        "spawn_not_available":     "This spawn location is not available on the current map",
+        "spawn_location":          "Spawn Location",
+        "show_spawn_menu":         "Actions",
+        "hide_spawn_menu":         "Actions",
+        "transfer_window_title":         "Transfer Money",
+        "transfer_recipient":            "Player ID:",
+        "transfer_amount":               "Amount:",
+        "transfer_send_button":          "Send Money",
+        "transfer_cancel_button":        "Cancel",
+        "transfer_limit_reached":        "Transfer limit reached! You can send max $10,000 to this player per hour.",
+        "transfer_moderator_limit":      "Transfer limit reached! Moderators can send max $50,000 per player per hour.",
+        "transfer_invalid_amount":       "Please enter a valid amount.",
+        "transfer_invalid_recipient":    "Please enter a valid player ID.",
+        "transfer_success":              "Successfully sent $${amount} to ${recipient}!",
+        "transfer_insufficient_funds":   "Insufficient funds!",
+        "transfer_self":                 "You cannot send money to yourself!",
         "airpolluter_alert_title":       "AIR POLLUTION ALERT",
         "airpolluter_alert_body":        "is polluting the air! Stop them before it's too late!",
         "airpolluter_end_title_success": "AIR CLEAR",
@@ -400,7 +458,12 @@ angular.module('beamng.apps')
         "auth_failed":               "Authentication failed.",
         "auth_invalid":              "Invalid data.",
         "tooltip_change_account":    "Change Account",
-        "auth_password_saved":       "Leave empty to sign in with saved password"
+        "auth_password_saved":       "Leave empty to sign in with saved password",
+        "tooltip_spike_strip":       "Spike Strip",
+        "tooltip_banana":            "Banana Peel",
+        "tooltip_cannon":            "Cannon",
+        "tooltip_nav_on":            "Navigate to Nearest Marker",
+        "tooltip_nav_off":           "Stop Navigation"
       };
 
       $scope.t = function(key, vars) {
@@ -494,6 +557,7 @@ angular.module('beamng.apps')
       };
 
       $scope.acceptRules = function() {
+        SESSION.welcomeDone = true;
         $scope.showWelcomeScreen = false;
       };
 
@@ -531,8 +595,23 @@ angular.module('beamng.apps')
       // UI controls
       // -------------------------------------------------------------------------
 
-      $scope.toggleUI         = function() { $scope.$applyAsync(function() { $scope.isUIOpen      = !$scope.isUIOpen;      }); };
-      $scope.toggleLangMenu   = function() { $scope.$applyAsync(function() { $scope.isLangOpen    = !$scope.isLangOpen;    }); };
+      $scope.toggleUI         = function() { $scope.$applyAsync(function() { $scope.isUIOpen       = !$scope.isUIOpen;       }); };
+
+      function applyStyleClass() {
+        var root = document.getElementById('economy-hud-container');
+        if (!root) return;
+        if ($scope.minimalStyle) root.classList.add('outlined');
+        else root.classList.remove('outlined');
+      }
+      $scope.toggleUIStyle = function() {
+        $scope.$applyAsync(function() {
+          $scope.minimalStyle = !$scope.minimalStyle;
+          try { localStorage.setItem('pit_minimal_style', String($scope.minimalStyle)); } catch(e) {}
+          applyStyleClass();
+        });
+      };
+      $timeout(applyStyleClass, 0);
+      $scope.toggleLangMenu   = function() { $scope.$applyAsync(function() { $scope.isLangOpen     = !$scope.isLangOpen;     }); };
       $scope.toggleSpawnsMenu = function() { $scope.$applyAsync(function() { $scope.spawnsMenuOpen = !$scope.spawnsMenuOpen; }); };
 
       $scope.setLanguage = function(lang) {
@@ -622,6 +701,14 @@ angular.module('beamng.apps')
         }
       };
 
+      $scope.toggleNav = function() {
+        navPreference = !$scope.navEnabled;
+        try { localStorage.setItem('pit_nav_preference', String(navPreference)); } catch(e) {}
+        if (window.bngApi && typeof window.bngApi.engineLua === 'function') {
+          window.bngApi.engineLua('toggleMarkerNavigation()');
+        }
+      };
+
       $scope.syncVehicle = function() {
         if (window.bngApi && typeof window.bngApi.engineLua === 'function') {
           window.bngApi.engineLua('finishVehicleEditing()');
@@ -630,6 +717,41 @@ angular.module('beamng.apps')
             updateButtonsVisibility();
           });
         }
+      };
+
+      $scope.activatePowerup = function(type) {
+        if (!window.bngApi || typeof window.bngApi.engineLua !== 'function') return;
+        if (type === 'spike_strip') {
+          window.bngApi.engineLua('activateSpikeStrip()');
+        } else if (type === 'banana') {
+          window.bngApi.engineLua('activateBanana()');
+        } else if (type === 'cannon') {
+          window.bngApi.engineLua('activateCannon()');
+        }
+      };
+
+      $scope.nearbyHasSpikes = function() {
+        for (var pid in $scope.copInventories) {
+          if ($scope.copInventories[pid] &&
+              ($scope.copInventories[pid].spike_strip || 0) > 0) return true;
+        }
+        return false;
+      };
+
+      $scope.nearbyHasBanana = function() {
+        for (var pid in $scope.copInventories) {
+          if ($scope.copInventories[pid] &&
+              ($scope.copInventories[pid].banana || 0) > 0) return true;
+        }
+        return false;
+      };
+
+      $scope.nearbyHasCannon = function() {
+        for (var pid in $scope.copInventories) {
+          if ($scope.copInventories[pid] &&
+              ($scope.copInventories[pid].cannon || 0) > 0) return true;
+        }
+        return false;
       };
 
       // -------------------------------------------------------------------------
@@ -651,12 +773,64 @@ angular.module('beamng.apps')
       };
 
       $scope.closeRankUpBtn = function() {
+        if (_rankUpAuto) $timeout.cancel(_rankUpAuto);
+        stopConfetti();
         $scope.$applyAsync(function() { $scope.showRankUpCelebration = false; });
       };
 
       $scope.closeTransferWindowBtn = function() {
         $scope.$applyAsync(function() { $scope.showTransferWindow = false; });
       };
+
+      // -------------------------------------------------------------------------
+      // Task list
+      // -------------------------------------------------------------------------
+
+      function roleClassFor(role) {
+        if (role === 'police')   return 'role-police';
+        if (role === 'civilian') return 'role-wanted';
+        return 'role-global';
+      }
+
+      function fmtDuration(sec) {
+        sec = Math.max(0, Math.floor(sec || 0));
+        var h = Math.floor(sec / 3600);
+        var m = Math.floor((sec % 3600) / 60);
+        return h + ':' + (m < 10 ? '0' : '') + m;
+      }
+      function fmtCount(n) {
+        n = Math.floor(n || 0);
+        try { return n.toLocaleString('en-US'); } catch (e) { return '' + n; }
+      }
+      function isTimeStat(stat) { return /seconds|playtime/i.test(stat || ''); }
+
+      function recomputeTasks() {
+        var ms = ($scope.rankData && $scope.rankData.milestones) || [];
+        var groups = { available: [], done: [], locked: [] };
+        for (var i = 0; i < ms.length; i++) {
+          var m         = ms[i];
+          var threshold = m.threshold || 0;
+          var value     = m.value || 0;
+          var capped    = value > threshold ? threshold : value;
+          var item = {
+            id:        m.id,
+            name_key:  m.name_key,
+            role:      m.role,
+            roleClass: roleClassFor(m.role),
+            threshold: threshold,
+            value:     value,
+            dispValue: capped,
+            pct:       threshold > 0 ? Math.floor((capped / threshold) * 100) : 0,
+            reward:    m.points || m.base_points || 0,
+            progText:  isTimeStat(m.stat) ? fmtDuration(capped)    : fmtCount(capped),
+            threshText:isTimeStat(m.stat) ? fmtDuration(threshold) : fmtCount(threshold)
+          };
+          if (m.done)        groups.done.push(item);
+          else if (m.locked) groups.locked.push(item);
+          else               groups.available.push(item);
+        }
+        $scope.taskGroups = groups;
+      }
 
       $scope.getWantedTooltip = function() {
         return $scope.wantedEnabled ? $scope.t('tooltip_wanted_disable') : $scope.t('tooltip_wanted_enable');
@@ -678,26 +852,120 @@ angular.module('beamng.apps')
       $scope.deactivateTooltipRow  = function() { $scope.$applyAsync(function() { $scope.tooltipRowActive  = false; }); };
 
       // -------------------------------------------------------------------------
-      // Rank up / points notifications
+      // Rank up 
       // -------------------------------------------------------------------------
 
+      var _notifSeq = 0;
+
+      var _lastNotifKey = null;
+      var _lastNotifTs  = 0;
+      var NOTIF_DEDUPE_MS = 400;
+
       function showPointsNotification(data) {
-        if (!data.points || data.points <= 0) return;
+        if (!data || !data.points || data.points <= 0) return;
+
+        var _dedupeKey = Math.round(data.points) + '|' +
+                         (data.task_name_key || '') + '|' +
+                         (data.complete === true ? '1' : '0');
+        var _now = (typeof performance !== 'undefined' && performance.now)
+                   ? performance.now() : Date.now();
+        if (_dedupeKey === _lastNotifKey && (_now - _lastNotifTs) < NOTIF_DEDUPE_MS) {
+          return;
+        }
+        _lastNotifKey = _dedupeKey;
+        _lastNotifTs  = _now;
+
+        var notif = {
+          id: ++_notifSeq,
+          points: Math.round(data.points),
+          display: 0,
+          task_name_key: data.task_name_key || '',
+          complete: data.complete === true,
+          glow: true,
+          leaving: false
+        };
+
         $scope.$applyAsync(function() {
-          $scope.pointsNotification = {
-            show: true,
-            points: data.points || 0,
-            task_name_key: data.task_name_key || '',
-            glow: true
-          };
+          $scope.pointsNotifications.push(notif);
+          while ($scope.pointsNotifications.length > 5) {
+            $scope.pointsNotifications.shift();
+          }
           $scope.rankBarGlow = true;
         });
+
+        var startTs = null;
+        function tick(ts) {
+          if (startTs === null) startTs = ts;
+          var t = Math.min(1, (ts - startTs) / COUNTUP_MS);
+          var eased = 1 - Math.pow(1 - t, 3);
+          notif.display = Math.round(eased * notif.points);
+          $scope.$applyAsync();
+          if (t < 1) {
+            requestAnimationFrame(tick);
+          } else {
+            notif.display = notif.points;
+            $scope.$applyAsync();
+          }
+        }
+        requestAnimationFrame(tick);
+
+        $timeout(function() {
+          $scope.$applyAsync(function() { notif.leaving = true; });
+        }, COUNTUP_MS + 1100);
         $timeout(function() {
           $scope.$applyAsync(function() {
-            $scope.pointsNotification.show = false;
-            $scope.rankBarGlow             = false;
+            var i = $scope.pointsNotifications.indexOf(notif);
+            if (i !== -1) $scope.pointsNotifications.splice(i, 1);
+            if ($scope.pointsNotifications.length === 0) $scope.rankBarGlow = false;
           });
-        }, 2500);
+        }, COUNTUP_MS + 1500);
+      }
+
+      var _confettiRAF = null;
+      var _rankUpAuto  = null;
+
+      function startConfetti() {
+        var canvas = document.getElementById('rankup-confetti');
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var W = canvas.width  = canvas.offsetWidth  || 320;
+        var H = canvas.height = canvas.offsetHeight || 380;
+        var colors = ['#f39c12', '#e67e22', '#27ae60', '#3498db', '#e74c3c', '#ffffff', '#9b59b6'];
+        var parts = [];
+        for (var i = 0; i < 110; i++) {
+          parts.push({
+            x: Math.random() * W,
+            y: Math.random() * -H,
+            r: 3 + Math.random() * 5,
+            c: colors[Math.floor(Math.random() * colors.length)],
+            vy: 1.4 + Math.random() * 3,
+            vx: -1.2 + Math.random() * 2.4,
+            rot: Math.random() * Math.PI,
+            vr: -0.25 + Math.random() * 0.5,
+            rect: Math.random() < 0.55
+          });
+        }
+        function frame() {
+          ctx.clearRect(0, 0, W, H);
+          for (var i = 0; i < parts.length; i++) {
+            var p = parts[i];
+            p.y += p.vy; p.x += p.vx; p.rot += p.vr;
+            if (p.y > H + 12) { p.y = -12; p.x = Math.random() * W; }
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillStyle = p.c;
+            if (p.rect) ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+            else { ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI * 2); ctx.fill(); }
+            ctx.restore();
+          }
+          _confettiRAF = requestAnimationFrame(frame);
+        }
+        frame();
+      }
+
+      function stopConfetti() {
+        if (_confettiRAF) { cancelAnimationFrame(_confettiRAF); _confettiRAF = null; }
       }
 
       function showRankUpCelebration(data) {
@@ -705,6 +973,12 @@ angular.module('beamng.apps')
           $scope.rankUpData            = data;
           $scope.showRankUpCelebration = true;
         });
+        $timeout(function() { startConfetti(); }, 80);
+        if (_rankUpAuto) $timeout.cancel(_rankUpAuto);
+        _rankUpAuto = $timeout(function() {
+          stopConfetti();
+          $scope.$applyAsync(function() { $scope.showRankUpCelebration = false; });
+        }, 8000);
       }
 
       // -------------------------------------------------------------------------
@@ -716,8 +990,7 @@ angular.module('beamng.apps')
           $scope.showSyncButton = $scope.isEditingVehicle;
           $scope.showWantedToggle = !$scope.isPolice &&
                                     $scope.wantedTime === 0 &&
-                                    !$scope.isEditingVehicle &&
-                                    $scope.repairIcons === 0;
+                                    !$scope.isEditingVehicle;
         });
       }
 
@@ -763,11 +1036,48 @@ angular.module('beamng.apps')
       };
 
       // -------------------------------------------------------------------------
-      // AngularJS event listeners ($scope.$on)
+      // AngularJS event listeners
       // -------------------------------------------------------------------------
+
+      $scope.$on('ECON_AuthRequired', function(e, data) {
+        if (!data || !data.required) return;
+        if (SESSION.authDone) return;
+        $scope.$applyAsync(function() {
+          $scope.isGuestAccount    = true;
+          $scope.authRequired      = true;
+          $scope.showWelcomeScreen = true;
+          $scope.currentStep       = 0;
+          if (savedUsername) { $scope.authData.username = savedUsername; }
+        });
+      });
+
+      $scope.$on('AIRPOLLUTER_MissionStart', function(e, data) {
+        if (!data) return;
+        var msg = (data.playerName || '?') + ' ' + $scope.t('airpolluter_alert_body');
+        showAPAlert($scope.t('airpolluter_alert_title'), msg, null);
+      });
+
+      $scope.$on('AIRPOLLUTER_MissionEnd', function(e, data) {
+        if (!data) return;
+        if (data.success) {
+          showAPAlert('✅ ' + $scope.t('airpolluter_end_title_success'),
+                              $scope.t('airpolluter_end_body_success'), true);
+        } else {
+          showAPAlert('🚨 ' + $scope.t('airpolluter_end_title_fail'),
+                              $scope.t('airpolluter_end_body_fail'), false);
+        }
+      });
 
       $scope.$on('AIRPOLLUTER_StatusUpdate', function(e, data) {
         if (data) $scope.$applyAsync(function() { $scope.apStatusPanel = data; });
+      });
+
+      $scope.$on('POWERUP_InventoryUpdate', function(e, data) {
+        if (data) $scope.$applyAsync(function() { $scope.powerupInventory = data; });
+      });
+
+      $scope.$on('POWERUP_CopInventories', function(e, data) {
+        if (data) $scope.$applyAsync(function() { $scope.copInventories = data; });
       });
 
       $scope.$on('EconomyUI_Update', function(e, data) {
@@ -789,7 +1099,16 @@ angular.module('beamng.apps')
           });
         }
       }
-      $scope.$on('EconomyUI_WantedUpdate', function(e, p) { handleWantedPayload(p); });
+      $scope.$on('EconomyUI_WantedUpdate', function(e, p) {
+        handleWantedPayload(p);
+        var wt = (p && p.wantedTime != null) ? Math.max(0, Math.floor(Number(p.wantedTime))) : 0;
+        if (prevWantedForNav === 0 && wt > 0 && navPreference && !$scope.navEnabled) {
+          if (window.bngApi && typeof window.bngApi.engineLua === 'function') {
+            window.bngApi.engineLua('toggleMarkerNavigation()');
+          }
+        }
+        prevWantedForNav = wt;
+      });
 
       $scope.$on('EconomyUI_PoliceProximity', function(e, p) {
         if (p && typeof p === 'object' && p.policeNearby !== undefined) {
@@ -797,11 +1116,78 @@ angular.module('beamng.apps')
         }
       });
 
+      function makeCuffsTo(ac, dest, when) {
+        [0, 0.18].forEach(function(offset) {
+          var buf = ac.createBuffer(1, Math.floor(ac.sampleRate * 0.08), ac.sampleRate);
+          var d   = buf.getChannelData(0);
+          for (var i = 0; i < d.length; i++)
+            d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (d.length * 0.15));
+          var src = ac.createBufferSource();
+          src.buffer = buf;
+          var hp = ac.createBiquadFilter();
+          hp.type = 'highpass'; hp.frequency.value = 3000;
+          var g = ac.createGain(); g.gain.value = 1.8;
+          src.connect(hp); hp.connect(g); g.connect(dest);
+          src.start(when + offset);
+        });
+      }
+
+      function buildOption3(ac, dest) {
+        var buf = ac.createBuffer(1, ac.sampleRate * 0.15, ac.sampleRate);
+        var d   = buf.getChannelData(0);
+        for (var i = 0; i < d.length; i++)
+          d[i] = (Math.random() * 2 - 1) *
+                 (i < d.length * 0.7 ? 1 : Math.exp(-(i - d.length * 0.7) / (d.length * 0.1)));
+        var src = ac.createBufferSource();
+        src.buffer = buf;
+        var bp = ac.createBiquadFilter();
+        bp.type = 'bandpass'; bp.frequency.value = 1400; bp.Q.value = 0.6;
+        var rg = ac.createGain(); rg.gain.value = 2.5;
+        src.connect(bp); bp.connect(rg); rg.connect(dest);
+        src.start(ac.currentTime + 0.2);
+        var osc = ac.createOscillator();
+        var og  = ac.createGain();
+        osc.frequency.value = 1050;
+        og.gain.setValueAtTime(0,    ac.currentTime + 0.45);
+        og.gain.linearRampToValueAtTime(0.35, ac.currentTime + 0.48);
+        og.gain.linearRampToValueAtTime(0,    ac.currentTime + 0.62);
+        osc.connect(og); og.connect(dest);
+        osc.start(ac.currentTime + 0.4); osc.stop(ac.currentTime + 0.65);
+        makeCuffsTo(ac, dest, ac.currentTime + 6.8);
+      }
+
+      var _arrestAc      = null;
+      var _arrestCleanup = null;
+
+      function startArrestSound() {
+        if (_arrestAc) return;
+        try {
+          _arrestAc = new (window.AudioContext || window.webkitAudioContext)();
+          buildOption3(_arrestAc, _arrestAc.destination);
+          _arrestCleanup = $timeout(stopArrestSound, 7500);
+        } catch(e) {
+          console.warn('[EconomyUI] Arrest sound failed:', e);
+        }
+      }
+
+      function stopArrestSound() {
+        if (_arrestCleanup) { $timeout.cancel(_arrestCleanup); _arrestCleanup = null; }
+        if (_arrestAc)      { try { _arrestAc.close(); } catch(e) {} _arrestAc = null; }
+      }
+
+      function syncBustPct() {
+        var row = document.querySelector('.bust-progress-row');
+        if (row) row.style.setProperty('--bust-pct', ($scope.bustProgress.percent || 0) + '%');
+      }
       $scope.$on('EconomyUI_BustProgress', function(e, p) {
         if (p && typeof p === 'object') {
+          var wasActive = $scope.bustProgress.active;
           $scope.$applyAsync(function() {
             $scope.bustProgress = { active: p.active === true, percent: Number(p.bustProgress) || 0 };
           });
+          $timeout(syncBustPct, 0);
+          if (p.active === true && !wasActive) startArrestSound();
+          else if (!p.active && wasActive)     stopArrestSound();
         }
       });
 
@@ -824,6 +1210,7 @@ angular.module('beamng.apps')
         $scope.$applyAsync(function() {
           $scope.authLoading = false;
           if (data.ok) {
+            SESSION.authDone    = true;
             $scope.authRequired = false;
             if (data.migration_token) {
               $scope.migrationToken = data.migration_token;
@@ -842,8 +1229,15 @@ angular.module('beamng.apps')
       $scope.$on('POLICE_RoleUpdate', function(e, data) {
         if (data && data.isPolice !== undefined) {
           $scope.$applyAsync(function() {
+            var wasPolice = prevPoliceForNav;
             $scope.isPolice = data.isPolice;
             updateButtonsVisibility();
+            if (!wasPolice && data.isPolice && navPreference && !$scope.navEnabled) {
+              if (window.bngApi && typeof window.bngApi.engineLua === 'function') {
+                window.bngApi.engineLua('toggleMarkerNavigation()');
+              }
+            }
+            prevPoliceForNav = data.isPolice;
           });
         }
       });
@@ -863,9 +1257,16 @@ angular.module('beamng.apps')
         }
       });
 
+      $scope.$on('ECON_NavUpdate', function(e, data) {
+        if (data && data.navEnabled !== undefined) {
+          $scope.$applyAsync(function() { $scope.navEnabled = data.navEnabled; });
+        }
+      });
+
       $scope.$on('EconomyUI_TranslationsUpdate', function(e, data) {
         if (data && data.translations) {
-          serverTranslations = data.translations;
+          serverTranslations   = data.translations;
+          SESSION.translations = data.translations;
           if (data.lang) {
             $scope.$applyAsync(function() {
               $scope.selectedLang = data.lang;
@@ -877,7 +1278,7 @@ angular.module('beamng.apps')
               }
             });
           }
-          if (data.auth_required) {
+          if (data.auth_required && !SESSION.authDone) {
             $scope.$applyAsync(function() {
               $scope.authRequired      = true;
               $scope.showWelcomeScreen = true;
@@ -889,22 +1290,35 @@ angular.module('beamng.apps')
         }
       });
 
+      function syncRankPct() {
+        var track = document.querySelector('.rank-bar-track');
+        if (track) track.style.setProperty('--rank-pct', ($scope.rankData.percent || 0) + '%');
+      }
       $scope.$on('EconomyUI_RankUpdate', function(e, data) {
         if (data) {
           $scope.$applyAsync(function() {
             $scope.rankData = {
-              rank:          data.rank          || 1,
-              rank_name_key: data.rank_name_key || 'rank_1_name',
-              prefix:        data.prefix        || '',
-              percent:       data.percent       || 0,
-              completed:     data.completed     || 0,
-              total:         data.total         || 0,
-              tasks:         data.tasks         || [],
-              max_rank:      data.max_rank      || 5
+              rank:             data.rank             || 1,
+              rank_name_key:    data.rank_name_key    || 'rank_1_name',
+              prefix:           data.prefix           || '[I]',
+              percent:          data.percent          || 0,
+              completed:        data.completed        || 0,
+              total:            data.total            || 0,
+              tasks:            data.tasks            || [],
+              milestones:       data.milestones       || [],
+              max_rank:         data.max_rank         || 20,
+              total_points:     data.total_points     || 0,
+              pts_to_next:      data.pts_to_next      || 0,
+              next_prefix:      data.next_prefix      || null,
+              milestones_done:  data.milestones_done  || 0,
+              milestones_total: data.milestones_total || 0,
             };
+            recomputeTasks();
           });
+          $timeout(syncRankPct, 0);
         }
       });
+      $timeout(syncRankPct, 0);
 
       $scope.$on('EconomyUI_TaskProgress', function(e, data) { if (data) showPointsNotification(data); });
       $scope.$on('EconomyUI_RankUp',       function(e, data) { if (data) showRankUpCelebration(data); });
@@ -913,154 +1327,7 @@ angular.module('beamng.apps')
       });
 
       // -------------------------------------------------------------------------
-      // guihooks listeners (direct BeamNG bridge)
-      // -------------------------------------------------------------------------
-
-      try {
-        if (typeof guihooks !== "undefined" && guihooks.on) {
-          guihooks.on("ECON_AuthRequired", function(data) {
-            if (!data || !data.required) return;
-            $scope.$applyAsync(function() {
-              $scope.isGuestAccount    = true;
-              $scope.authRequired      = true;
-              $scope.showWelcomeScreen = true;
-              $scope.currentStep       = 0;
-              if (savedUsername) { $scope.authData.username = savedUsername; }
-            });
-            if (savedUsername && savedPasswordHash && window.bngApi) {
-              var p = JSON.stringify({ mode: 'login', username: savedUsername, hash: savedPasswordHash });
-              window.bngApi.engineLua('TriggerServerEvent("ECON_Auth", [==[' + p + ']==])');
-            }
-          });
-
-          guihooks.on("ECON_AuthResult", function(data) {
-            if (!data) return;
-            $scope.$applyAsync(function() {
-              $scope.authLoading = false;
-              if (data.ok) {
-                $scope.authRequired = false;
-                if (data.migration_token) {
-                  $scope.migrationToken = data.migration_token;
-                  try { localStorage.setItem('pit_migration_token', data.migration_token); } catch(e) {}
-                }
-                if ($scope.currentStep === 0) { $scope.currentStep = 1; }
-                if (data.money !== undefined) { $scope.balance = data.money; }
-              } else {
-                $scope.authError  = $scope.t(data.error_key || 'auth_failed');
-                savedPasswordHash = null;
-                try { localStorage.removeItem('pit_password_hash'); } catch(e) {}
-              }
-            });
-          });
-
-          guihooks.on("EconomyUI_WantedUpdate",    handleWantedPayload);
-
-          guihooks.on("EconomyUI_PoliceProximity", function(p) {
-            if (p) $scope.$applyAsync(function() { $scope.policeNearby = p.policeNearby === true; });
-          });
-
-          guihooks.on("EconomyUI_BustProgress", function(p) {
-            if (p) $scope.$applyAsync(function() {
-              $scope.bustProgress = { active: p.active === true, percent: Number(p.bustProgress) || 0 };
-            });
-          });
-
-          guihooks.on("EconomyUI_RepairIcons", function(p) {
-            if (p) $scope.$applyAsync(function() {
-              $scope.repairIcons = Math.max(0, Number(p.repairIcons) || 0);
-            });
-          });
-
-          guihooks.on("EconomyUI_TranslationsUpdate", function(data) {
-            if (data && data.translations) {
-              serverTranslations = data.translations;
-              $scope.$applyAsync(function() {
-                if (data.lang) {
-                  $scope.selectedLang = data.lang;
-                  updateDirection(data.lang);
-                  try {
-                    localStorage.setItem('economyUI_language', data.lang);
-                  } catch(e) {
-                    console.warn('[EconomyUI] Could not save language from guihooks:', e);
-                  }
-                }
-                if (data.auth_required) {
-                  $scope.isGuestAccount    = true;
-                  $scope.authRequired      = true;
-                  $scope.showWelcomeScreen = true;
-                  $scope.currentStep       = 0;
-                  if (savedUsername) { $scope.authData.username = savedUsername; }
-                }
-              });
-              if (data.auth_required && savedUsername && savedPasswordHash && window.bngApi) {
-                var p = JSON.stringify({ mode: 'login', username: savedUsername, hash: savedPasswordHash });
-                window.bngApi.engineLua('TriggerServerEvent("ECON_Auth", [==[' + p + ']==])');
-              }
-            }
-          });
-
-          guihooks.on("EconomyUI_RankUpdate", function(data) {
-            if (data) $scope.$applyAsync(function() { $scope.rankData = data; });
-          });
-
-          guihooks.on("EconomyUI_TaskProgress",  showPointsNotification);
-          guihooks.on("EconomyUI_RankUp",        showRankUpCelebration);
-
-          guihooks.on("EconomyUI_ShowRankPanel", function() {
-            $scope.$applyAsync(function() { $scope.showRankPanel = true; });
-          });
-
-          guihooks.on("POLICE_RoleUpdate", function(data) {
-            if (data && data.isPolice !== undefined) {
-              $scope.$applyAsync(function() {
-                $scope.isPolice = data.isPolice;
-                updateButtonsVisibility();
-              });
-            }
-          });
-
-          guihooks.on("EconomyUI_WantedEnabledUpdate", function(data) {
-            if (data && data.wantedEnabled !== undefined) {
-              $scope.$applyAsync(function() { $scope.wantedEnabled = data.wantedEnabled; });
-            }
-          });
-
-          guihooks.on("ECON_EditingModeUpdate", function(data) {
-            if (data && data.isEditing !== undefined) {
-              $scope.$applyAsync(function() {
-                $scope.isEditingVehicle = data.isEditing;
-                updateButtonsVisibility();
-              });
-            }
-          });
-
-          guihooks.on("AIRPOLLUTER_MissionStart", function(data) {
-            if (!data) return;
-            var msg = (data.playerName || '?') + ' ' + $scope.t('airpolluter_alert_body');
-            showAPAlert($scope.t('airpolluter_alert_title'), msg, null);
-          });
-
-          guihooks.on("AIRPOLLUTER_MissionEnd", function(data) {
-            if (!data) return;
-            if (data.success) {
-              showAPAlert('✅ ' + $scope.t('airpolluter_end_title_success'),
-                                  $scope.t('airpolluter_end_body_success'), true);
-            } else {
-              showAPAlert('🚨 ' + $scope.t('airpolluter_end_title_fail'),
-                                  $scope.t('airpolluter_end_body_fail'), false);
-            }
-          });
-
-          guihooks.on("AIRPOLLUTER_StatusUpdate", function(data) {
-            if (data) $scope.$applyAsync(function() { $scope.apStatusPanel = data; });
-          });
-        }
-      } catch(err) {
-        console.error('[EconomyHUD] guihooks registration error:', err);
-      }
-
-      // -------------------------------------------------------------------------
-      // Tooltip DOM binding (post-render)
+      // Tooltip DOM binding
       // -------------------------------------------------------------------------
 
       $timeout(function() {
@@ -1080,6 +1347,10 @@ angular.module('beamng.apps')
       // -------------------------------------------------------------------------
       // Initialization
       // -------------------------------------------------------------------------
+
+      $scope.$on('$destroy', function() {
+        if (_arrestAc) { try { _arrestAc.close(); } catch(e) {} _arrestAc = null; }
+      });
 
       $timeout(function() {
         updateButtonsVisibility();

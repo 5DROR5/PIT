@@ -148,15 +148,28 @@ body.srs-loading-active .loading-screen .loading-background {
   pointer-events: none;
   display: none;
 }
+
 #srs-pit-gifs.is-visible {
   display: block;
 }
+
 #srs-pit-gifs img {
   position: absolute;
   width: 32%;
   aspect-ratio: 640 / 380;
   object-fit: contain;
 }
+
+#srs-logo {
+  position: absolute;
+  left: 2%;
+  top: 22%;
+  width: 19vw;
+  height: 19vw;
+  object-fit: contain;
+  pointer-events: none;
+}
+
 #srs-pit-gifs img:nth-child(1) { top: 9%;  left: 29%; }
 #srs-pit-gifs img:nth-child(2) { top: 9%;  left: 65%; }
 #srs-pit-gifs img:nth-child(3) { top: 48%; left: 29%; }

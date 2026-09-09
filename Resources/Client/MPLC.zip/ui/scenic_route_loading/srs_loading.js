@@ -153,6 +153,12 @@
 
     document.body.appendChild(overlayEl);
 
+    const logoEl = document.createElement("img");
+    logoEl.id = "srs-logo";
+    logoEl.src = "/ui/scenic_route_loading/images/LOGO.gif";
+    logoEl.alt = "";
+    overlayEl.appendChild(logoEl);
+
     const gifDiv = document.createElement("div");
     gifDiv.id = "srs-pit-gifs";
     gifDiv.innerHTML = GIF_NAMES.map(g => `<img src="${GIF_BASE}${g}" alt="">`).join("");

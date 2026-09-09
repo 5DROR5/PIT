@@ -110,14 +110,6 @@ angular.module('beamng.apps')
         $scope.visible = false;
       };
 
-      // =======================================================================
-      // GUIHOOKS BRIDGE
-      // =======================================================================
-      if (typeof guihooks !== 'undefined') {
-        guihooks.on('PartsShop_ShowPurchase',   function(data) { $scope.$broadcast('PartsShop_ShowPurchase',   data); });
-        guihooks.on('PartsShop_ShowBanned',     function(data) { $scope.$broadcast('PartsShop_ShowBanned',     data); });
-        guihooks.on('PartsShop_LanguageUpdate', function(data) { $scope.$broadcast('PartsShop_LanguageUpdate', data); });
-      }
     }]
   };
 }]);

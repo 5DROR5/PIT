@@ -33,7 +33,7 @@ ul#chat-list {
     padding: 4px 4px;
     color: white;
     background-color: transparent;
-    text-shadow: 0px 0px 4px #000, 0px 0px 6px #000, 0px 0px 8px #000;
+    text-shadow: 0px 0px 2px #000, 0px 0px 3px #000, 0px 0px 4px #000;
     border-radius: 6px;
     transition: transform .12s ease, opacity .12s;
 }
@@ -182,4 +182,30 @@ ul#chat-list {
 
 .italic {
     font-style: italic;
+}
+
+span[style*="background-color"] {
+    text-shadow: none;
+}
+
+#mention-area {
+    border-left: 4px solid #FFD700;
+    border-top: 1px solid rgba(255, 215, 0, 0.2);
+    padding: 6px 10px;
+    cursor: pointer;
+    display: none;
+    background: transparent;
+    border-radius: 0;
+    align-items: center;
+    gap: 7px;
+}
+
+#mention-area .mention-inner {
+    background: rgba(0, 0, 0, 0.7);
+    color: #FFD700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }

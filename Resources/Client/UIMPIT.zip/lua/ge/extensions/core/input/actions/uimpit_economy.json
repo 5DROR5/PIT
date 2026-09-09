@@ -1,0 +1,93 @@
+{
+  "uimpit_home": {
+    "cat": "uimpit",
+    "order": 1,
+    "ctx": "tlua",
+    "onDown": "if extensions and extensions.powerUpsClient then extensions.powerUpsClient.triggerAction('home') end",
+    "isBasic": true,
+    "title": "PIT: Return Home",
+    "desc": "Teleport your vehicle to the home spawn point"
+  },
+  "uimpit_spawn2": {
+    "cat": "uimpit",
+    "order": 2,
+    "ctx": "tlua",
+    "onDown": "if extensions and extensions.powerUpsClient then extensions.powerUpsClient.triggerAction('spawn2') end",
+    "isBasic": true,
+    "title": "PIT: Spawn Location 2",
+    "desc": "Teleport to spawn location 2"
+  },
+  "uimpit_spawn3": {
+    "cat": "uimpit",
+    "order": 3,
+    "ctx": "tlua",
+    "onDown": "if extensions and extensions.powerUpsClient then extensions.powerUpsClient.triggerAction('spawn3') end",
+    "isBasic": true,
+    "title": "PIT: Spawn Location 3",
+    "desc": "Teleport to spawn location 3"
+  },
+  "uimpit_spawn4": {
+    "cat": "uimpit",
+    "order": 4,
+    "ctx": "tlua",
+    "onDown": "if extensions and extensions.powerUpsClient then extensions.powerUpsClient.triggerAction('spawn4') end",
+    "isBasic": true,
+    "title": "PIT: Spawn Location 4",
+    "desc": "Teleport to spawn location 4"
+  },
+  "uimpit_repair": {
+    "cat": "uimpit",
+    "order": 5,
+    "ctx": "tlua",
+    "onDown": "if extensions and extensions.powerUpsClient then extensions.powerUpsClient.triggerAction('repair') end",
+    "isBasic": true,
+    "title": "PIT: Repair Vehicle",
+    "desc": "Repair your vehicle (when repairs are available)"
+  },
+  "uimpit_spike_strip": {
+    "cat": "uimpit",
+    "order": 6,
+    "ctx": "tlua",
+    "onDown": "if extensions and extensions.powerUpsClient then extensions.powerUpsClient.triggerAction('spike_strip') end",
+    "isBasic": true,
+    "title": "PIT: Deploy Spike Strip",
+    "desc": "Place a spike strip behind your vehicle"
+  },
+  "uimpit_banana": {
+    "cat": "uimpit",
+    "order": 7,
+    "ctx": "tlua",
+    "onDown": "if extensions and extensions.powerUpsClient then extensions.powerUpsClient.triggerAction('banana') end",
+    "isBasic": true,
+    "title": "PIT: Drop Banana Peel",
+    "desc": "Drop a banana peel behind your vehicle"
+  },
+  "uimpit_cannon": {
+    "cat": "uimpit",
+    "order": 8,
+    "ctx": "tlua",
+    "onDown": "if extensions and extensions.powerUpsClient then extensions.powerUpsClient.triggerAction('cannon') end",
+    "isBasic": true,
+    "title": "PIT: Fire Cannon",
+    "desc": "Fire a cannonball at the nearest target"
+  },
+  "uimpit_nav_toggle": {
+    "cat": "uimpit",
+    "order": 9,
+    "ctx": "tlua",
+    "onDown": "if extensions and extensions.powerUpsClient then extensions.powerUpsClient.triggerAction('nav_toggle') end",
+    "isBasic": true,
+    "title": "PIT: Toggle Marker Navigation",
+    "desc": "Toggle navigation arrows to the nearest repair marker"
+  },
+  "spawn_bollard": {
+    "internal_name": "spawnBollard",
+    "cat": "uimpit",
+    "order": 10,
+    "ctx": "tlua",
+    "onDown": "if extensions.mybollard then extensions.mybollard.spawn() end",
+    "isBasic": true,
+    "title": "Spawn Bollards",
+    "desc": "Spawns a row of bollards behind your vehicle"
+  }
+}

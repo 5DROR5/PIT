@@ -165,6 +165,18 @@
         "top":"",
         "width":"490px"
       }
+    },
+        {
+      "appName":"bollardUi",
+      "placement":{
+        "bottom":"",
+        "height":"250px",
+        "left":"",
+        "position":"absolute",
+        "right":"355px",
+        "top":"0px",
+        "width":"180px"
+      }
     }
   ],
   "title":"Pit",

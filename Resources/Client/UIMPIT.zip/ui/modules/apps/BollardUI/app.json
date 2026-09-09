@@ -1,0 +1,9 @@
+{
+  "domElement": "<bollard-ui></bollard-ui>",
+  "name": "Bollard UI",
+  "types": ["ui.apps.categories.vehicle_info"],
+  "description": "Blocker mission control",
+  "css": { "right":"10px","bottom":"10px","width":"200px","height":"170px","min-width":"180px","min-height":"130px" },
+  "author": "you", "version": "1.0", "directive": "bollardUi",
+  "category": "Dashboard", "isAuxiliary": false, "interactive": "yes"
+}

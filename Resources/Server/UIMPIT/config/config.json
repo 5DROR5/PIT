@@ -19,18 +19,18 @@
   "money": {
     "money_per_minute_interval_ms": 180000,
     "money_per_minute_amount": 75,
-    "starting_money": 50000,
+    "starting_money": 250000,
     "cool_message_interval_ms": 200000
   },
 
   "civilian": {
     "speeding_limit_kmh": 150,
     "speeding_bonus_duration_ms": 240000,
-    "speeding_cooldown_ms": 1,
+    "speeding_cooldown_ms": 15000,
     "speeding_bonus_per_second": 4,
     "speeding_final_bonus_amount": 900,
     "zigzag_bonus_duration_ms": 420000,
-    "zigzag_cooldown_ms": 1,
+    "zigzag_cooldown_ms": 15000,
     "zigzag_final_bonus_amount": 1500,
     "zigzag_prorated_bonus": 7,
     "min_speed_kmh_for_zigzag": 30,
@@ -66,7 +66,7 @@
   },
 
   "markers": {
-    "spawn_delay_ms": 60000,
+    "spawn_delay_ms": 10000,
     "max_markers": 3,
     "marker_type": 1,
     "marker_scale": 10,

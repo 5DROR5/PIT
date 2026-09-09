@@ -9,13 +9,11 @@
 
 return {
     -- Trucks
-    "titan",
-    "t_series",
-    "d_series",
+    "us_semi",
+    "dumptruck",
 
     -- Buses
     "citybus",
-    "wentward_bus",
 
     -- Other
     "Inflated_Mat",

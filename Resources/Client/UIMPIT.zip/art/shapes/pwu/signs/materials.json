@@ -1,0 +1,63 @@
+{
+  "PWU_SignRoadSpikesAhead": {
+    "name": "PWU_SignRoadSpikesAhead",
+    "mapTo": "PWU_SignRoadSpikesAhead",
+    "class": "Material",
+    "Stages": [
+      { "colorMap": "art/shapes/pwu/signs/IMG_0241.PNG.001.png" },
+      {}, {}, {}
+    ],
+    "translucentBlendOp": "None"
+  },
+  "PWU_BarbedWireLong_2": {
+    "name": "PWU_BarbedWireLong_2",
+    "mapTo": "PWU_BarbedWireLong_2",
+    "class": "Material",
+    "Stages": [
+      { "colorMap": "art/shapes/pwu/signs/Wire.jpg" },
+      {}, {}, {}
+    ],
+    "translucentBlendOp": "None"
+  },
+  "PWU_BarbedWireLong_3": {
+    "name": "PWU_BarbedWireLong_3",
+    "mapTo": "PWU_BarbedWireLong_3",
+    "class": "Material",
+    "Stages": [
+      { "colorMap": "art/shapes/pwu/signs/metal-texture-pictures-48xgj9hn2w2epewh.jpg" },
+      {}, {}, {}
+    ],
+    "translucentBlendOp": "None"
+  },
+  "banana": {
+    "name": "banana",
+    "mapTo": "banana",
+    "class": "Material",
+    "Stages": [
+      { "colorMap": "art/shapes/pwu/signs/1_DefaultMaterial_BaseColor.jpg.035.jpg" },
+      {}, {}, {}
+    ],
+    "translucentBlendOp": "None"
+  },
+  "Cast": {
+    "name": "Cast",
+    "mapTo": "Cast",
+    "class": "Material",
+    "Stages": [
+      { "colorMap": "art/shapes/pwu/signs/GWC Cast Iron Minor Rust_BaseColor.jpg.001.jpg" },
+      {}, {}, {}
+    ],
+    "translucentBlendOp": "None"
+  },
+  "PWU_Bollard": {
+    "name": "PWU_Bollard",
+    "mapTo": "PWU_Bollard",
+    "class": "Material",
+    "Stages": [
+      { "baseColorMap": ".018_baseColor.jpg" },
+      {}, {}, {}
+    ],
+    "translucentBlendOp": "None",
+    "version": 1.5
+  }
+}

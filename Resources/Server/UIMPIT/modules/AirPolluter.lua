@@ -1,8 +1,8 @@
 -- =============================================================================
 -- AirPolluter.lua
 -- Special Mission: Air Polluter
--- Secondary module — loaded by main.lua via dofile()
--- License: AGPL-3.0 — https://www.gnu.org/licenses/agpl-3.0.html
+-- Secondary module - loaded by main.lua via dofile()
+-- License: AGPL-3.0 - https://www.gnu.org/licenses/agpl-3.0.html
 -- =============================================================================
 
 local AP = {}
@@ -117,7 +117,7 @@ end
 
 
 -- =============================================================================
--- STATUS PANEL  (proximity UI — shown when mission is idle only)
+-- STATUS PANEL  (proximity UI - shown when mission is idle only)
 -- =============================================================================
 
 local function hideStatusPanel(pid)
@@ -148,8 +148,8 @@ local function sendStatusToNearbyPlayers(now)
 
     deps.forPlayers(function(pid)
         if not MP.IsPlayerConnected(pid) then return end
-        local ok, pd = pcall(MP.GetPositionRaw, pid, 0)
-        if not (ok and pd and pd.pos) then return end
+        local pd, err = MP.GetPositionRaw(pid, 0)
+        if err ~= "" or not pd or not pd.pos then return end
         local p  = pd.pos
         local dx = (p[1] or 0) - mPos.x
         local dy = (p[2] or 0) - mPos.y
@@ -222,7 +222,7 @@ local function startMission(pid)
     state.fog_intensity  = 0
     state.touch_timers   = {}
 
-    -- Hide the proximity status panel for all players — mission is now in progress.
+    -- Hide the proximity status panel for all players - mission is now in progress.
     hideStatusPanelAll()
 
     deps.DB.setWanted(uid, true)
@@ -242,7 +242,7 @@ local function startMission(pid)
     deps.updatePrefix(pid)
 
     local name = deps.getPlayerName(pid)
-    deps.broadcastMessage(deps.translateForPlayer(-1, "airpolluter_start_broadcast", { player = name }))
+    deps.forPlayers(function(p) deps.sendMessage(p, deps.translateForPlayer(p, "airpolluter_start_broadcast", { player = name })) end)
     toAll("AIRPOLLUTER_MissionStart", encode({ playerName = name }))
     log("Mission started by " .. name .. " (pid=" .. pid .. ")")
 end
@@ -268,10 +268,10 @@ local function endMission(success)
             deps.sendMessage(pid, deps.translateForPlayer(pid, "airpolluter_success", { amount = SUCCESS_BONUS }))
             pcall(function() deps.DB.incrementWantedSuccess(uid) end)
         end
-        deps.broadcastMessage(deps.translateForPlayer(-1, "airpolluter_success_broadcast", { player = name }))
+        deps.forPlayers(function(p) deps.sendMessage(p, deps.translateForPlayer(p, "airpolluter_success_broadcast", { player = name })) end)
         toAll("AIRPOLLUTER_MissionEnd", encode({ success = true,  playerName = name }))
     else
-        deps.broadcastMessage(deps.translateForPlayer(-1, "airpolluter_fail_broadcast", { player = name }))
+        deps.forPlayers(function(p) deps.sendMessage(p, deps.translateForPlayer(p, "airpolluter_fail_broadcast", { player = name })) end)
         toAll("AIRPOLLUTER_MissionEnd", encode({ success = false, playerName = name }))
     end
 
@@ -371,8 +371,8 @@ function AP.tick()
                     return
                 end
 
-                local ok, pd = pcall(MP.GetPositionRaw, pid, 0)
-                if not (ok and pd and pd.pos) then return end
+                local pd, err = MP.GetPositionRaw(pid, 0)
+                if err ~= "" or not pd or not pd.pos then return end
                 local p  = pd.pos
                 local dx = (p[1] or 0) - mPos.x
                 local dy = (p[2] or 0) - mPos.y
@@ -440,15 +440,15 @@ function AP.tick()
         local police_n    = 0
         local nearby_cops = {}
         local rangeSq     = POLICE_RANGE_M * POLICE_RANGE_M
-        local ok_c, cpd   = pcall(MP.GetPositionRaw, pid, 0)
+        local cpd, c_err  = MP.GetPositionRaw(pid, 0)
 
-        if ok_c and cpd and cpd.pos then
+        if c_err == "" and cpd and cpd.pos then
             local cp = cpd.pos
             deps.forPlayers(function(opid)
                 if opid == pid or not MP.IsPlayerConnected(opid) then return end
                 if deps.getRole(deps.getUID(opid)) ~= "police" then return end
-                local ok2, cop = pcall(MP.GetPositionRaw, opid, 0)
-                if ok2 and cop and cop.pos then
+                local cop, cop_err = MP.GetPositionRaw(opid, 0)
+                if cop_err == "" and cop and cop.pos then
                     local co  = cop.pos
                     local ddx = (cp[1] or 0) - (co[1] or 0)
                     local ddy = (cp[2] or 0) - (co[2] or 0)

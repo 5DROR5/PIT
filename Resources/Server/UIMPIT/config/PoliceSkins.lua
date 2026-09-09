@@ -2,7 +2,7 @@
 -- PoliceSkins.lua
 -- List of vehicle skin/paint identifiers that grant the police role.
 -- Add any custom police skin IDs here to extend role detection.
--- License: AGPL-3.0 — https://www.gnu.org/licenses/agpl-3.0.html
+-- License: AGPL-3.0 - https://www.gnu.org/licenses/agpl-3.0.html
 -- =============================================================================
 
 return {
@@ -35,7 +35,7 @@ return {
     "sunburst2_skin_gendarmerie",
     "sunburst2_skin_police",
     "sunburst2_skin_policeBelasco",
-    "sunburst2_skin_policeinterceptor",
+    "sunburst2_skin_policeInterceptor",
     "sunburst2_skin_polizia",
     "sunburst2_skin_polizia_alt",
     "bx_skin_police",
@@ -52,4 +52,6 @@ return {
 --    "etki_skin_police",
 --    "moonhawk_skin_police",
 --    "fullsize_limo_skin_police",
+    "ardente_skin_carabinieri",
+    "ardente_skin_gendarmerie",
 }
