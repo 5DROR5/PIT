@@ -363,7 +363,9 @@ Have questions about the mods or want to play on the server? [Join the Discord](
 ## Credits
 
 - **[beamsofnorway](https://github.com/beamsofnorway)** — speed detection code reference
-- **[OfficialLambdax](https://github.com/OfficialLambdax)** - `MPDN` was rewritten from his day/night sync implementation. The power-up code was learned from his mod, and the power-up models, textures and sounds are taken from it
+- **[Neverless](https://github.com/OfficialLambdax)** (discord: neverless)
+  - `MPDN` was rewritten from his day/night sync implementation
+  - The power-up and bollard logic was learned from his mod, and the models, textures and sounds are taken from it
 - **[StanleyDudek](https://github.com/StanleyDudek)** — extensive help and published code examples that shaped much of this project
 - **[Codex](https://github.com/codex-src) & MYNAMEISJEFF482** — original Scenic Route loading screen base (`srs_loading.js` / `srs_loading.css`)
 
