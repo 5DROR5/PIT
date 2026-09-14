@@ -206,7 +206,6 @@
   "wanted_list_title": "Arananlar",
   "time_label": "Süre",
   "type_label": "Tür",
-  "repairs_label": "Onarımlar",
   "no_wanted_players": "Aranan oyuncu yok",
   "sync_vehicle": "Düzenlemeyi Bitir ve Senkronize Et",
   "tooltip_repair": "Aracı Onar",
@@ -259,8 +258,6 @@
   "insufficient_funds": "Yeterli para yok! Eksik: $${missing}",
   "purchase_success": "${count} parça $${cost} karşılığında satın alındı",
   "series_banned": "'${series}' araç serisi bu sunucuda engellendi. Kamyon ve otobüslere izin verilmiyor.",
-  "vehicle_series_banned": "Araç Serisi Engellendi",
-  "series_not_allowed": "Bu araç serisi sunucuda kullanılamaz",
   "marker_spawned_at_fields_area": "🌾 Tarlalarda bir tamir işareti belirdi!",
   "marker_spawned_at_city_gas_station": "⛽ Şehir benzin istasyonunda bir tamir işareti belirdi!",
   "marker_spawned_at_narrow_city_road": "🛣️ Dar şehir yolunda bir tamir işareti belirdi!",
@@ -504,5 +501,8 @@
   "marker_spawned_at_lucera_gas_station": "⛽ Lucera'daki benzin istasyonunda bir onarım işareti belirdi!",
   "marker_spawned_at_in_lucera": "🏛️ Lucera'da bir onarım işareti belirdi!",
   "marker_spawned_at_road_layby": "🛣️ Yol banketinde bir onarım işareti belirdi!",
-  "marker_spawned_at_near_tunnel": "🚇 Tünelin yakınında bir onarım işareti belirdi!"
+  "marker_spawned_at_near_tunnel": "🚇 Tünelin yakınında bir onarım işareti belirdi!",
+  "free_vehicle": "✅ Bu araç ücretsiz! İyi eğlenceler!",
+  "editing_mode_banner": "🔧 Düzenleme modu etkin | 🔄 tuşuna basana kadar araç senkronize edilmeyecek",
+  "tooltip_home": "Ana Sayfa"
 }

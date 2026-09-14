@@ -1,8 +1,6 @@
 -- =============================================================================
 -- MinimapSystem.lua
--- Manages minimap updates for police/wanted gameplay.
--- Secondary module - loaded by main.lua via dofile()
--- Note: this module has a corresponding client-side component.
+-- Manages minimap updates for police/wanted gameplay
 -- License: AGPL-3.0 - https://www.gnu.org/licenses/agpl-3.0.html
 -- =============================================================================
 
@@ -201,7 +199,6 @@ function M.init(dependencies)
     log(string.format("Wanted tracking range: %dm", DISTANCES.WANTED_TRACKING_RANGE))
 end
 
--- Allows runtime adjustment of detection distances without restarting the server.
 function M.setDistances(wanted_visible, wanted_hidden, police_visible, police_hidden, tracking_range)
     DISTANCES.WANTED_VISIBLE        = wanted_visible   or DISTANCES.WANTED_VISIBLE
     DISTANCES.WANTED_HIDDEN         = wanted_hidden    or DISTANCES.WANTED_HIDDEN
@@ -210,7 +207,6 @@ function M.setDistances(wanted_visible, wanted_hidden, police_visible, police_hi
     DISTANCES.WANTED_TRACKING_RANGE = tracking_range   or DISTANCES.WANTED_TRACKING_RANGE
 end
 
--- Allows runtime adjustment of update rates without restarting the server.
 function M.setUpdateRates(fast_ms, slow_ms)
     UPDATE_RATES.FAST = fast_ms or UPDATE_RATES.FAST
     UPDATE_RATES.SLOW = slow_ms or UPDATE_RATES.SLOW

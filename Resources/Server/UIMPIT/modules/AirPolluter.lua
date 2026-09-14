@@ -1,24 +1,16 @@
 -- =============================================================================
--- AirPolluter.lua
--- Special Mission: Air Polluter
--- Secondary module - loaded by main.lua via dofile()
+-- AirPolluter.lua -Special Mission: Air Polluter
 -- License: AGPL-3.0 - https://www.gnu.org/licenses/agpl-3.0.html
 -- =============================================================================
 
 local AP = {}
-
-
--- =============================================================================
--- CONSTANTS  (overridable via config.json → "air_polluter")
--- =============================================================================
-
-local MISSION_DURATION_MS   = 900000  -- 15 minutes
-local TOUCH_DURATION_MS     = 5000    -- hold time required to activate (ms)
-local TOUCH_RADIUS_M        = 4       -- server-side activation radius
-local HOVER_RADIUS_M        = 15      -- show status UI within this range
-local VISIBILITY_RADIUS_M   = 50      -- client hides marker beyond this distance
-local MIN_PLAYERS           = 4       -- minimum connected players to allow activation
-local COOLDOWN_SECS         = 21600   -- 6 hours between missions
+local MISSION_DURATION_MS   = 900000
+local TOUCH_DURATION_MS     = 5000
+local TOUCH_RADIUS_M        = 4
+local HOVER_RADIUS_M        = 15
+local VISIBILITY_RADIUS_M   = 50
+local MIN_PLAYERS           = 4
+local COOLDOWN_SECS         = 21600
 local SUCCESS_BONUS         = 10000
 local FAIL_PENALTY          = 1000
 local MISSION_REPAIRS       = 2
@@ -27,11 +19,6 @@ local POLICE_RANGE_M        = 150
 local POLICE_INCOME_PER_SEC = 20
 local MAX_FOG_DENSITY       = 0.03
 local FOG_UPDATE_MS         = 5000
-
-
--- =============================================================================
--- STATE
--- =============================================================================
 
 local state = {
     active         = false,
@@ -47,20 +34,9 @@ local state = {
     cooldown_uid   = nil,
 }
 
--- Tracks which pids currently have the status panel visible.
 local status_visible_players = {}
 
-
--- =============================================================================
--- DEPENDENCIES  (injected via AP.init)
--- =============================================================================
-
 local deps = {}
-
-
--- =============================================================================
--- INTERNAL HELPERS
--- =============================================================================
 
 local function log(msg)
     if deps.log then deps.log("[AirPolluter] " .. tostring(msg)) end
@@ -87,20 +63,9 @@ local function isCooldown()
     return (os.time() - state.cooldown_time) < COOLDOWN_SECS
 end
 
-local function encode(t) return deps.encodeJSON(t) end
-
-
--- =============================================================================
--- NETWORK
--- =============================================================================
-
-local function toPlayer(pid, event, payload)
-    deps.triggerClient(pid, event, payload)
-end
-
-local function toAll(event, payload)
-    deps.broadcastClientEvent(event, payload)
-end
+local function encode(t) return              deps.encodeJSON(t)                        end
+local function toPlayer(pid, event, payload) deps.triggerClient(pid, event, payload)   end
+local function toAll(event, payload)         deps.broadcastClientEvent(event, payload) end
 
 local function broadcastFog(intensity, single_pid)
     local p = encode({ intensity = intensity })
@@ -114,11 +79,6 @@ local function sendMarker(pid)
     local p   = encode({ x = pos.x, y = pos.y, z = pos.z, visibility_radius = VISIBILITY_RADIUS_M })
     if p then toPlayer(pid, "AIRPOLLUTER_SetMarker", p) end
 end
-
-
--- =============================================================================
--- STATUS PANEL  (proximity UI - shown when mission is idle only)
--- =============================================================================
 
 local function hideStatusPanel(pid)
     local p = encode({ visible = false })
@@ -159,25 +119,11 @@ local function sendStatusToNearbyPlayers(now)
             local uid       = deps.getUID(pid)
             local available = true
             local reasons   = {}
-
-            if in_cooldown then
-                available = false
-                table.insert(reasons, "ap_reason_cooldown")
-            end
-            if pc < MIN_PLAYERS then
-                available = false
-                table.insert(reasons, "ap_reason_players")
-            end
-            if deps.getRole(uid) ~= "civilian" then
-                available = false
-                table.insert(reasons, "ap_reason_not_civilian")
-            elseif deps.isWanted(pid) then
-                available = false
-                table.insert(reasons, "ap_reason_wanted")
-            elseif deps.players_editing_vehicle and deps.players_editing_vehicle[pid] then
-                available = false
-                table.insert(reasons, "ap_reason_editing")
-            end
+            if in_cooldown                     then available = false table.insert(reasons, "ap_reason_cooldown") end
+            if pc < MIN_PLAYERS                then available = false table.insert(reasons, "ap_reason_players")  end
+            if deps.getRole(uid) ~= "civilian" then available = false table.insert(reasons, "ap_reason_not_civilian")
+            elseif deps.isWanted(pid)          then available = false table.insert(reasons, "ap_reason_wanted")
+            elseif deps.players_editing_vehicle and deps.players_editing_vehicle[pid] then  available = false table.insert(reasons, "ap_reason_editing")  end
 
             local touch_progress = 0
             if state.touch_timers[pid] then
@@ -203,11 +149,6 @@ local function sendStatusToNearbyPlayers(now)
     end)
 end
 
-
--- =============================================================================
--- MISSION LIFECYCLE
--- =============================================================================
-
 local function startMission(pid)
     local uid = deps.getUID(pid)
     local now = os.time() * 1000
@@ -222,7 +163,6 @@ local function startMission(pid)
     state.fog_intensity  = 0
     state.touch_timers   = {}
 
-    -- Hide the proximity status panel for all players - mission is now in progress.
     hideStatusPanelAll()
 
     deps.DB.setWanted(uid, true)
@@ -290,11 +230,6 @@ local function endMission(success)
     log("Mission ended — success=" .. tostring(success))
 end
 
-
--- =============================================================================
--- PUBLIC API
--- =============================================================================
-
 function AP.init(d)
     deps = d
     if deps.config and deps.config.air_polluter then
@@ -338,20 +273,14 @@ function AP.onMissionFailed(pid)
     endMission(false)
 end
 
-function AP.isActiveMission() return state.active                  end
-function AP.getActivePid()    return state.pid                     end
+function AP.isActiveMission() return state.active                      end
+function AP.getActivePid()    return state.pid                         end
 function AP.isAPPlayer(pid)   return state.active and state.pid == pid end
-
-
--- =============================================================================
--- MAIN TICK  (called every 300 ms by main.lua)
--- =============================================================================
 
 function AP.tick()
     local now = os.time() * 1000
     local MP  = deps.MP
 
-    -- ── IDLE ─────────────────────────────────────────────────────────────────
     if not state.active then
         if not isCooldown() and getPlayerCount() >= MIN_PLAYERS then
             local mPos          = getMarkerPos()
@@ -400,7 +329,6 @@ function AP.tick()
         return
     end
 
-    -- ── ACTIVE ───────────────────────────────────────────────────────────────
     local pid = state.pid
     if not pid then endMission(false); return end
 

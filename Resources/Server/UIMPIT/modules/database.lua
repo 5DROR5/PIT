@@ -604,7 +604,6 @@ function M.saveDeviceToken(uid, token)
 end
 
 function M.getTokenBanStatus(uid, token)
-    -- מחזיר true רק אם החשבון נוצר אחרי שהמכשיר נחסם
     if backend == M.BACKEND_MYSQL then
         local r = q1(string.format([[
             SELECT bd.banned_at FROM banned_devices bd
@@ -822,7 +821,6 @@ function M.updateStreak(uid)
         last=p.last_play_date; streak=p.streak_days or 0
         daily_secs=p.daily_playtime_seconds or 0
     end
-    -- בדיקת תנאי חצי שעה: רק אם השחקן שיחק לפחות 1800 שניות היום
     if daily_secs < 1800 then return streak end
     local new_streak
     if not last or last=="" then new_streak=1

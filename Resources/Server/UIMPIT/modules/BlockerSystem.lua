@@ -2,6 +2,7 @@
 -- PIT Economy System - Blocker System
 -- Version: 5.0
 -- License: AGPL-3.0 - https://www.gnu.org/licenses/agpl-3.0.html
+-- Credit: bollard logic adapted from Neverless's mod (discord: neverless)
 -- =============================================================================
 
 local M = {}

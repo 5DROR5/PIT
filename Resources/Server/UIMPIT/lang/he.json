@@ -155,6 +155,9 @@
   "task_wanted_escape_5": "ברח 35 פעמים",
   "task_wanted_zigzag_1": "בצע זיגזג ליד שוטר 3 פעמים",
   "task_wanted_zigzag_2": "בצע זיגזג ליד שוטר 10 פעמים",
+  "task_wanted_zigzag_3": "בצע זיגזג ליד שוטר 15 פעמים",
+  "task_wanted_zigzag_4": "בצע זיגזג ליד שוטר 20 פעמים",
+  "task_wanted_zigzag_5": "בצע זיגזג ליד שוטר 35 פעמים",
   "task_wanted_combo_1": "בריחת קומבו 2 פעמים",
   "task_wanted_combo_2": "בריחת קומבו 8 פעמים",
   "task_wanted_combo_3": "בריחת קומבו 15 פעמים",
@@ -191,7 +194,6 @@
   "wanted_list_title": "מבוקשים",
   "time_label": "זמן",
   "type_label": "סוג",
-  "repairs_label": "תיקונים",
   "no_wanted_players": "אין שחקנים מבוקשים",
   "sync_vehicle": "סיים ו-סנכרן",
   "editing_mode_banner": "🔧 מצב עריכה פעיל | הרכב לא יסונכרן עד שתלחץ על 🔄",
@@ -258,8 +260,6 @@
   "insufficient_funds": "אין מספיק כסף! חסר: $${missing}",
   "purchase_success": "נרכשו ${count} חלקים ב-$${cost}",
   "series_banned": "סדרת רכב '${series}' חסומה בשרת זה. משאיות ואוטובוסים אינם מותרים.",
-  "vehicle_series_banned": "סדרת רכב חסומה",
-  "series_not_allowed": "סדרת רכב זו אינה מותרת בשרת",
   "marker_spawned_at_fields_area": "🌾 נקודת תיקון הופיעה בשדות!",
   "marker_spawned_at_city_gas_station": "⛽ נקודת תיקון הופיעה בתחנת הדלק בעיר!",
   "marker_spawned_at_narrow_city_road": "🛣️ נקודת תיקון הופיעה בכביש הצר בעיר!",
@@ -503,5 +503,6 @@
   "marker_spawned_at_lucera_gas_station": "⛽ סמן תיקון הופיע בתחנת הדלק של Lucera!",
   "marker_spawned_at_in_lucera": "🏛️ סמן תיקון הופיע ב-Lucera!",
   "marker_spawned_at_road_layby": "🛣️ סמן תיקון הופיע במפרץ הכביש!",
-  "marker_spawned_at_near_tunnel": "🚇 סמן תיקון הופיע סמוך למנהרה!"
+  "marker_spawned_at_near_tunnel": "🚇 סמן תיקון הופיע סמוך למנהרה!",
+  "free_vehicle": "✅ הרכב הזה חינם! תיהנה!"
 }

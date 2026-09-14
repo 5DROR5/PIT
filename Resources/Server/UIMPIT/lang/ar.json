@@ -155,6 +155,9 @@
   "task_wanted_escape_5": "اهرب 35 مرة",
   "task_wanted_zigzag_1": "زجزج بالقرب من الشرطة 3 مرات",
   "task_wanted_zigzag_2": "زجزج بالقرب من الشرطة 10 مرات",
+  "task_wanted_zigzag_3": "زجزج بالقرب من الشرطة 15 مرة",
+  "task_wanted_zigzag_4": "زجزج بالقرب من الشرطة 20 مرة",
+  "task_wanted_zigzag_5": "زجزج بالقرب من الشرطة 35 مرة",
   "task_wanted_combo_1": "هروب كومبو مرتين",
   "task_wanted_combo_2": "هروب كومبو 8 مرات",
   "task_wanted_combo_3": "هروب كومبو 15 مرة",
@@ -243,7 +246,6 @@
   "ap_players_label": "لاعبون",
   "ap_cooldown_label": "متاح خلال",
   "parts_required_title": "قطع مطلوبة للشراء",
-  "part_item": "• ${name} .... $${price}",
   "total_cost": "التكلفة الإجمالية",
   "current_balance": "الرصيد الحالي",
   "confirm_purchase": "هل أنت متأكد من شراء هذه القطع؟",
@@ -252,9 +254,7 @@
   "btn_close": "إغلاق",
   "purchase_success": "✅ اشتريت ${count} قطع بمبلغ $${cost}!",
   "insufficient_funds": "❌ رصيد غير كافٍ! ينقص",
-  "vehicle_frozen": "🔒 المركبة مجمدة حتى شراء القطع المطلوبة",
   "free_vehicle": "✅ هذه المركبة مجانية للاستخدام! استمتع!",
-  "part_banned": "🚫 هذا الجزء محظور",
   "vehicle_has_banned_parts": "تحتوي هذه المركبة على قطع محظورة",
   "cannot_use_vehicle": "لا يمكن استخدام هذه المركبة",
   "banned_parts_list": "القطع المحظورة المكتشفة:",
@@ -501,5 +501,8 @@
   "marker_spawned_at_lucera_gas_station": "⛽ ظهرت علامة إصلاح عند محطة وقود لوتشيرا!",
   "marker_spawned_at_in_lucera": "🏛️ ظهرت علامة إصلاح في لوتشيرا!",
   "marker_spawned_at_road_layby": "🛣️ ظهرت علامة إصلاح في مبيت الطريق الجانبي!",
-  "marker_spawned_at_near_tunnel": "🚇 ظهرت علامة إصلاح بالقرب من النفق!"
+  "marker_spawned_at_near_tunnel": "🚇 ظهرت علامة إصلاح بالقرب من النفق!",
+  "sync_vehicle": "إنهاء التحرير والمزامنة",
+  "missing_amount": "المبلغ الناقص",
+  "series_banned": "سلسلة المركبات '${series}' محظورة على هذا الخادم. الشاحنات والحافلات غير مسموح بها."
 }

@@ -206,7 +206,6 @@
   "wanted_list_title": "通缉名单",
   "time_label": "时间",
   "type_label": "类型",
-  "repairs_label": "维修",
   "no_wanted_players": "暂无通缉玩家",
   "sync_vehicle": "完成编辑并同步",
   "tooltip_repair": "维修车辆",
@@ -259,8 +258,6 @@
   "insufficient_funds": "金币不足！缺少：${missing}",
   "purchase_success": "已购买 ${count} 个零件，花费 ${cost}",
   "series_banned": "车辆系列 '${series}' 在此服务器上被禁用。卡车和巴士不被允许。",
-  "vehicle_series_banned": "车辆系列已被禁用",
-  "series_not_allowed": "此车辆系列在服务器上不被允许",
   "marker_spawned_at_fields_area": "🌾 田野里出现了一个修复标记！",
   "marker_spawned_at_city_gas_station": "⛽ 城市加油站出现了一个修复标记！",
   "marker_spawned_at_narrow_city_road": "🛣️ 城市窄路上出现了一个修复标记！",
@@ -504,5 +501,8 @@
   "marker_spawned_at_lucera_gas_station": "⛽ 卢切拉加油站出现了一个维修标记!",
   "marker_spawned_at_in_lucera": "🏛️ 卢切拉出现了一个维修标记!",
   "marker_spawned_at_road_layby": "🛣️ 路边停车带出现了一个维修标记!",
-  "marker_spawned_at_near_tunnel": "🚇 隧道附近出现了一个维修标记!"
+  "marker_spawned_at_near_tunnel": "🚇 隧道附近出现了一个维修标记!",
+  "free_vehicle": "✅ 此车辆免费使用！尽情享受！",
+  "editing_mode_banner": "🔧 编辑模式已启用 | 按下 🔄 之前车辆不会同步",
+  "tooltip_home": "主页"
 }

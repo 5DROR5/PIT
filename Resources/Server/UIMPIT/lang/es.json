@@ -155,6 +155,9 @@
   "task_wanted_escape_5": "Escapa 35 veces",
   "task_wanted_zigzag_1": "Zigzaguea cerca de la policía 3 veces",
   "task_wanted_zigzag_2": "Zigzaguea cerca de la policía 10 veces",
+  "task_wanted_zigzag_3": "Zigzaguea cerca de la policía 15 veces",
+  "task_wanted_zigzag_4": "Zigzaguea cerca de la policía 20 veces",
+  "task_wanted_zigzag_5": "Zigzaguea cerca de la policía 35 veces",
   "task_wanted_combo_1": "Escape combo 2 veces",
   "task_wanted_combo_2": "Escape combo 8 veces",
   "task_wanted_combo_3": "Escape combo 15 veces",
@@ -185,7 +188,7 @@
   "wanted_global_zigzag": "🚨 ¡${player} cometió conducción temeraria y se convirtió en BUSCADO!",
   "wanted_fail_global": "❌ ¡${player} falló la misión BUSCADO!",
   "wanted_escape_global": "✅ ¡${player} escapó con éxito!",
-  "violation_speeding": "Vitesse",
+  "violation_speeding": "Exceso de velocidad",
   "violation_zigzag": "Zigzag",
   "violation_both": "Combo",
   "wanted_list_title": "Recherchés",
@@ -256,8 +259,6 @@
   "insufficient_funds": "¡No tienes suficiente dinero! Falta: $${missing}",
   "purchase_success": "Compraste ${count} piezas por $${cost}",
   "series_banned": "La serie de vehículo '${series}' está bloqueada en este servidor. Camiones y autobuses no están permitidos.",
-  "vehicle_series_banned": "Serie de vehículo bloqueada",
-  "series_not_allowed": "Esta serie de vehículo no está permitida en el servidor",
   "marker_spawned_at_fields_area": "🌾 ¡Ha aparecido un marcador de reparación en los Campos!",
   "marker_spawned_at_city_gas_station": "⛽ ¡Ha aparecido un marcador de reparación en la gasolinera de la ciudad!",
   "marker_spawned_at_narrow_city_road": "🛣️ ¡Ha aparecido un marcador de reparación en la calle estrecha de la ciudad!",
@@ -501,5 +502,7 @@
   "marker_spawned_at_lucera_gas_station": "⛽ ¡Ha aparecido un marcador de reparación en la gasolinera de Lucera!",
   "marker_spawned_at_in_lucera": "🏛️ ¡Ha aparecido un marcador de reparación en Lucera!",
   "marker_spawned_at_road_layby": "🛣️ ¡Ha aparecido un marcador de reparación en el apartadero de la carretera!",
-  "marker_spawned_at_near_tunnel": "🚇 ¡Ha aparecido un marcador de reparación cerca del túnel!"
+  "marker_spawned_at_near_tunnel": "🚇 ¡Ha aparecido un marcador de reparación cerca del túnel!",
+  "free_vehicle": "✅ ¡Este vehículo es gratuito! ¡Disfruta!",
+  "sync_vehicle": "Finalizar edición y sincronizar"
 }

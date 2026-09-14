@@ -206,7 +206,6 @@
   "wanted_list_title": "Körözöttek",
   "time_label": "Idő",
   "type_label": "Típus",
-  "repairs_label": "Javítások",
   "no_wanted_players": "Nincs körözött játékos",
   "sync_vehicle": "Szerkesztés befejezése és szinkronizálás",
   "tooltip_repair": "Jármű javítása",
@@ -259,8 +258,6 @@
   "insufficient_funds": "Nincs elég pénz! Hiányzik: $${missing}",
   "purchase_success": "${count} alkatrészt vásároltál $${cost}-ért",
   "series_banned": "A(z) '${series}' járműsorozat blokkolva van ezen a szerveren. Teherautók és buszok nem engedélyezettek.",
-  "vehicle_series_banned": "Járműsorozat blokkolva",
-  "series_not_allowed": "Ez a járműsorozat nem engedélyezett a szerveren",
   "marker_spawned_at_fields_area": "🌾 Javítójelző jelent meg a Mezőkön!",
   "marker_spawned_at_city_gas_station": "⛽ Javítójelző jelent meg a városi benzinkútnál!",
   "marker_spawned_at_narrow_city_road": "🛣️ Javítójelző jelent meg a szűk városi úton!",
@@ -504,5 +501,8 @@
   "marker_spawned_at_lucera_gas_station": "⛽ Javítójelző jelent meg a Lucera benzinkútjánál!",
   "marker_spawned_at_in_lucera": "🏛️ Javítójelző jelent meg Lucerában!",
   "marker_spawned_at_road_layby": "🛣️ Javítójelző jelent meg az útpadkán!",
-  "marker_spawned_at_near_tunnel": "🚇 Javítójelző jelent meg az alagút közelében!"
+  "marker_spawned_at_near_tunnel": "🚇 Javítójelző jelent meg az alagút közelében!",
+  "free_vehicle": "✅ Ez a jármű ingyenes! Jó szórakozást!",
+  "editing_mode_banner": "🔧 Szerkesztési mód aktív | A jármű nem szinkronizálódik, amíg meg nem nyomod a 🔄 gombot",
+  "tooltip_home": "Kezdőlap"
 }

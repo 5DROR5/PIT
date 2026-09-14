@@ -206,7 +206,6 @@
   "wanted_list_title": "手配中",
   "time_label": "時間",
   "type_label": "タイプ",
-  "repairs_label": "修理",
   "no_wanted_players": "手配中のプレイヤーはいません",
   "sync_vehicle": "編集を終了して同期する",
   "tooltip_repair": "車両を修理する",
@@ -259,8 +258,6 @@
   "insufficient_funds": "資金が不足しています！不足額: $${missing}",
   "purchase_success": "${count} 個のパーツを $${cost} で購入しました",
   "series_banned": "車両シリーズ「${series}」はこのサーバーでブロックされています。トラックとバスは使用できません。",
-  "vehicle_series_banned": "車両シリーズがブロックされています",
-  "series_not_allowed": "この車両シリーズはサーバーで使用できません",
   "marker_spawned_at_fields_area": "🌾 フィールドに修理マーカーが出現しました！",
   "marker_spawned_at_city_gas_station": "⛽ 市街地のガソリンスタンドに修理マーカーが出現しました！",
   "marker_spawned_at_narrow_city_road": "🛣️ 市街地の狭い道路に修理マーカーが出現しました！",
@@ -504,5 +501,8 @@
   "marker_spawned_at_lucera_gas_station": "⛽ ルチェーラのガソリンスタンドに修理マーカーが出現しました!",
   "marker_spawned_at_in_lucera": "🏛️ ルチェーラに修理マーカーが出現しました!",
   "marker_spawned_at_road_layby": "🛣️ 道路の待避所に修理マーカーが出現しました!",
-  "marker_spawned_at_near_tunnel": "🚇 トンネルの近くに修理マーカーが出現しました!"
+  "marker_spawned_at_near_tunnel": "🚇 トンネルの近くに修理マーカーが出現しました!",
+  "free_vehicle": "✅ この車両は無料です！お楽しみください！",
+  "editing_mode_banner": "🔧 編集モード有効 | 🔄 を押すまで車両は同期されません",
+  "tooltip_home": "ホーム"
 }

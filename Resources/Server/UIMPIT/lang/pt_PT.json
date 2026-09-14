@@ -206,7 +206,6 @@
   "wanted_list_title": "Procurados",
   "time_label": "Tempo",
   "type_label": "Tipo",
-  "repairs_label": "Reparações",
   "no_wanted_players": "Nenhum jogador procurado",
   "sync_vehicle": "Terminar Edição e Sincronizar",
   "tooltip_repair": "Reparar Veículo",
@@ -259,8 +258,6 @@
   "insufficient_funds": "Dinheiro insuficiente! Em falta: $${missing}",
   "purchase_success": "Compradas ${count} peças por $${cost}",
   "series_banned": "A série de veículos '${series}' está bloqueada neste servidor. Camiões e autocarros não são permitidos.",
-  "vehicle_series_banned": "Série de Veículos Bloqueada",
-  "series_not_allowed": "Esta série de veículos não é permitida no servidor",
   "marker_spawned_at_fields_area": "🌾 Um marcador de reparação apareceu nos Campos!",
   "marker_spawned_at_city_gas_station": "⛽ Um marcador de reparação apareceu no posto de combustível da cidade!",
   "marker_spawned_at_narrow_city_road": "🛣️ Um marcador de reparação apareceu na rua estreita da cidade!",
@@ -504,5 +501,8 @@
   "marker_spawned_at_lucera_gas_station": "⛽ Apareceu um marcador de reparação na estação de serviço de Lucera!",
   "marker_spawned_at_in_lucera": "🏛️ Apareceu um marcador de reparação em Lucera!",
   "marker_spawned_at_road_layby": "🛣️ Apareceu um marcador de reparação na área de descanso da estrada!",
-  "marker_spawned_at_near_tunnel": "🚇 Apareceu um marcador de reparação perto do túnel!"
+  "marker_spawned_at_near_tunnel": "🚇 Apareceu um marcador de reparação perto do túnel!",
+  "free_vehicle": "✅ Este veículo é gratuito! Aproveita!",
+  "editing_mode_banner": "🔧 Modo de edição ativo | O veículo não será sincronizado até premires 🔄",
+  "tooltip_home": "Início"
 }

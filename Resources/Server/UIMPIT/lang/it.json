@@ -155,6 +155,9 @@
   "task_wanted_escape_5": "Fuggi 35 volte",
   "task_wanted_zigzag_1": "Zigzag vicino alla polizia 3 volte",
   "task_wanted_zigzag_2": "Zigzag vicino alla polizia 10 volte",
+  "task_wanted_zigzag_3": "Zigzag vicino alla polizia 15 volte",
+  "task_wanted_zigzag_4": "Zigzag vicino alla polizia 20 volte",
+  "task_wanted_zigzag_5": "Zigzag vicino alla polizia 35 volte",
   "task_wanted_combo_1": "Fuga combo 2 volte",
   "task_wanted_combo_2": "Fuga combo 8 volte",
   "task_wanted_combo_3": "Fuga combo 15 volte",
@@ -193,7 +196,7 @@
   "type_label": "Tipo",
   "no_wanted_players": "Nessun ricercato",
   "editing_mode_banner": "🔧 Modalità modifica attiva | Il veicolo non si sincronizzerà finché non premi 🔄",
-  "tooltip_home": "Accueil",
+  "tooltip_home": "Home",
   "tooltip_repair": "Réparer véhicule",
   "tooltip_wanted_enable": "Activer défis recherchés",
   "tooltip_wanted_disable": "Désactiver défis recherchés",
@@ -256,8 +259,6 @@
   "insufficient_funds": "Fondi insufficienti! Mancano: $${missing}",
   "purchase_success": "Acquistate ${count} parti per $${cost}",
   "series_banned": "La serie veicolo '${series}' è bloccata su questo server. Camion e autobus non sono ammessi.",
-  "vehicle_series_banned": "Serie veicolo bloccata",
-  "series_not_allowed": "Questa serie di veicoli non è consentita sul server",
   "marker_spawned_at_fields_area": "🌾 Un marker di riparazione è apparso nei Campi!",
   "marker_spawned_at_city_gas_station": "⛽ Un marker di riparazione è apparso alla stazione di servizio della città!",
   "marker_spawned_at_narrow_city_road": "🛣️ Un marker di riparazione è apparso sulla strada stretta della città!",
@@ -501,5 +502,7 @@
   "marker_spawned_at_lucera_gas_station": "⛽ È apparso un marcatore di riparazione al distributore di Lucera!",
   "marker_spawned_at_in_lucera": "🏛️ È apparso un marcatore di riparazione a Lucera!",
   "marker_spawned_at_road_layby": "🛣️ È apparso un marcatore di riparazione nella piazzola di sosta!",
-  "marker_spawned_at_near_tunnel": "🚇 È apparso un marcatore di riparazione vicino alla galleria!"
+  "marker_spawned_at_near_tunnel": "🚇 È apparso un marcatore di riparazione vicino alla galleria!",
+  "free_vehicle": "✅ Questo veicolo è gratuito! Divertiti!",
+  "sync_vehicle": "Termina modifica e sincronizza"
 }

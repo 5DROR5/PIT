@@ -150,15 +150,15 @@ end
 
 local DB_FN = {
     busts               = function(uid,n) for _=1,n do DB.incrementPoliceArrests(uid)  end end,
-    cop_chase_time      = function(uid,n) DB.addChaseTime(uid,n)                            end,
-    wanted_chase_time   = function(uid,n) DB.addWantedTime(uid,n)                           end,
+    cop_chase_time      = function(uid,n) DB.addChaseTime(uid,n)                           end,
+    wanted_chase_time   = function(uid,n) DB.addWantedTime(uid,n)                          end,
     cop_marker_chase    = function(uid,n) for _=1,n do DB.incrementMarkersPolice(uid)  end end,
     wanted_marker_chase = function(uid,n) for _=1,n do DB.incrementMarkersWanted(uid)  end end,
     escapes             = function(uid,n) for _=1,n do DB.incrementWantedSuccess(uid)  end end,
     zigzag_count        = function(uid,n) for _=1,n do DB.incrementZigzag(uid)         end end,
     combo_count         = function(uid,n) for _=1,n do DB.incrementCombo(uid)          end end,
     close_markers       = function(uid,n) for _=1,n do DB.incrementCloseMarker(uid)    end end,
-    total_playtime      = function(uid,n) DB.addPlaytime(uid,n)                             end,
+    total_playtime      = function(uid,n) DB.addPlaytime(uid,n)                            end,
 }
 
 local function incStat(pid, uid, stat, n, is_cop)
@@ -188,8 +188,6 @@ local function incSess(pid, uid, stat, n, is_cop)
     s[k] = (s[k] or 0) + n
     proc(pid, uid, chkStat(uid, stat, is_cop), is_cop)
 end
-
--- ── PUBLIC API ────────────────────────────────────────────────────────────────
 
 function M.onPlayerJoin(pid)
     local uid = _getUID(pid); ld(uid); initSess(uid)
@@ -258,7 +256,6 @@ function M.onComboEscape(pid)
 end
 
 
--- Called every tick during active chase. total_playtime/session handled by onPlaytime.
 function M.onChaseTime(pid, secs, is_cop)
     local uid = _getUID(pid); ld(uid); initSess(uid)
     secs = math.floor(tonumber(secs) or 0); if secs <= 0 then return end
@@ -266,7 +263,6 @@ function M.onChaseTime(pid, secs, is_cop)
     incStat(pid, uid, stat, secs, is_cop)
 end
 
--- Called by the 60s playtime timer for all online players.
 function M.onPlaytime(pid, secs)
     local uid = _getUID(pid); ld(uid); initSess(uid)
     secs = math.floor(tonumber(secs) or 0); if secs <= 0 then return end
@@ -282,11 +278,6 @@ function M.onPowerupUsed(pid, pu_type)
     incStat(pid, uid, stat, 1, true)
 end
 
--- A spike/banana/cannon HIT must reward the player who DEPLOYED it (the
--- attacker), NOT the player who got hit (the victim). The collision event
--- fires on the victim's vehicle, so the relay must resolve the powerup's
--- owner and pass it as `attacker_pid`. We credit the attacker and ignore
--- self-hits (you can't farm by driving over your own spikes).
 function M.onPowerupHit(attacker_pid, pu_type, victim_pid)
     if attacker_pid == nil then return end
     if victim_pid ~= nil and attacker_pid == victim_pid then return end
@@ -308,10 +299,6 @@ function M.sendUpdate(pid)
     end
     local ac   = ach_cache[uid] and ach_cache[uid].data or {}
     local done = ac.milestones_done and #ac.milestones_done or 0
-
-    -- Full per-milestone progress for the UI task list (completed / available / locked).
-    -- Built from the same sv()/done-set the milestone engine uses, so it always
-    -- matches what the player can actually earn. Additive only.
     local doneset = (ach_cache[uid] and ach_cache[uid].done) or {}
     local ms_list = {}
     for _, ms in ipairs(cfg.milestones) do
@@ -328,7 +315,7 @@ function M.sendUpdate(pid)
             value     = val,
             done      = is_done,
             locked    = is_locked,
-            points    = ms.base_points,   -- reward shown on each task card
+            points    = ms.base_points,
         }
     end
 
