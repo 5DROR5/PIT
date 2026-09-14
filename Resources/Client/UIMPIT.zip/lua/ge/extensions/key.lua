@@ -1279,6 +1279,12 @@ M.onWorldReadyState = function(newState)
 
         local inMP = MPCoreNetwork and type(MPCoreNetwork.isMPSession) == "function" and MPCoreNetwork.isMPSession()
         if inMP then
+            M.delay(3, function()
+                local ok, cur = pcall(extensions.ui_router.getCurrent)
+                local name = ok and type(cur) == "table" and cur.resolved and cur.resolved.name or "?"
+                logI("route watchdog: current route is '" .. tostring(name) .. "' -> navigate(play)")
+                pcall(extensions.ui_router.navigate, "play")
+            end)
             if core_gamestate and core_gamestate.setGameState then
                 local layout_applied = false
                 local function applyPitLayout()
