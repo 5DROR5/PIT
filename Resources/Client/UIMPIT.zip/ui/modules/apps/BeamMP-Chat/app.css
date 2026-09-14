@@ -178,3 +178,25 @@ ul#chat-list {
 .italic {
     font-style: italic;
 }
+
+#mention-area {
+    border-left: 4px solid #FFD700;
+    border-top: 1px solid rgba(255, 215, 0, 0.2);
+    padding: 6px 10px;
+    cursor: pointer;
+    display: none;
+    background: transparent;
+    border-radius: 0;
+    align-items: center;
+    gap: 7px;
+}
+
+#mention-area .mention-inner {
+    background: rgba(0, 0, 0, 0.7);
+    color: #FFD700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}

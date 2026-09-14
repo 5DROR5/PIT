@@ -1,6 +1,6 @@
 -- =============================================================================
--- PIT Economy System — Parts Shop
--- License: AGPL-3.0 — https://www.gnu.org/licenses/agpl-3.0.html
+-- PIT Economy System - Parts Shop
+-- License: AGPL-3.0 - https://www.gnu.org/licenses/agpl-3.0.html
 -- =============================================================================
 
 local M    = {}
@@ -32,11 +32,6 @@ local BANNED_VEHICLES = {}
 
 local function fileExists(path)
     local f = io.open(path, "r"); if f then f:close(); return true end; return false
-end
-
-local function readFile(path)
-    local f = io.open(path, "r"); if not f then return nil end
-    local s = f:read("*a"); f:close(); return s
 end
 
 
@@ -90,12 +85,12 @@ local function translate(lang, key, vars)
 end
 
 local function translateForPlayer(pid, key, vars)
-    local lang = _DB and _DB.getLang(_getUID(pid)) or "en"
+    local lang = _DB.getLang(_getUID(pid)) or "en"
     return translate(lang, key, vars)
 end
 
 local function sendLanguageToClient(pid)
-    local lang    = _DB and _DB.getLang(_getUID(pid)) or "en"
+    local lang    = _DB.getLang(_getUID(pid)) or "en"
     local payload = _encodeJSON({ lang = lang, translations = _translations[lang] or _translations["en"] or {} })
     if payload then _triggerClient(pid, "PartsShop_LanguageUpdate", payload) end
 end
@@ -244,21 +239,21 @@ end
 -- =============================================================================
 
 function M.onVehicleSpawn(pid, vid, data)
-    if not (_MP.IsPlayerConnected and _MP.IsPlayerConnected(pid)) then return end
+    if not _MP.IsPlayerConnected(pid) then return end
     local vd = parseVehicleData(data)
     if not vd then return end
     checkVehicleParts(pid, vid, vd)
 end
 
 function M.onVehicleEdited(pid, vid, data)
-    if not (_MP.IsPlayerConnected and _MP.IsPlayerConnected(pid)) then return end
+    if not _MP.IsPlayerConnected(pid) then return end
     local vd = parseVehicleData(data)
     if not vd then return end
     checkVehicleParts(pid, vid, vd)
 end
 
 function M.onConfirmPurchase(pid, data_str)
-    if not (_MP.IsPlayerConnected and _MP.IsPlayerConnected(pid)) then return end
+    if not _MP.IsPlayerConnected(pid) then return end
     local data = _decodeJSON(data_str)
     if not data or not data.parts or not data.totalCost then
         _log(string.format("PartsShop: PID=%s invalid purchase payload", pid)); return
@@ -279,9 +274,26 @@ function M.onConfirmPurchase(pid, data_str)
     _triggerClient(pid, "receiveMoney", _encodeJSON({ money = _DB.getMoney(uid) }))
 end
 
+local function sendDisplayConfigToClient(pid)
+    local bannedPartsList = {}
+    for partName, cfg in pairs(PARTS_CONFIG) do
+        if cfg.value and cfg.value < 0 then table.insert(bannedPartsList, partName) end
+    end
+    local freeList, bannedList = {}, {}
+    for s in pairs(FREE_VEHICLES)   do table.insert(freeList,   s) end
+    for s in pairs(BANNED_VEHICLES) do table.insert(bannedList, s) end
+    local payload = _encodeJSON({
+        freeVehicles   = freeList,
+        bannedVehicles = bannedList,
+        bannedParts    = bannedPartsList,
+    })
+    if payload then _triggerClient(pid, "PartsDisplay_Config", payload) end
+end
+
 function M.onPlayerJoin(pid)
-    if not (_MP.IsPlayerConnected and _MP.IsPlayerConnected(pid)) then return end
+    if not _MP.IsPlayerConnected(pid) then return end
     sendLanguageToClient(pid)
+    sendDisplayConfigToClient(pid)
 end
 
 

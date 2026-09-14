@@ -1,2 +1,9 @@
 Resources/Server/UIMPIT/data/ 
 build.bat 
+
+Resources/Server/UIMPIT/config/db.json
+
+_diff-*.txt
+_scan.txt
+_tree.txt
+_headers.txt

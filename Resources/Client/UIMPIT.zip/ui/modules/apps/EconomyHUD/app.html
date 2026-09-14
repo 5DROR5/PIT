@@ -207,33 +207,80 @@
           
           <div class="rank-panel-content">
               <div class="current-rank-display">
-                  <div class="rank-badge" ng-class="'rank-' + rankData.rank">
-                      <span class="rank-number">{{ rankData.rank }}</span>
+                  <div class="rank-badge rank-prefix-badge">
+                      <span class="rank-prefix-text">{{ rankData.prefix }}</span>
                   </div>
                   <div class="rank-info">
-                      <h3>{{ t(rankData.rank_name_key) }}</h3>
+                      <div class="rank-number-line">
+                          <span class="rank-label">{{ t('rank_panel_title') }}</span>
+                          <span class="rank-fraction">{{ rankData.rank }} / {{ rankData.max_rank }}</span>
+                      </div>
+                      <div class="rank-total-points">
+                          {{ rankData.total_points | number }}
+                          <span class="pts-suffix"> {{ t('points_label') }}</span>
+                      </div>
                       <div class="rank-progress-bar">
                           <div class="rank-progress-fill" ng-style="{'width': rankData.percent + '%'}"></div>
                       </div>
-                      <span class="rank-percent">{{ rankData.percent }}% {{ t('complete') }}</span>
+                      <div class="rank-progress-labels">
+                          <span class="rank-percent-label">{{ rankData.percent }}%</span>
+                          <span class="rank-next-label" ng-if="rankData.next_prefix">
+                              {{ rankData.pts_to_next | number }} {{ t('points_label') }} → {{ rankData.next_prefix }}
+                          </span>
+                          <span class="rank-max-label" ng-if="!rankData.next_prefix">MAX RANK 🏆</span>
+                      </div>
+                  </div>
+              </div>
+              <div class="milestones-section">
+                  <div class="milestones-header">
+                      <span>🏅 {{ t('milestones_label') }}</span>
+                      <span class="milestones-count">{{ rankData.completed }} / {{ rankData.total }}</span>
+                  </div>
+                  <div class="milestones-bar-track">
+                      <div class="milestones-bar-fill"
+                           ng-style="{'width': (rankData.total > 0 ? (rankData.completed / rankData.total * 100) : 0) + '%'}">
+                      </div>
                   </div>
               </div>
 
               <div class="tasks-section">
-                  <div class="tasks-column">
-                      <h4>🚔 {{ t('cop_tasks') }}</h4>
-                      <div class="task-item" ng-repeat="task in rankData.tasks | filter:{type:'police'}" ng-class="{'completed': task.complete}">
-                          <span class="task-name">{{ t(task.name_key, {target: task.target, target_minutes: task.target_minutes}) }}</span>
-                          <span class="task-progress">{{ task.progress }}/{{ task.target }}</span>
-                          <span class="task-check" ng-if="task.complete">✓</span>
+                  <div class="tasks-substate" ng-if="taskGroups.available.length">
+                      <div class="tasks-substate-label available">⏳ {{ t('tasks_group_available') }}</div>
+                      <div class="tasks-grid">
+                          <div class="task-card available" ng-class="task.roleClass" ng-repeat="task in taskGroups.available track by task.id">
+                              <div class="task-card-name">{{ t(task.name_key) }}</div>
+                              <div class="task-card-bar">
+                                  <div class="task-card-fill" ng-style="{'width': task.pct + '%'}"></div>
+                              </div>
+                              <div class="task-card-meta">
+                                  <span class="task-card-progress">{{ task.progText }} / {{ task.threshText }}</span>
+                                  <span class="task-card-reward" ng-if="task.reward">{{ task.reward | number }} {{ t('points_label') }}</span>
+                                  <span class="task-card-pct">{{ task.pct }}%</span>
+                              </div>
+                          </div>
                       </div>
                   </div>
-                  <div class="tasks-column">
-                      <h4>🏃 {{ t('wanted_tasks') }}</h4>
-                      <div class="task-item" ng-repeat="task in rankData.tasks | filter:{type:'civilian'}" ng-class="{'completed': task.complete}">
-                          <span class="task-name">{{ t(task.name_key, {target: task.target, target_minutes: task.target_minutes}) }}</span>
-                          <span class="task-progress">{{ task.progress }}/{{ task.target }}</span>
-                          <span class="task-check" ng-if="task.complete">✓</span>
+
+                  <div class="tasks-substate" ng-if="taskGroups.done.length">
+                      <div class="tasks-substate-label done">✅ {{ t('tasks_group_completed') }}</div>
+                      <div class="tasks-grid">
+                          <div class="task-card done" ng-repeat="task in taskGroups.done track by task.id">
+                              <div class="task-card-check">✓</div>
+                              <div class="task-card-name">{{ t(task.name_key) }}</div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="tasks-substate" ng-if="taskGroups.locked.length">
+                      <div class="tasks-substate-label locked">🔒 {{ t('tasks_group_locked') }}</div>
+                      <div class="tasks-grid">
+                          <div class="task-card locked" ng-repeat="task in taskGroups.locked track by task.id">
+                              <div class="task-card-name">{{ t(task.name_key) }}</div>
+                              <div class="task-card-meta">
+                                  <span class="task-card-progress">🔒 {{ task.threshText }}</span>
+                                  <span class="task-card-reward" ng-if="task.reward">{{ task.reward | number }} {{ t('points_label') }}</span>
+                              </div>
+                          </div>
                       </div>
                   </div>
               </div>
@@ -241,22 +288,29 @@
       </div>
   </div>
 
-  <div class="points-notification" ng-if="pointsNotification.show" ng-class="{'glow': pointsNotification.glow}">
-      <span class="points-value">+{{ pointsNotification.points }}</span>
-      <span class="points-label">{{ t('points_label') }}</span>
-      <span class="points-task">{{ t(pointsNotification.task_name_key) }}</span>
+  <div class="points-notification-stack">
+      <div class="points-notification"
+           ng-repeat="n in pointsNotifications track by n.id"
+           ng-class="{'glow': n.glow, 'leaving': n.leaving, 'is-complete': n.complete}">
+          <span class="points-badge" ng-if="n.complete">🏅</span>
+          <span class="points-value">+{{ n.display }}</span>
+          <span class="points-label">{{ t('points_label') }}</span>
+          <span class="points-task">{{ t(n.task_name_key) }}</span>
+      </div>
   </div>
 
-  <div class="rankup-overlay" ng-if="showRankUpCelebration" ng-click="showRankUpCelebration = false">
-      <div class="rankup-box" ng-click="$event.stopPropagation()">
+  <div class="rankup-popup" ng-if="showRankUpCelebration">
+      <canvas class="rankup-confetti" id="rankup-confetti"></canvas>
+      <div class="rankup-popup-inner">
           <div class="rankup-icon">🎉</div>
-          <h2>{{ t('rank_up') }}!</h2>
+          <h2 class="rankup-title">{{ t('rank_up') }}!</h2>
           <div class="rankup-ranks">
               <span class="old-rank">{{ rankUpData.old_rank }}</span>
               <span class="arrow">→</span>
               <span class="new-rank">{{ rankUpData.new_rank }}</span>
           </div>
-          <div class="rankup-reward">+${{ rankUpData.reward | number }}</div>
+          <div class="rankup-new-prefix" ng-if="rankUpData.new_prefix">{{ rankUpData.new_prefix }}</div>
+          <div class="rankup-reward" ng-if="rankUpData.reward > 0">+${{ rankUpData.reward | number }}</div>
           <button class="rankup-close" ng-click="closeRankUpBtn()">{{ t('awesome') }}!</button>
       </div>
   </div>
@@ -343,13 +397,21 @@
       </div>
       
       <div class="hud-row hud-row-buttons" ng-class="{'tooltip-active': tooltipRow2Active}">
-          <div class="economy-ui-toggle has-tooltip tooltip-bottom" 
-               ng-mouseenter="activateTooltipRow2()" 
-               ng-mouseleave="deactivateTooltipRow2()" 
+          <div class="economy-ui-toggle has-tooltip tooltip-bottom"
+               ng-mouseenter="activateTooltipRow2()"
+               ng-mouseleave="deactivateTooltipRow2()"
                ng-click="toggleUI()">
-              <span ng-if="!isUIOpen">{{ t('open_ui') }}</span>
-              <span ng-if="isUIOpen">{{ t('close_ui') }}</span>
+              <span ng-if="!isUIOpen">▶</span>
+              <span ng-if="isUIOpen">▼</span>
               <span class="custom-tooltip">{{ isUIOpen ? t('tooltip_close') : t('tooltip_open') }}</span>
+          </div>
+          <div class="ui-style-toggle-rect has-tooltip tooltip-bottom"
+               ng-mouseenter="activateTooltipRow2()"
+               ng-mouseleave="deactivateTooltipRow2()"
+               ng-click="toggleUIStyle()">
+              <span ng-if="!minimalStyle">🎨</span>
+              <span ng-if="minimalStyle">◐</span>
+              <span class="custom-tooltip">{{ minimalStyle ? 'Full style' : 'Minimal style' }}</span>
           </div>
           <div class="language-wrapper" 
                ng-mouseenter="activateTooltipRow2()" 
@@ -383,14 +445,16 @@
             </ul>
           </div>
           
-          <div class="repair-button-rect has-tooltip tooltip-bottom" 
-               ng-if="repairIcons > 0 && !isEditingVehicle" 
-               ng-mouseenter="activateTooltipRow2()" 
-               ng-mouseleave="deactivateTooltipRow2()" 
-               ng-click="repairVehicle()">
-              🔧
-              <span class="custom-tooltip">{{ t('tooltip_repair') }}</span>
+          <div class="nav-button-rect has-tooltip tooltip-bottom"
+               ng-if="isPolice || wantedTime > 0"
+               ng-mouseenter="activateTooltipRow2()"
+               ng-mouseleave="deactivateTooltipRow2()"
+               ng-click="toggleNav()"
+               ng-class="{'active': navEnabled}">
+              🧭
+              <span class="custom-tooltip">{{ navEnabled ? t('tooltip_nav_off') : t('tooltip_nav_on') }}</span>
           </div>
+          <!-- repair button moved to tools row below -->
           <div class="wanted-toggle-button-rect has-tooltip tooltip-bottom" 
                ng-if="showWantedToggle" 
                ng-mouseenter="activateTooltipRow2()" 
@@ -400,20 +464,21 @@
               {{ wantedEnabled ? '✅' : '❌' }}
               <span class="custom-tooltip">{{ getWantedTooltip() }}</span>
           </div>
-          <div class="sync-vehicle-button-rect has-tooltip tooltip-bottom" 
-               ng-if="showSyncButton" 
-               ng-mouseenter="activateTooltipRow2()" 
-               ng-mouseleave="deactivateTooltipRow2()" 
+          <div class="sync-vehicle-button-rect has-tooltip tooltip-bottom"
+               ng-if="showSyncButton"
+               ng-mouseenter="activateTooltipRow2()"
+               ng-mouseleave="deactivateTooltipRow2()"
                ng-click="syncVehicle()">
               🔄
               <span class="custom-tooltip">{{ t('tooltip_sync') }}</span>
           </div>
+          <!-- powerup buttons moved to tools row below -->
       </div>
       
-      <div class="hud-row rank-bar-row has-tooltip" ng-click="openRankPanel()" ng-class="{'glow-bar': rankBarGlow}">
+      <div class="hud-row rank-bar-row has-tooltip" ng-click="openRankPanel()" ng-class="{'glow-bar': rankBarGlow, 'closed': !isUIOpen}">
           <div class="rank-bar-container">
-              <span class="rank-bar-label">{{ t(rankData.rank_name_key) }}</span>
-              <div class="rank-bar-track">
+              <span class="rank-bar-label">{{ rankData.prefix }}</span>
+              <div class="rank-bar-track" ng-style="{'--rank-pct': rankData.percent + '%'}">
                   <div class="rank-bar-fill" ng-style="{'width': rankData.percent + '%'}"></div>
               </div>
               <span class="rank-bar-percent">{{ rankData.percent }}%</span>
@@ -421,39 +486,80 @@
           <span class="custom-tooltip">{{ t('tooltip_rank') }}</span>
       </div>
       
-      <div class="hud-row economy-data-row" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
-          <div class="balance-display clickable-balance" ng-click="openTransferWindow($event)">
+      <div class="hud-row economy-data-row" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}" ng-click="openTransferWindow($event)">
+          <div class="balance-display clickable-balance">
               <span class="currency-symbol">{{ t('currency_symbol') }}</span>
               <span class="current-balance">{{ balance | number:2 }}</span>
           </div>
       </div>
       
-      <div class="hud-row wanted-timer-row" ng-if="wantedTime > 0" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
-          <div id="floating-wanted-timer">
-              <span class="label">🚨 {{ t('wanted_label') }}</span>
-              <span class="time">{{ formatTime(wantedTime) }}</span>
-          </div>
-      </div>
-      
-      <div class="hud-row police-indicator-row" ng-if="policeNearby && wantedTime > 0" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
-          <div class="police-indicator">
-              <span class="police-icon">👮</span>
-          </div>
-      </div>
-      
-      <div class="hud-row bust-progress-row" ng-if="bustProgress.active" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
-          <div class="bust-progress-container">
-              <div class="bust-progress-label">{{ t('being_arrested') }}</div>
-              <div class="bust-progress-bar">
-                  <div class="bust-progress-fill" ng-style="{'width': bustProgress.percent + '%'}"></div>
+      <div class="wanted-cluster" ng-if="wantedTime > 0">
+          <div class="wanted-stack">
+              <div class="hud-row wanted-timer-row" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
+                  <div id="floating-wanted-timer">
+                      <span class="label">🚨</span>
+                      <span class="time">{{ formatTime(wantedTime) }}</span>
+                  </div>
               </div>
-              <div class="bust-progress-text">{{ bustProgress.percent | number:0 }}%</div>
+              <div class="hud-row police-indicator-row" ng-if="policeNearby" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
+                  <div class="police-indicator">
+                      <span class="police-icon">👮</span>
+                      <span class="cop-powerup-indicator" ng-if="nearbyHasSpikes()">🪤</span>
+                      <span class="cop-powerup-indicator" ng-if="nearbyHasBanana()">🍌</span>
+                      <span class="cop-powerup-indicator" ng-if="nearbyHasCannon()">💣</span>
+                  </div>
+              </div>
+          </div>
+          <div class="hud-row bust-progress-row" ng-if="bustProgress.active"
+               ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
+              <div class="bust-progress-container">
+                  <div class="bust-progress-label">{{ t('being_arrested') }}</div>
+                  <div class="bust-progress-bar">
+                      <div class="bust-progress-fill" ng-style="{'width': bustProgress.percent + '%'}"></div>
+                  </div>
+                  <div class="bust-progress-text">{{ bustProgress.percent | number:0 }}%</div>
+              </div>
           </div>
       </div>
       
-      <div class="hud-row repair-icons-row" ng-if="repairIcons > 0 && !isEditingVehicle" ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
-          <div class="repair-icons-container">
-              <span class="repair-icon" ng-repeat="n in getRepairArray() track by $index">🔧</span>
+      <div class="hud-row hud-row-buttons tools-row"
+           ng-if="(repairIcons > 0 || powerupInventory.spike_strip > 0 || powerupInventory.banana > 0) && !isEditingVehicle"
+           ng-class="{'open': isUIOpen, 'closed': !isUIOpen}">
+          <div class="powerup-button-rect repair-powerup-rect has-tooltip tooltip-top"
+               ng-if="repairIcons > 0"
+               ng-mouseenter="tooltipRowActive = true"
+               ng-mouseleave="tooltipRowActive = false"
+               ng-click="repairVehicle()">
+              🔧
+              <span class="powerup-count-badge">{{ repairIcons }}</span>
+              <span class="custom-tooltip">{{ t('tooltip_repair') }} ({{ repairIcons }}/{{ maxRepairs }})</span>
+          </div>
+          <div class="powerup-button-rect has-tooltip tooltip-top"
+               ng-if="powerupInventory.spike_strip > 0"
+               ng-mouseenter="tooltipRowActive = true"
+               ng-mouseleave="tooltipRowActive = false"
+               ng-click="activatePowerup('spike_strip')">
+              🪤
+              <span class="powerup-count-badge">{{ powerupInventory.spike_strip }}</span>
+              <span class="custom-tooltip">{{ t('tooltip_spike_strip') }} ({{ powerupInventory.spike_strip }}/2)</span>
+          </div>
+          <div class="powerup-button-rect has-tooltip tooltip-top"
+               ng-if="powerupInventory.banana > 0"
+               ng-mouseenter="tooltipRowActive = true"
+               ng-mouseleave="tooltipRowActive = false"
+               ng-click="activatePowerup('banana')">
+              🍌
+              <span class="powerup-count-badge">{{ powerupInventory.banana }}</span>
+              <span class="custom-tooltip">{{ t('tooltip_banana') }} ({{ powerupInventory.banana }}/2)</span>
+          </div>
+          <div class="powerup-button-rect has-tooltip tooltip-top"
+               ng-if="powerupInventory.cannon > 0"
+               ng-mouseenter="tooltipRowActive = true"
+               ng-mouseleave="tooltipRowActive = false"
+               ng-click="activatePowerup('cannon')">
+              💣
+              <span class="powerup-count-badge">{{ powerupInventory.cannon }}</span>
+              <span class="custom-tooltip">{{ t('tooltip_cannon') }} ({{ powerupInventory.cannon }}/2)</span>
           </div>
       </div>
       

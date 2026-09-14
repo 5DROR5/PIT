@@ -22,24 +22,24 @@ local lastFreezeCheck = 0
 local voteActive  = false
 
 local vdata = {
-    hp              = 0,
-    torqueNm        = 0,
-    weight          = 0,
-    perfPower       = 0,
-    perfTorque      = 0,
-    brakeTorque     = 0,
-    avgFriction     = 1.0,
-    drivetrain      = "RWD",
-    propulsedWheels = 2,
-    totalWheels     = 4,
-    rating          = 0,
-    class           = "D",
-    ratingRounded   = 0,
-    maxRPM          = 0,
-    gearboxType     = "N/A",
-    gearCount       = 0,
-    inductionType   = "NA",
-    serverMaxRating = 999,
+    hp               = 0,
+    torqueNm         = 0,
+    weight           = 0,
+    perfPower        = 0,
+    perfTorque       = 0,
+    brakeTorque      = 0,
+    avgFriction      = 1.0,
+    drivetrain       = "RWD",
+    propulsedWheels  = 2,
+    totalWheels      = 4,
+    rating           = 0,
+    class            = "D",
+    ratingRounded    = 0,
+    maxRPM           = 0,
+    gearboxType      = "N/A",
+    gearCount        = 0,
+    inductionType    = "NA",
+    serverMaxRating  = 999,
     isVehicleAllowed = true
 }
 
@@ -49,17 +49,34 @@ local vdata = {
 local function buildVehicleJSON()
     return string.format(
         '{"rating":%d,"hp":%d,"weight":%d,"class":"%s"}',
-        vdata.rating, vdata.hp, vdata.weight, vdata.class
+        vdata.rating,
+        vdata.hp,
+        vdata.weight,
+        vdata.class
     )
 end
 
 local function buildFullJSON()
     return string.format(
         '{"hp":%d,"torqueNm":%d,"weight":%d,"perfPower":%d,"perfTorque":%d,"brakeTorque":%d,"avgFriction":%.2f,"drivetrain":"%s","propulsedWheels":%d,"totalWheels":%d,"rating":%d,"class":"%s","ratingRounded":%d,"maxRPM":%d,"gearboxType":"%s","gearCount":%d,"inductionType":"%s","serverMaxRating":%d,"isVehicleAllowed":%s}',
-        vdata.hp, vdata.torqueNm, vdata.weight, vdata.perfPower, vdata.perfTorque,
-        vdata.brakeTorque, vdata.avgFriction, vdata.drivetrain, vdata.propulsedWheels,
-        vdata.totalWheels, vdata.rating, vdata.class, vdata.ratingRounded, vdata.maxRPM,
-        vdata.gearboxType, vdata.gearCount, vdata.inductionType, vdata.serverMaxRating,
+        vdata.hp,
+        vdata.torqueNm,
+        vdata.weight,
+        vdata.perfPower,
+        vdata.perfTorque,
+        vdata.brakeTorque,
+        vdata.avgFriction,
+        vdata.drivetrain,
+        vdata.propulsedWheels,
+        vdata.totalWheels,
+        vdata.rating,
+        vdata.class,
+        vdata.ratingRounded,
+        vdata.maxRPM,
+        vdata.gearboxType,
+        vdata.gearCount,
+        vdata.inductionType,
+        vdata.serverMaxRating,
         tostring(vdata.isVehicleAllowed)
     )
 end
@@ -107,9 +124,9 @@ local function calculatePI(data, maxLimit)
     result.ratingRounded = math.floor(final + 0.5)
     result.rating        = math.floor(result.ratingRounded / 4)
 
-    if     result.rating < 100 then result.class = "D"
-    elseif result.rating < 200 then result.class = "C"
-    elseif result.rating < 300 then result.class = "B"
+    if     result.rating < 100 then result.class  = "D"
+    elseif result.rating < 200 then result.class  = "C"
+    elseif result.rating < 300 then result.class  = "B"
     else                             result.class = "A" end
 
     result.isVehicleAllowed = (result.rating <= maxLimit)
@@ -279,20 +296,20 @@ local function collect()
 end
 
 M.setBulkData = function(hp, torque, weight, maxRPM, brakeTorque, drivetrain, propulsed, total, avgFriction, gearboxType, gearCount, inductionType)
-    vdata.hp             = math.ceil(hp)
-    vdata.perfPower      = vdata.hp
-    vdata.torqueNm       = math.ceil(torque)
-    vdata.perfTorque     = vdata.torqueNm
-    vdata.weight         = math.ceil(weight)
-    vdata.maxRPM         = maxRPM
-    vdata.brakeTorque    = brakeTorque
-    vdata.drivetrain     = drivetrain
+    vdata.hp              = math.ceil(hp)
+    vdata.perfPower       = vdata.hp
+    vdata.torqueNm        = math.ceil(torque)
+    vdata.perfTorque      = vdata.torqueNm
+    vdata.weight          = math.ceil(weight)
+    vdata.maxRPM          = maxRPM
+    vdata.brakeTorque     = brakeTorque
+    vdata.drivetrain      = drivetrain
     vdata.propulsedWheels = propulsed
-    vdata.totalWheels    = total
-    vdata.avgFriction    = avgFriction
-    vdata.gearboxType    = gearboxType
-    vdata.gearCount      = gearCount
-    vdata.inductionType  = inductionType
+    vdata.totalWheels     = total
+    vdata.avgFriction     = avgFriction
+    vdata.gearboxType     = gearboxType
+    vdata.gearCount       = gearCount
+    vdata.inductionType   = inductionType
 end
 
 M.getVehicleData = function() return vdata end
@@ -355,7 +372,18 @@ local function try_register()
     AddEventHandler("PerfModVoteUpdate",             onVoteUpdate)
     AddEventHandler("PerfModVoteEnded",              onVoteEnded)
     AddEventHandler("updatePlayerPerformanceRating", onReceivePlayerRating)
+    AddEventHandler("PerfModTranslations",           function(payload)
+        guihooks.trigger('PerfModTranslations', payload)
+    end)
     M.registered_events = true
+end
+
+M.onExtensionLoaded = function()
+    M.registered_events = false
+    if TriggerServerEvent then
+        local lang = (settings and settings.getValue and settings.getValue("userLanguage")) or ""
+        TriggerServerEvent("PerfModSetLang", lang)
+    end
 end
 
 -- =============================================================================
@@ -377,9 +405,9 @@ local function onUpdate(dt)
         lastSend = 0
         if dataCollected and vdata.hp > 0 and vdata.weight > 0 then
             local result = calculatePI(vdata, serverLimit)
-            vdata.rating         = result.rating
-            vdata.class          = result.class
-            vdata.ratingRounded  = result.ratingRounded
+            vdata.rating          = result.rating
+            vdata.class           = result.class
+            vdata.ratingRounded   = result.ratingRounded
             vdata.serverMaxRating = serverLimit
             updateUI()
             if type(TriggerServerEvent) == "function" then

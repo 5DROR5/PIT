@@ -1,7 +1,7 @@
 // =============================================================================
-// PIT Economy System — Police Wanted List Controller
-// Version: 1.0
-// License: AGPL-3.0 — https://www.gnu.org/licenses/agpl-3.0.html
+// PIT Economy System - Police Wanted List Controller
+// Version: 5.0
+// License: AGPL-3.0 - https://www.gnu.org/licenses/agpl-3.0.html
 // =============================================================================
 
 angular.module('beamng.apps')
@@ -29,7 +29,7 @@ angular.module('beamng.apps')
         "no_wanted_players":     "No wanted players",
         "time_label":            "Time",
         "type_label":            "Type",
-        "repairs_label":         "Repairs",
+        "tools_label":           "Tools",
         "violation_airpolluter": "Air Polluter",
         "violation_unknown":     "?"
       };
@@ -119,43 +119,6 @@ angular.module('beamng.apps')
           }
         }
       });
-
-      // -------------------------------------------------------------------------
-      // guihooks listeners (direct BeamNG bridge)
-      // -------------------------------------------------------------------------
-
-      try {
-        if (typeof guihooks !== "undefined" && guihooks.on) {
-          guihooks.on("POLICE_WantedListUpdate", function(payload) {
-            if (!payload) return;
-            var list = normalizeWantedList(payload);
-            $scope.$applyAsync(function() {
-              $scope.wantedPlayers = list || [];
-              if (list) $scope.isPolice = true;
-            });
-          });
-
-          guihooks.on("POLICE_RoleUpdate", function(data) {
-            if (data && data.isPolice !== undefined) {
-              $scope.$applyAsync(function() {
-                $scope.isPolice = data.isPolice;
-                if (!$scope.isPolice) $scope.wantedPlayers = [];
-              });
-            }
-          });
-
-          guihooks.on("POLICE_TranslationsUpdate", function(data) {
-            if (data && data.translations) {
-              serverTranslations = data.translations;
-              $scope.$applyAsync(function() {
-                if (data.lang) updateDirection(data.lang);
-              });
-            }
-          });
-        }
-      } catch(err) {
-        console.error('[PoliceWantedList] guihooks registration error:', err);
-      }
 
     }
   };

@@ -6,16 +6,31 @@ var app = angular.module('beamng.apps');
 
 let lastSentMessage = "";
 
-window.pitDisplayNames = {};
-try {
-    if (typeof guihooks !== 'undefined' && guihooks.on) {
-
-    }
-} catch(e) {}
+window.pitDisplayNames = window.pitDisplayNames || {};
 
 let lastMsgId = 0;
+let localPlayerNames = new Set();
+
+function playMentionPing() {
+	try {
+		const ctx = new (window.AudioContext || window.webkitAudioContext)();
+		[0, 0.15, 0.30].forEach(function(t) {
+			const o = ctx.createOscillator(), g = ctx.createGain();
+			o.connect(g); g.connect(ctx.destination);
+			o.type = 'sine';
+			o.frequency.setValueAtTime(960, ctx.currentTime + t);
+			g.gain.setValueAtTime(0.2, ctx.currentTime + t);
+			g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.1);
+			o.start(ctx.currentTime + t);
+			o.stop(ctx.currentTime + t + 0.12);
+		});
+	} catch(e) {}
+}
+
 let newChatMenu = false;
-import('/ui/lib/ext/purify.min.js')
+import('/ui/lib/ext/purify.min.js').catch(function (e) {
+	console.warn('[CHAT] DOMPurify failed to load, falling back to plain escaping:', e);
+});
 app.directive('multiplayerchat', [function () {
 	return {
 		templateUrl: '/ui/modules/apps/BeamMP-Chat/app.html',
@@ -28,6 +43,27 @@ app.directive('multiplayerchat', [function () {
 
 
 app.controller("Chat", ['$scope', 'Settings', function ($scope, Settings) {
+	const CHAT_EVENTS = {
+		chatMessage:      ['chatMessage',      'onBeamMPChatMessage'],
+		clearChatHistory: ['clearChatHistory', 'onBeamMPClearChatHistory']
+	};
+
+	function onAny(eventNames, handler) {
+		eventNames.forEach(function (eventName) {
+			$scope.$on(eventName, handler);
+		});
+	}
+
+	function parsePayload(data, fallback) {
+		if (typeof data !== 'string') {
+			return (data === undefined || data === null) ? fallback : data;
+		}
+		try {
+			return JSON.parse(data);
+		} catch (e) {
+			return fallback;
+		}
+	}
 	const applyChatStyle = function(useNewDesign) {
 		const stylesheet = document.getElementById('chat-style');
 		const sendButton = document.getElementById('send-button');
@@ -51,23 +87,18 @@ app.controller("Chat", ['$scope', 'Settings', function ($scope, Settings) {
 
 		var chatMessages = retrieveChatMessages()
 		newChatMenu = Settings.values.enableNewChatMenu;
-		//console.log(`[CHAT] New chat menu: ${newChatMenu}`);
-		// Set listeners
 		var chatinput = document.getElementById("chat-input");
-		// To ensure that the element exists
 		if (chatinput) {
 			chatinput.addEventListener("mouseover", function(){ chatShown = true; showChat(); });
 			chatinput.addEventListener("mouseout", function(){ chatShown = false; });
-			chatinput.addEventListener('keydown', onKeyDown); //used for 'up arrow' last msg functionality
+			chatinput.addEventListener('keydown', onKeyDown);
 		}
 
 		var chatlist = document.getElementById("chat-list");
-		// To ensure that the element exists
 		if (chatlist) {
 			chatlist.addEventListener("mouseover", function(){ chatShown = true; showChat(); });
 			chatlist.addEventListener("mouseout", function(){ chatShown = false; });
 		}
-		// Set chat direction
 		setChatDirection(localStorage.getItem('chatHorizontal'));
 		setChatDirection(localStorage.getItem('chatVertical'));
 
@@ -84,7 +115,7 @@ app.controller("Chat", ['$scope', 'Settings', function ($scope, Settings) {
 			})
 		}
 
-		if (chatlist) {		// scroll to the bottom of the chat list on ui reload
+		if (chatlist) {
 			setTimeout(() => {
 				scrollToLastMessage();
 			}, 0)
@@ -152,7 +183,9 @@ app.controller("Chat", ['$scope', 'Settings', function ($scope, Settings) {
 		scrollToLastMessage();
 	}
 
-	$scope.$on('chatMessage', function (event, data) {
+	onAny(CHAT_EVENTS.chatMessage, function (event, rawData) {
+		const data = parsePayload(rawData, null);
+		if (!data || data.id === undefined) return;
 		if (data.id > lastMsgId) {
 			lastMsgId = data.id;
 
@@ -171,14 +204,23 @@ app.controller("Chat", ['$scope', 'Settings', function ($scope, Settings) {
 		}
 	});
 
-	$scope.$on('clearChatHistory', function (event, data) {
+	onAny(CHAT_EVENTS.clearChatHistory, function (event, data) {
 		localStorage.removeItem('chatMessages');
 	})
+
+	$scope.$on('LocalPlayerIdentity', function (event, rawData) {
+		const data = parsePayload(rawData, {}) || {};
+		localPlayerNames.clear();
+		if (data.beammp_name)  localPlayerNames.add(data.beammp_name);
+		if (data.display_name) localPlayerNames.add(data.display_name);
+	});
 
 	$scope.$on('SettingsChanged', function (event, data) {
 		Settings.values = data.values;
 
 		applyChatStyle(Settings.values.useUiAppRedesign);
+
+		newChatMenu = Settings.values.enableNewChatMenu;
 
 		const chatbox = document.getElementById("chat-window");
 		if (newChatMenu) {
@@ -204,7 +246,6 @@ app.controller("Chat", ['$scope', 'Settings', function ($scope, Settings) {
 
 
 
-// -------------------------------------------- CHAT FADING -------------------------------------------- //
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -214,19 +255,13 @@ var chatShowTime = 3500; // 5000ms
 var chatFadeSteps = 1/30; // 60 steps
 var chatFadeSpeed = 1000 / (1/chatFadeSteps); // 1000ms
 async function fadeNode(node) {
-	// Set the node opacity to 1.0
 	node.style.opacity = 1.0;
-	// Once the node is shown, we wait before fading it
-	// We take care of checking that the chat is not shown while we are waiting before fading
 	for (var steps = chatShowTime/35; steps < chatShowTime; steps += chatShowTime/35) {
 		if (chatShown) return;
 		await sleep(chatShowTime/35);
 	}
-	// We fade the node
 	var nodeOpacity = 1.0;
 	while (nodeOpacity > 0.0) {
-		// If the user move the mouse hover the chat before
-		// this loop as ended then we break the loop
 		if (chatShown) return;
 		nodeOpacity = nodeOpacity - chatFadeSteps;
 		node.style.opacity = nodeOpacity;
@@ -237,39 +272,45 @@ async function fadeNode(node) {
 async function showChat() {
 	if (newChatMenu) return;
 
-	// While the mouse is over the chat, we wait
 	var chatMessages = []
 	while (chatShown) {
-		// Get the chat and the messages
-		// Copy the variables so it's a pointer
 		var tempMessages = document.getElementById("chat-list").getElementsByTagName("li");
 		for (i = 0; i < tempMessages.length; i++) {
 			chatMessages[i] = tempMessages[i];
 		}
-		// Set all messages opacity to 1.0
 		for (var i = 0; i < chatMessages.length; ++i) chatMessages[i].style.opacity = 1.0;
 		await sleep(100);
 	}
-	// Once the mouse is not over the chat anymore, we wait before fading
-	// We take care of checking that the chat is not shown while we are waiting before fading
+
 	for (var steps = chatShowTime/35; steps < chatShowTime; steps += chatShowTime/35) {
 		if (chatShown) return;
 		await sleep(chatShowTime/35);
 	}
 	var chatOpacity = 1.0;
 	while (chatOpacity > 0.0) {
-		// If the user move the mouse hover the chat before
-		// this loop as ended then we break the loop
 		if (chatShown) break;
 		chatOpacity = chatOpacity - chatFadeSteps;
 		for (var i = 0; i < chatMessages.length; ++i) chatMessages[i].style.opacity = chatOpacity;
 		await sleep(chatFadeSpeed);
 	}
 }
-// -------------------------------------------- CHAT FADING -------------------------------------------- //
 
-// -------------------------------------------- MESSAGE FORMATTING -------------------------------------------- //
 
+function escapeChatHtml(value) {
+    return String(value === undefined || value === null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function sanitizeChatInput(string) {
+    if (typeof DOMPurify !== 'undefined' && DOMPurify && typeof DOMPurify.sanitize === 'function') {
+        return DOMPurify.sanitize(string);
+    }
+    return escapeChatHtml(string);
+}
 
 function formatChatMessage(string) {
     const blockedTags = new Set(['script', 'iframe', 'form', 'input', 'button', 'a']);
@@ -308,34 +349,62 @@ function formatChatMessage(string) {
     let result = '';
     let currentText = '';
     let classes = new Set();
+    let currentHexColor = null;
+    let currentHexBg = null;
 
-    string = DOMPurify.sanitize(string);
-    const tokens = string.split(/(\^.)/g);
+    string = sanitizeChatInput(string);
+    const tokens = string.split(/(\^@#[0-9a-fA-F]{6}|\^#[0-9a-fA-F]{6}|\^.)/g);
 
     const flush = () => {
         if (!currentText) return;
         const classList = Array.from(classes);
-        result += classList.length
-            ? `<span class="${classList.join(' ')}">${currentText}</span>`
+        let attrs = classList.length ? ` class="${classList.join(' ')}"` : '';
+        let style = '';
+        if (currentHexColor) style += `color:${currentHexColor};`;
+        if (currentHexBg) style += `background-color:${currentHexBg};`;
+        if (style) attrs += ` style="${style}"`;
+        result += attrs
+            ? `<span${attrs}>${currentText}</span>`
             : currentText;
         currentText = '';
     };
 
-    for (const token of tokens) {
-        if (/^\^.$/.test(token)) {
+    for (let index = 0; index < tokens.length; index += 1) {
+        const token = tokens[index];
+        const nextToken = (tokens[index + 1] || '').trim();
+
+        if (/^\^@#[0-9a-fA-F]{6}$/.test(token)) {
+            flush();
+            currentHexBg = token.slice(2);
+        } else if (/^\^#[0-9a-fA-F]{6}$/.test(token)) {
+            flush();
+            [...classes].forEach(c => c.startsWith('color-') && classes.delete(c));
+            currentHexColor = token.slice(1);
+        } else if (/^\^.$/.test(token)) {
             flush();
             if (token === '^r') {
                 classes.clear();
+                currentHexColor = null;
+                currentHexBg = null;
+            } else if (token === '^p') {
+                result += '<br>';
+            } else if (token === '^*') {
+                const cls = globalThis.serverStyleMap?.[token];
+                if (cls) classes.add(cls);
+                if (globalThis.iconsOrig?.[nextToken]) {
+                    currentText = globalThis.iconsOrig[nextToken].glyph;
+                }
             } else {
                 const cls = globalThis.serverStyleMap?.[token];
                 if (cls?.startsWith('color-')) {
                     [...classes].forEach(c => c.startsWith('color-') && classes.delete(c));
                     classes.add(cls);
+                    currentHexColor = null;
                 } else if (cls) {
                     classes.add(cls);
                 }
             }
-        } else {
+        } else if (tokens[index - 1] !== '^*') {
             currentText += token;
         }
     }
@@ -344,25 +413,18 @@ function formatChatMessage(string) {
     return result;
 }
 
-// -------------------------------------------- MESSAGE FORMATTING -------------------------------------------- //
-
 function storeChatMessage(message) {
-  // Check if localStorage is available
   if (typeof(Storage) !== "undefined") {
-    // Get the existing chat messages from localStorage (if any)
     let chatMessages = JSON.parse(localStorage.getItem("chatMessages")) || [];
 
-    // Add the new message to the chatMessages array
     chatMessages.push(message);
 
 		if (chatMessages.length > 70) {
 			chatMessages.shift()
 		}
 
-    // Store the updated chatMessages array back in localStorage
     localStorage.setItem("chatMessages", JSON.stringify(chatMessages));
 
-    // You can optionally return the updated chatMessages array or perform other actions
     return chatMessages;
   } else {
     console.error("localStorage is not available in this browser.");
@@ -371,12 +433,8 @@ function storeChatMessage(message) {
 }
 
 function retrieveChatMessages() {
-	// Check if localStorage is available
 	if (typeof localStorage !== 'undefined') {
-		// Get the chat messages from localStorage
 		const storedMessages = localStorage.getItem('chatMessages');
-
-		// Parse the stored data if it exists
 		if (storedMessages) {
 			return JSON.parse(storedMessages);
 		}
@@ -395,7 +453,6 @@ function addMessage(msg, time = null) {
             }
         }
     }
-	//getting current time and adding it to the message before displaying
 	if (time == null) {
 		var now = new Date();
 		var hour    = now.getHours();
@@ -411,12 +468,10 @@ function addMessage(msg, time = null) {
   const msgText = "" + msg
 	msg = time + " " + msg;
 
-	// Create the message node
 	const chatMessageNode = document.createElement("li");
 	chatMessageNode.className = "chat-message";
 	fadeNode(chatMessageNode);
 
-	// create node for the timestamp
 	const messageTimestampNode = document.createElement("span");
 	messageTimestampNode.className = "chat-message-timestamp";
 
@@ -425,11 +480,8 @@ function addMessage(msg, time = null) {
 
 	chatMessageNode.appendChild(messageTimestampNode)
 
-	// create text for the message itself, add it to chat message list
 	const chatList = document.getElementById("chat-list");
 
-	// check if this message is a server message before
-	// doing rich formatting
 	if (msgText.startsWith("Server: ")) {
 		const formattedInnerHtml = formatChatMessage(msgText);
 		chatMessageNode.innerHTML = chatMessageNode.innerHTML + formattedInnerHtml;
@@ -438,9 +490,25 @@ function addMessage(msg, time = null) {
 		chatMessageNode.appendChild(textNode);
 	}
 
+	for (let name of localPlayerNames) {
+		if (msgText.includes('@' + name)) {
+			const mentionArea = document.getElementById('mention-area');
+			mentionArea.style.display = 'flex';
+			playMentionPing();
+			const bell = '<span style="font-size:14px;flex-shrink:0;filter:drop-shadow(0 0 3px #000);">🔔</span>';
+			const timeSpan = '<span style="font-size:0.7em;color:rgba(255,215,0,0.6);margin-right:3px;">' + time + '</span>';
+			const cleanMsg = formatChatMessage(msgText.replace(new RegExp('@' + name, 'g'), '').trim());
+			mentionArea.innerHTML = bell + '<span class="mention-inner">' + timeSpan + cleanMsg + '</span>';
+			mentionArea.onclick = () => {
+				mentionArea.style.display = 'none';
+				mentionArea.innerHTML = '';
+			};
+			break;
+		}
+	}
+
 	chatList.appendChild(chatMessageNode);
 
-	// Delete oldest chat message if more than 70 messages exist
 	if (chatList.children.length > 70) {
 		chatList.removeChild(chatList.children[0]);
 	}

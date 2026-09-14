@@ -1,7 +1,7 @@
 -- =============================================================================
--- PIT Economy System — Database Layer
+-- PIT Economy System - Database Layer
 -- Backends: MySQL (primary) · JSON file (automatic fallback)
--- License: AGPL-3.0 — https://www.gnu.org/licenses/agpl-3.0.html
+-- License: AGPL-3.0 - https://www.gnu.org/licenses/agpl-3.0.html
 -- =============================================================================
 
 local M    = {}
@@ -22,7 +22,7 @@ local env     = nil
 local LOCAL_DB_PATH = ROOT .. "/data/local_storage.json"
 
 local function ensureDataDir()
-    os.execute('mkdir "' .. ROOT .. '/data"')
+    FS.CreateDirectory(ROOT .. "/data")
 end
 local _store        = { players = {}, accounts = {}, account_devices = {}, banned_devices = {} }
 local _dirty        = false
@@ -62,20 +62,12 @@ local function writeFile(path, s)
 end
 
 local function jsonEnc(t)
-    if type(Util) == "table" and Util.JsonEncode then
-        local ok, s = pcall(Util.JsonEncode, t)
-        if ok and type(s) == "string" then return s end
-    end
-    return nil
+    return Util.JsonEncode(t)
 end
 
 local function jsonDec(s)
     if type(s) ~= "string" then return nil end
-    if type(Util) == "table" and Util.JsonDecode then
-        local ok, t = pcall(Util.JsonDecode, s)
-        if ok then return t end
-    end
-    return nil
+    return Util.JsonDecode(s)
 end
 
 
@@ -106,8 +98,12 @@ local function j_flush()
     if not s then log("ERROR: JSON encode failed"); return false end
     local tmp = LOCAL_DB_PATH .. ".tmp"
     if not writeFile(tmp, s) then log("ERROR: cannot write temp file"); return false end
-    if FS and FS.Rename then pcall(FS.Rename, tmp, LOCAL_DB_PATH)
-    else writeFile(LOCAL_DB_PATH, s) end
+    local ok, err = FS.Rename(tmp, LOCAL_DB_PATH)
+    if not ok then
+        log("ERROR: rename failed: " .. tostring(err))
+        FS.Remove(tmp)
+        return false
+    end
     _dirty = false; _last_save = os.time()
     return true
 end
@@ -141,6 +137,17 @@ local function j_player(uid, starting_money)
             pit_username_display      = nil,
             migration_token           = nil,
             guest_name                = nil,
+            total_points              = 0,
+            achievement_data          = nil,
+            close_markers_captured    = 0,
+            zigzag_count              = 0,
+            combo_count               = 0,
+            cop_chases                = 0,
+            best_cop_chase_seconds    = 0,
+            best_wanted_chase_seconds = 0,
+            streak_days               = 0,
+            last_play_date            = nil,
+            daily_playtime_seconds    = 0,
         }
         _dirty = true
     end
@@ -249,7 +256,6 @@ function M.connect()
                 created_at    TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (username)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4]])
-            ensureColumn("players", "player_rank",               "INT NOT NULL DEFAULT 1")
             ensureColumn("players", "task_progress",             "TEXT DEFAULT NULL")
             ensureColumn("players", "last_police_payment",       "BIGINT DEFAULT 0")
             ensureColumn("players", "is_wanted",                 "TINYINT(1) DEFAULT 0")
@@ -268,6 +274,17 @@ function M.connect()
             ensureColumn("players", "migration_token",           "VARCHAR(10) DEFAULT NULL")
             ensureColumn("players", "guest_name",                "VARCHAR(128) DEFAULT NULL")
             ensureColumn("pit_accounts", "username_display",     "VARCHAR(64) DEFAULT NULL")
+            ensureColumn("players", "total_points",              "INT NOT NULL DEFAULT 0")
+            ensureColumn("players", "achievement_data",          "MEDIUMTEXT DEFAULT NULL")
+            ensureColumn("players", "close_markers_captured",    "INT DEFAULT 0")
+            ensureColumn("players", "zigzag_count",              "INT DEFAULT 0")
+            ensureColumn("players", "combo_count",               "INT DEFAULT 0")
+            ensureColumn("players", "cop_chases",                "INT DEFAULT 0")
+            ensureColumn("players", "best_cop_chase_seconds",    "INT DEFAULT 0")
+            ensureColumn("players", "best_wanted_chase_seconds", "INT DEFAULT 0")
+            ensureColumn("players", "streak_days",               "INT DEFAULT 0")
+            ensureColumn("players", "last_play_date",            "DATE DEFAULT NULL")
+            ensureColumn("players", "daily_playtime_seconds",    "INT DEFAULT 0")
             return true
         end
         log("MySQL unavailable: " .. tostring(err) .. " — falling back to JSON")
@@ -309,8 +326,8 @@ function M.ensurePlayer(uid, name, _identifiers, starting_money)
     if backend == M.BACKEND_MYSQL then
         local sn = esc(name or "Unknown")
         q(string.format(
-            "INSERT INTO players (uid, name, money, role, lang, created_at, last_seen, player_rank, task_progress) "
-            .. "VALUES (%s, %s, %d, 'civilian', NULL, NOW(), NOW(), 1, '{}') "
+            "INSERT INTO players (uid, name, money, role, lang, created_at, last_seen, task_progress) "
+            .. "VALUES (%s, %s, %d, 'civilian', NULL, NOW(), NOW(), '{}') "
             .. "ON DUPLICATE KEY UPDATE name=%s, last_seen=NOW()",
             esc(uid), sn, tonumber(starting_money) or 0, sn))
     else
@@ -417,23 +434,7 @@ end
 -- RANK SYSTEM
 -- =============================================================================
 
-function M.getRank(uid)
-    if backend == M.BACKEND_MYSQL then
-        local r = q1("SELECT player_rank FROM players WHERE uid=" .. esc(uid))
-        return r and tonumber(r.player_rank) or 1
-    else
-        return j_player(uid).player_rank or 1
-    end
-end
 
-function M.setRank(uid, rank)
-    rank = math.max(1, math.min(5, tonumber(rank) or 1))
-    if backend == M.BACKEND_MYSQL then
-        q(string.format("UPDATE players SET player_rank=%d WHERE uid=%s", rank, esc(uid)))
-    else
-        j_player(uid).player_rank = rank; _dirty = true
-    end
-end
 
 function M.getTaskProgress(uid)
     if backend == M.BACKEND_MYSQL then
@@ -454,20 +455,6 @@ function M.setTaskProgress(uid, data)
     end
 end
 
-function M.savePlayerRankData(uid, rank, progress_json)
-    rank = math.max(1, math.min(5, tonumber(rank) or 1))
-    local s = tostring(progress_json or "{}"); if s == "" then s = "{}" end
-    if backend == M.BACKEND_MYSQL then
-        q(string.format(
-            "UPDATE players SET player_rank=%d, task_progress=%s WHERE uid=%s",
-            rank, esc(s), esc(uid)))
-    else
-        local p = j_player(uid)
-        p.player_rank   = rank
-        p.task_progress = s
-        _dirty = true
-    end
-end
 
 
 -- =============================================================================
@@ -501,6 +488,28 @@ function M.incrementMarkersWanted(uid) _inc(uid, "markers_captured_wanted")   en
 function M.addChaseTime(uid, secs)     _add(uid, "total_chase_time_seconds",  secs) end
 function M.addWantedTime(uid, secs)    _add(uid, "total_wanted_time_seconds", secs) end
 function M.addPlaytime(uid, secs)      _add(uid, "total_playtime_seconds",    secs) end
+function M.addDailyPlaytime(uid, secs)
+    secs = math.floor(tonumber(secs) or 0); if secs == 0 then return end
+    local today = os.date("%Y-%m-%d")
+    if backend == M.BACKEND_MYSQL then
+        local r = q1(string.format("SELECT last_play_date, daily_playtime_seconds FROM players WHERE uid=%s", esc(uid)))
+        if not r then return end
+        if r.last_play_date == today then
+            q(string.format("UPDATE players SET daily_playtime_seconds=daily_playtime_seconds+%d WHERE uid=%s", secs, esc(uid)))
+        else
+            q(string.format("UPDATE players SET daily_playtime_seconds=%d, last_play_date=%s WHERE uid=%s", secs, esc(today), esc(uid)))
+        end
+    else
+        local p = j_player(uid)
+        if p.last_play_date == today then
+            p.daily_playtime_seconds = (p.daily_playtime_seconds or 0) + secs
+        else
+            p.daily_playtime_seconds = secs
+        end
+        _dirty = true
+    end
+end
+
 
 function M.getPlayerStats(uid)
     if backend == M.BACKEND_MYSQL then
@@ -656,11 +665,11 @@ function M.createAccount(username, password_hash, username_display, starting_mon
             "SELECT uid FROM players WHERE pit_username=%s", esc(username))) then
             return false
         end
-        q(string.format([[
+        local result = q(string.format([[
             INSERT INTO players
-                (uid, name, money, role, lang, created_at, last_seen, player_rank, task_progress,
+                (uid, name, money, role, lang, created_at, last_seen, task_progress,
                  pit_username, pit_password_hash, pit_username_display)
-            VALUES (%s, %s, %d, 'civilian', NULL, NOW(), NOW(), 1, '{}', %s, %s, %s)
+            VALUES (%s, %s, %d, 'civilian', NULL, NOW(), NOW(), '{}', %s, %s, %s)
             ON DUPLICATE KEY UPDATE
                 pit_username=%s, pit_password_hash=%s, pit_username_display=%s, last_seen=NOW()
         ]],
@@ -668,7 +677,7 @@ function M.createAccount(username, password_hash, username_display, starting_mon
             esc(username), esc(password_hash), esc(username_display),
             esc(username), esc(password_hash), esc(username_display)
         ))
-        return true
+        return result ~= nil
     else
         for _, p in pairs(_store.players or {}) do
             if p.pit_username == username then return false end
@@ -733,6 +742,214 @@ function M.cleanGuestPlayers()
         end
     end
     log("Cleaned guest player records")
+end
+
+
+-- =============================================================================
+-- ACHIEVEMENT SYSTEM  (added by migration script)
+-- =============================================================================
+
+function M.getTotalPoints(uid)
+    if backend == M.BACKEND_MYSQL then
+        local r = q1("SELECT total_points FROM players WHERE uid=" .. esc(uid))
+        return r and tonumber(r.total_points) or 0
+    else return j_player(uid).total_points or 0 end
+end
+
+function M.addPoints(uid, amt)
+    amt = math.floor(tonumber(amt) or 0); if amt == 0 then return end
+    if backend == M.BACKEND_MYSQL then
+        q(string.format("UPDATE players SET total_points=total_points+%d WHERE uid=%s", amt, esc(uid)))
+    else local p=j_player(uid); p.total_points=(p.total_points or 0)+amt; _dirty=true end
+end
+
+local function _defAch()
+    return { milestones_done={}, spike_used=0, banana_used=0, cannon_used=0,
+             spike_hits=0, banana_hits=0, cannon_hits=0 }
+end
+
+function M.getAchievementData(uid)
+    local raw
+    if backend == M.BACKEND_MYSQL then
+        local r = q1("SELECT achievement_data FROM players WHERE uid=" .. esc(uid))
+        raw = r and r.achievement_data
+    else raw = j_player(uid).achievement_data end
+    if not raw or raw=="" then return _defAch() end
+    local d = jsonDec(raw); if type(d)~="table" then return _defAch() end
+    d.milestones_done = d.milestones_done or {}
+    d.spike_used=d.spike_used or 0; d.banana_used=d.banana_used or 0; d.cannon_used=d.cannon_used or 0
+    d.spike_hits=d.spike_hits or 0; d.banana_hits=d.banana_hits or 0; d.cannon_hits=d.cannon_hits or 0
+    return d
+end
+
+function M.setAchievementData(uid, data)
+    local s = jsonEnc(data) or "{}"
+    if backend == M.BACKEND_MYSQL then
+        q(string.format("UPDATE players SET achievement_data=%s WHERE uid=%s", esc(s), esc(uid)))
+    else j_player(uid).achievement_data=s; _dirty=true end
+end
+
+function M.incrementCloseMarker(uid) _inc(uid,"close_markers_captured") end
+function M.incrementZigzag(uid)      _inc(uid,"zigzag_count")           end
+function M.incrementCombo(uid)       _inc(uid,"combo_count")            end
+function M.incrementCopChases(uid)   _inc(uid,"cop_chases")             end
+
+function M.updateBestCopChase(uid, secs)
+    secs=math.floor(tonumber(secs) or 0); if secs<=0 then return end
+    if backend==M.BACKEND_MYSQL then
+        q(string.format("UPDATE players SET best_cop_chase_seconds=GREATEST(best_cop_chase_seconds,%d) WHERE uid=%s",secs,esc(uid)))
+    else local p=j_player(uid); if secs>(p.best_cop_chase_seconds or 0) then p.best_cop_chase_seconds=secs;_dirty=true end end
+end
+
+function M.updateBestWantedChase(uid, secs)
+    secs=math.floor(tonumber(secs) or 0); if secs<=0 then return end
+    if backend==M.BACKEND_MYSQL then
+        q(string.format("UPDATE players SET best_wanted_chase_seconds=GREATEST(best_wanted_chase_seconds,%d) WHERE uid=%s",secs,esc(uid)))
+    else local p=j_player(uid); if secs>(p.best_wanted_chase_seconds or 0) then p.best_wanted_chase_seconds=secs;_dirty=true end end
+end
+
+function M.updateStreak(uid)
+    local today = os.date("%Y-%m-%d")
+    local last, streak, daily_secs
+    if backend==M.BACKEND_MYSQL then
+        local r=q1(string.format("SELECT last_play_date,streak_days,daily_playtime_seconds FROM players WHERE uid=%s",esc(uid)))
+        if not r then return end
+        last=r.last_play_date; streak=tonumber(r.streak_days) or 0
+        daily_secs=tonumber(r.daily_playtime_seconds) or 0
+    else
+        local p=j_player(uid)
+        last=p.last_play_date; streak=p.streak_days or 0
+        daily_secs=p.daily_playtime_seconds or 0
+    end
+    if daily_secs < 1800 then return streak end
+    local new_streak
+    if not last or last=="" then new_streak=1
+    elseif last==today then return streak
+    else
+        local ly,lm,ld2=last:match("(%d+)-(%d+)-(%d+)")
+        local lt=os.time({year=tonumber(ly),month=tonumber(lm),day=tonumber(ld2),hour=12})
+        new_streak = (math.floor((os.time()-lt)/86400)==1) and (streak+1) or 1
+    end
+    if backend==M.BACKEND_MYSQL then
+        q(string.format("UPDATE players SET streak_days=%d,last_play_date=%s WHERE uid=%s",new_streak,esc(today),esc(uid)))
+    else local p=j_player(uid); p.streak_days=new_streak; p.last_play_date=today; _dirty=true end
+    return new_streak
+end
+
+function M.getAllStats(uid)
+    if backend==M.BACKEND_MYSQL then
+        local r=q1(string.format([[
+            SELECT police_arrests AS busts,
+                   total_chase_time_seconds AS cop_chase_time,
+                   total_wanted_time_seconds AS wanted_chase_time,
+                   markers_captured_police AS cop_marker_chase,
+                   markers_captured_wanted AS wanted_marker_chase,
+                   (markers_captured_police+markers_captured_wanted) AS total_markers,
+                   wanted_success AS escapes, wanted_count AS wanted_chases,
+                   total_playtime_seconds AS total_playtime,
+                   close_markers_captured AS close_markers,
+                   zigzag_count, combo_count, cop_chases,
+                   best_cop_chase_seconds AS best_cop_chase,
+                   best_wanted_chase_seconds AS best_wanted_chase,
+                   streak_days, total_points, achievement_data
+            FROM players WHERE uid=%s]], esc(uid)))
+        if not r then return nil end
+        local s={}
+        for k,v in pairs(r) do if k~="achievement_data" then s[k]=tonumber(v) or 0 end end
+        local a=(r.achievement_data and jsonDec(r.achievement_data)) or _defAch()
+        s.spike_used=a.spike_used or 0; s.banana_used=a.banana_used or 0; s.cannon_used=a.cannon_used or 0
+        s.spike_hits=a.spike_hits or 0; s.banana_hits=a.banana_hits or 0; s.cannon_hits=a.cannon_hits or 0
+        return s
+    else
+        local p=_store.players[uid]; if not p then return nil end
+        local a=(p.achievement_data and jsonDec(p.achievement_data)) or _defAch()
+        return {
+            busts=(p.police_arrests or 0), cop_chase_time=(p.total_chase_time_seconds or 0),
+            wanted_chase_time=(p.total_wanted_time_seconds or 0),
+            cop_marker_chase=(p.markers_captured_police or 0),
+            wanted_marker_chase=(p.markers_captured_wanted or 0),
+            total_markers=(p.markers_captured_police or 0)+(p.markers_captured_wanted or 0),
+            escapes=(p.wanted_success or 0), wanted_chases=(p.wanted_count or 0),
+            total_playtime=(p.total_playtime_seconds or 0),
+            close_markers=(p.close_markers_captured or 0),
+            zigzag_count=(p.zigzag_count or 0), combo_count=(p.combo_count or 0),
+            cop_chases=(p.cop_chases or 0),
+            best_cop_chase=(p.best_cop_chase_seconds or 0),
+            best_wanted_chase=(p.best_wanted_chase_seconds or 0),
+            streak_days=(p.streak_days or 0), total_points=(p.total_points or 0),
+            spike_used=a.spike_used or 0, banana_used=a.banana_used or 0, cannon_used=a.cannon_used or 0,
+            spike_hits=a.spike_hits or 0, banana_hits=a.banana_hits or 0, cannon_hits=a.cannon_hits or 0,
+        }
+    end
+end
+
+function M.runRankMigration(ach_cfg)
+    if not ach_cfg or not ach_cfg.milestones then return 0,"no milestones" end
+    local players={}
+    if backend==M.BACKEND_MYSQL then
+        local cur=q([[SELECT uid,police_arrests AS busts,total_chase_time_seconds AS cop_chase_time,
+            total_wanted_time_seconds AS wanted_chase_time,markers_captured_police AS cop_marker_chase,
+            markers_captured_wanted AS wanted_marker_chase,wanted_success AS escapes,
+            wanted_count AS wanted_chases,total_playtime_seconds AS total_playtime
+            FROM players WHERE uid NOT LIKE 'guest_%' AND (total_points IS NULL OR total_points=0)]])
+        if not cur then return 0,"query failed" end
+        local row=cur:fetch({},"a")
+        while row do
+            local pd={uid=row.uid}
+            for k,v in pairs(row) do if k~="uid" then pd[k]=tonumber(v) or 0 end end
+            table.insert(players,pd); row=cur:fetch({},"a")
+        end; cur:close()
+    else
+        for uid,p in pairs(_store.players or {}) do
+            if not uid:match("^guest_") and (not p.total_points or p.total_points==0) then
+                table.insert(players,{uid=uid,busts=p.police_arrests or 0,
+                    cop_chase_time=p.total_chase_time_seconds or 0,
+                    wanted_chase_time=p.total_wanted_time_seconds or 0,
+                    cop_marker_chase=p.markers_captured_police or 0,
+                    wanted_marker_chase=p.markers_captured_wanted or 0,
+                    escapes=p.wanted_success or 0,wanted_chases=p.wanted_count or 0,
+                    total_playtime=p.total_playtime_seconds or 0})
+            end
+        end
+    end
+    if #players==0 then log("Migration: no players to migrate"); return 0 end
+    log(string.format("Migration: processing %d player(s)...",#players))
+    local migrated=0
+    for _,pd in ipairs(players) do
+        local stats={busts=pd.busts,cop_chase_time=pd.cop_chase_time,
+            wanted_chase_time=pd.wanted_chase_time,cop_marker_chase=pd.cop_marker_chase,
+            wanted_marker_chase=pd.wanted_marker_chase,
+            total_markers=(pd.cop_marker_chase or 0)+(pd.wanted_marker_chase or 0),
+            escapes=pd.escapes,wanted_chases=pd.wanted_chases,total_playtime=pd.total_playtime,
+            close_markers=0,zigzag_count=0,combo_count=0,cop_chases=0,
+            best_cop_chase=0,best_wanted_chase=0,streak_days=0,
+            spike_used=0,banana_used=0,cannon_used=0,spike_hits=0,banana_hits=0,cannon_hits=0}
+        local total_pts=0; local done={}; local done_set={}
+        for _,ms in ipairs(ach_cfg.milestones) do
+            if ms.session then goto cont end
+            if ms.requires and not done_set[ms.requires] then goto cont end
+            local val=stats[ms.stat] or 0
+            if val>=ms.threshold then
+                local pts=ms.base_points*(ms.role=="police" and 2 or 1)
+                total_pts=total_pts+pts; table.insert(done,ms.id); done_set[ms.id]=true
+            end
+            ::cont::
+        end
+        local ach=jsonEnc({milestones_done=done,spike_used=0,banana_used=0,cannon_used=0,
+            spike_hits=0,banana_hits=0,cannon_hits=0}) or "{}"
+        if backend==M.BACKEND_MYSQL then
+            q(string.format("UPDATE players SET total_points=%d,achievement_data=%s WHERE uid=%s",
+                total_pts,esc(ach),esc(pd.uid)))
+        else
+            local p=_store.players[pd.uid]
+            if p then p.total_points=total_pts; p.achievement_data=ach; _dirty=true end
+        end
+        migrated=migrated+1
+        log(string.format("  %s -> %d pts (%d milestones)",pd.uid,total_pts,#done))
+    end
+    if backend==M.BACKEND_JSON then j_flush() end
+    log(string.format("Migration complete: %d/%d players",migrated,#players))
+    return migrated
 end
 
 return M

@@ -1,11 +1,11 @@
 // Copyright (C) 2024 BeamMP Ltd., BeamMP team and contributors.
 // Licensed under AGPL-3.0 (or later), see <https://www.gnu.org/licenses/>.
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Modified for PIT Economy System — added role, rank, and wanted player display.
+// Modified for PIT Economy System - added role, rank, and wanted player display.
 
 var connected = false;
 var players = [];
-let pingList = [];
+let pingList = {};
 var nickname = "";
 var app = angular.module('beamng.apps');
 
@@ -25,12 +25,35 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 	$scope.showPlayerIDs = true;
 	$scope.playerlistLeftclick = 0;
 
-	// --- PIT Economy System additions ---
 	$scope.customPlayerData = {};
 	$scope.hasCustomData = false;
 	$scope.showPlayerRoles = true;
 	$scope.showPlayerRanks = true;
-	// ------------------------------------
+
+	const PL_EVENTS = {
+		playerList:          ['playerList',          'onBeamMPPlayerList'],
+		playerPings:         ['playerPings',         'onBeamMPPlayerPings'],
+		setQueue:            ['setQueue',            'onBeamMPSetQueue'],
+		updateCustomButtons: ['updateCustomButtons', 'onBeamMPUpdateCustomButtons']
+	};
+
+	function onAny(eventNames, handler) {
+		eventNames.forEach(function (eventName) {
+			$scope.$on(eventName, handler);
+		});
+	}
+
+	function parsePayload(data, fallback) {
+		if (typeof data !== 'string') {
+			return (data === undefined || data === null) ? fallback : data;
+		}
+		try {
+			return JSON.parse(data);
+		} catch (e) {
+			console.error('PlayerList: bad payload', e);
+			return fallback;
+		}
+	}
 
 	const applyPlayerListStyle = function(useNewDesign) {
 		const stylesheet = document.getElementById('playerlist-style');
@@ -53,6 +76,7 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 		setPLDirection(localStorage.getItem('plVertical'));
 		if (localStorage.getItem('plShown') == 1) showList();
 		bngApi.engineLua("guihooks.trigger('updateCustomButtons', UI.getCustomButtonNames())");
+		bngApi.engineLua("guihooks.trigger('onBeamMPUpdateCustomButtons', UI.getCustomButtonNames())");
 		
 		applyPlayerListStyle(Settings.values.useUiAppRedesign);
 		bngApi.engineLua('settings.getValue("showPlayerIDs")', (data) => {
@@ -80,7 +104,6 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 		$scope.showPlayerRanks = Settings.values.showPlayerRanks !== false;
 	});
 
-	// --- PIT Economy System addition ---
 	$scope.$on('PlayerList_CustomData', function(event, data) {
 		try {
 			if (data && data.players) {
@@ -110,7 +133,6 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 		}
 	});
 
-	// --- PIT Economy System addition ---
 	$scope.$on('PlayerList_NotSyncedBy', function(event, data) {
 		$scope.notSyncedBy = {};
 		if (data && data.pids && Array.isArray(data.pids)) {
@@ -123,7 +145,7 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 		}
 	});
 
-	function getRoleIcon(role) {
+	$scope.connect = function() {
 		connected = false;
 		players = [];
 		$scope.customPlayerData = {};
@@ -178,33 +200,45 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 		else setPLDirection("top");
 	}
 
-	$scope.$on('playerPings', function(event, data) {
-		pingList = JSON.parse(data);
-		for(let i = 0; i < pingList.length; i++) {
-			pingList[i] = pingList[i]-16;
-			if (pingList[i] > 999) pingList[i] = 999;
+
+	onAny(PL_EVENTS.playerPings, function(event, data) {
+		const parsed = parsePayload(data, {});
+		const result = {};
+		if (parsed && typeof parsed === 'object') {
+			Object.keys(parsed).forEach(function(name) {
+				let value = Number(parsed[name]) - 16;
+				if (!isFinite(value)) { result[name] = "?"; return; }
+				if (value < 0) value = 0;
+				if (value > 999) value = 999;
+				result[name] = value;
+			});
+		}
+		pingList = result;
+		if (players && players.length > 0) {
+			$scope.$broadcast('playerList', JSON.stringify(players));
 		}
 	});
 
 	var customButtons = [];
 
-	$scope.$on('updateCustomButtons', function(event, data) {
-		if (Array.isArray(data)) {
-			customButtons = data;
-		}
+	onAny(PL_EVENTS.updateCustomButtons, function(event, data) {
+		const parsed = parsePayload(data, []);
+		customButtons = Array.isArray(parsed) ? parsed : [];
 	});
 
 	function getRoleIcon(role) {
 		const icons = {
-			"police": "👮",
+			"police":   "👮",
+			"blocker":  "🚧",
 			"civilian": "🚗"
 		};
 		return icons[role] || "👤";
 	}
 
-	$scope.$on('playerList', function(event, data) {
+	onAny(PL_EVENTS.playerList, function(event, data) {
 		let playersList = document.getElementById("players-table");
-		let parsedList = JSON.parse(data);
+		let parsedList = parsePayload(data, []);
+		if (!Array.isArray(parsedList)) parsedList = [];
 		
 		if(players != null && playersList != null){
 			clearPlayerList();
@@ -361,9 +395,11 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 
 				var pingCell = row.insertCell(cellIndex++);
 				var btn = document.createElement("BUTTON");
-				var pingText = pingList[parsedList[i].name] || "?";
-				btn.appendChild(document.createTextNode(pingText+='ms'));
-				btn.setAttribute("onclick","teleportToPlayer('"+parsedList[i]+"')");
+				var pingValue = pingList[parsedList[i].name];
+				if (pingValue === undefined || pingValue === null) pingValue = parsedList[i].ping;
+				var pingText = (pingValue === undefined || pingValue === null || pingValue === "") ? "?" : pingValue;
+				btn.appendChild(document.createTextNode(pingText + 'ms'));
+				btn.setAttribute("onclick","teleportToPlayer('"+parsedList[i].name+"')");
 				btn.setAttribute("class", "tp-button buttons");
 				pingCell.appendChild(btn);
 
@@ -387,7 +423,8 @@ app.controller("PlayerList", ['$scope', '$filter', 'Settings', function ($scope,
 	$scope.queuedPlayers = [];
 	$scope.notSyncedBy = {};
 
-	$scope.$on('setQueue', function(event, data) {
+	onAny(PL_EVENTS.setQueue, function(event, rawData) {
+		var data = parsePayload(rawData, {});
 		var prevQueued = Object.assign({}, $scope.queuedPlayers);
 		$scope.queuedPlayers = [];
 

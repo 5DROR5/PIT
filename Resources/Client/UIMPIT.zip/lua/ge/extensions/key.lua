@@ -1,7 +1,7 @@
 -- =============================================================================
--- PIT Economy System — Client-Side Script
--- Version: 1.1
--- License: AGPL-3.0 — https://www.gnu.org/licenses/agpl-3.0.html
+-- PIT Economy System - Client-Side Script
+-- Version: 5.0
+-- License: AGPL-3.0 - https://www.gnu.org/licenses/agpl-3.0.html
 -- =============================================================================
 
 local M = {}
@@ -26,7 +26,7 @@ local blockedInputActions = {
 -- GAME STATE
 -- =============================================================================
 
-local DEFENSE_STATS = {
+local DEFENSE_STATS  = {
     layer1_blocks    = 0,
     layer2_blocks    = 0,
     layer3_cleans    = 0,
@@ -34,58 +34,57 @@ local DEFENSE_STATS = {
     successful_syncs = 0
 }
 
-local registered_events = false
-local retry_acc         = 0
-local hook_retry_timer  = 0
-
-local pending_wanted  = nil
-local current_prefix  = ""
-local is_admin        = false
-
-local player_roles    = {}
-local is_local_wanted = false
-local display_name_map = {}
-
+local registered_events      = false
+local retry_acc              = 0
+local hook_retry_timer       = 0
+local pending_wanted         = nil
+local current_prefix         = ""
+local is_admin               = false
+local player_roles           = {}
+local is_local_wanted        = false
+local is_local_police        = false
+local display_name_map       = {}
 local blob_color_check_timer = 0
-
-local police_nearby      = false
-local bust_progress      = { active = false, percent = 0, duration_ms = 0 }
-local repair_icons_count = 0
+local police_nearby          = false
+local bust_progress          = { active = false, percent = 0, duration_ms = 0 }
+local repair_icons_count     = 0
 
 local current_rank_data = {
-    rank          = 1,
-    rank_name_key = "rank_1_name",
-    prefix        = "[Rookie]",
-    percent       = 0,
-    completed     = 0,
-    total         = 0,
-    tasks         = {},
-    max_rank      = 5
+    rank             = 1,
+    rank_name_key    = "rank_1_name",
+    prefix           = "[I]",
+    percent          = 0,
+    completed        = 0,
+    total            = 0,
+    tasks            = {},
+    max_rank         = 20,
+    total_points     = 0,
+    pts_to_next      = 0,
+    next_prefix      = "[II]",
+    milestones_done  = 0,
+    milestones_total = 0,
 }
 
-local server_translations = {}
-local current_lang        = "en"
-
-local wanted_enabled = true
-
-local is_editing_vehicle       = false
-local current_edit_vehicle     = nil
-local last_vehicle_config      = nil
-local config_check_timer       = 0
-local editing_session_start    = 0
-local editing_state_sync_timer = 0
-
-local vehicles_in_blob_mode      = {}
-local vehicles_with_pending_edit = {}
-
-local pending_sync_ack    = nil
-local pending_blob_updates = {}
-
+local server_translations         = {}
+local current_lang                = "en"
+local wanted_enabled              = true
+local is_editing_vehicle          = false
+local current_edit_vehicle        = nil
+local last_vehicle_config         = nil
+local config_check_timer          = 0
+local editing_session_start       = 0
+local editing_state_sync_timer    = 0
+local vehicles_in_blob_mode       = {}
+local vehicles_with_pending_edit  = {}
+local pending_sync_ack            = nil
+local pending_blob_updates        = {}
 local original_MPGameNetwork_send = nil
 local original_onVehicleSpawned   = nil
-
-local network_hook_installed = false
-local spawn_hook_installed   = false
+local network_hook_installed      = false
+local spawn_hook_installed        = false
+local recovery_hook_installed     = false
+local original_spawn_safeTeleport = nil
+local original_spawn_teleportToLastRoad = nil
 
 local noRepairState = {
     enabled    = true,
@@ -93,12 +92,14 @@ local noRepairState = {
     worldReady = false
 }
 
-local teleportQueue      = {}
-local processingTeleport = false
-
-local active_markers     = {}
-local ap_hidden_marker   = nil
-local ap_map_default_fog = nil
+local teleportQueue       = {}
+local processingTeleport  = false
+local active_markers      = {}
+local ap_hidden_marker    = nil
+local ap_map_default_fog  = nil
+local nav_enabled         = false
+local nav_update_timer    = 0
+local NAV_UPDATE_INTERVAL = 2.0
 
 -- =============================================================================
 -- FORWARD DECLARATIONS
@@ -112,7 +113,7 @@ local toggleWantedRestrictions
 -- LOGGING
 -- =============================================================================
 
-local function logI(msg) print(string.format("[%s] %s",         PLUGIN, msg)) end
+local function logI(msg) print(string.format("[%s] %s",          PLUGIN, msg)) end
 local function logW(msg) print(string.format("[%s] WARNING: %s", PLUGIN, msg)) end
 local function logE(msg) print(string.format("[%s] ERROR: %s",   PLUGIN, msg)) end
 
@@ -166,13 +167,13 @@ M.delay = function(seconds, callback)
 end
 
 -- =============================================================================
--- VEHICLE EDITING — HOOKS
+-- VEHICLE EDITING - HOOKS
 -- =============================================================================
 
 local function hookOnVehicleSpawned()
     if not extensions or not extensions.MPVehicleGE then return false end
-    if spawn_hook_installed then return true end
-    if not extensions.MPVehicleGE.onVehicleSpawned then return false end
+    if spawn_hook_installed                         then return true  end
+    if not extensions.MPVehicleGE.onVehicleSpawned  then return false end
 
     original_onVehicleSpawned = extensions.MPVehicleGE.onVehicleSpawned
 
@@ -215,12 +216,13 @@ local function hookNetworkSend()
     original_MPGameNetwork_send = MPGameNetwork.send
 
     MPGameNetwork.send = function(data)
-        if type(data) == "string" then
-            local prefix = string.sub(data, 1, 3)
+        local packet = type(data) == "string" and data or tostring(data)
+        if type(packet) == "string" then
+            local prefix = string.sub(packet, 1, 3)
             if prefix == "Oc:" then
                 if is_editing_vehicle and current_edit_vehicle then
-                    local serverVehicleID = string.match(data, "^Oc:(%d+%-%d+):") or
-                                            string.match(data, "^Oc:(%d+):")
+                    local serverVehicleID = string.match(packet, "^Oc:(%d+%-%d+):") or
+                                            string.match(packet, "^Oc:(%d+):")
                     if serverVehicleID and extensions.MPVehicleGE then
                         local gameVehicleID = extensions.MPVehicleGE.getGameVehicleID(serverVehicleID)
                         if gameVehicleID == current_edit_vehicle then
@@ -235,6 +237,33 @@ local function hookNetworkSend()
     end
 
     network_hook_installed = true
+    return true
+end
+
+local function hookRecoveryExploit()
+    if recovery_hook_installed then return true end
+    if not spawn then return false end
+    if not spawn.safeTeleport or not spawn.teleportToLastRoad then return false end
+
+    original_spawn_safeTeleport = spawn.safeTeleport
+    spawn.safeTeleport = function(veh, pos, rot, a, b, c, d, resetFlag, ...)
+        if resetFlag == false and not is_admin then
+            logI("Blocked exploit: safeTeleport flip-upright (non-admin)")
+            return false
+        end
+        return original_spawn_safeTeleport(veh, pos, rot, a, b, c, d, resetFlag, ...)
+    end
+
+    original_spawn_teleportToLastRoad = spawn.teleportToLastRoad
+    spawn.teleportToLastRoad = function(...)
+        if not is_admin then
+            logI("Blocked exploit: teleportToLastRoad (non-admin)")
+            return false
+        end
+        return original_spawn_teleportToLastRoad(...)
+    end
+
+    recovery_hook_installed = true
     return true
 end
 
@@ -261,18 +290,29 @@ local function restoreHooks()
         extensions.MPVehicleGE.onVehicleSpawned = original_onVehicleSpawned
         original_onVehicleSpawned               = nil
     end
+    if spawn then
+        if original_spawn_safeTeleport then
+            spawn.safeTeleport                = original_spawn_safeTeleport
+            original_spawn_safeTeleport       = nil
+        end
+        if original_spawn_teleportToLastRoad then
+            spawn.teleportToLastRoad          = original_spawn_teleportToLastRoad
+            original_spawn_teleportToLastRoad = nil
+        end
+    end
+    recovery_hook_installed = false
 end
 
 -- =============================================================================
--- VEHICLE EDITING — LOGIC
+-- VEHICLE EDITING - LOGIC
 -- =============================================================================
 
 startEditingMode = function(gameVehicleID)
     if is_editing_vehicle then logI("Already in editing mode"); return end
 
-    is_editing_vehicle    = true
-    current_edit_vehicle  = gameVehicleID
-    editing_session_start = os.clock()
+    is_editing_vehicle        = true
+    current_edit_vehicle      = gameVehicleID
+    editing_session_start     = os.clock()
     DEFENSE_STATS.total_edits = DEFENSE_STATS.total_edits + 1
 
     guiTrigger("ECON_EditingModeUpdate", { isEditing = true })
@@ -497,9 +537,18 @@ local function on_set_vehicle_spawned(payload)
                 if vehicle.gameVehicleID and vehicle.gameVehicleID > 0 then
                     local veh = be:getObjectByID(vehicle.gameVehicleID)
                     if veh then
-                        if not vehicle.position then
+                        local pos = vehicle.position
+                        local needsPos = (pos == nil)
+                        if pos and type(pos.squaredLength) == "function" then
+                            needsPos = (pos:squaredLength() == 0)
+                        end
+                        if needsPos then
                             local x, y, z = be:getObjectOOBBCenterXYZ(vehicle.gameVehicleID)
-                            vehicle.position = vec3(x, y, z)
+                            if pos and type(pos.set) == "function" then
+                                pos:set(x, y, z)
+                            else
+                                vehicle.position = vec3(x, y, z)
+                            end
                         end
                         veh:setActive(0)
                     end
@@ -539,6 +588,41 @@ end
 -- MARKERS
 -- =============================================================================
 
+local function findClosestMarkerPos()
+    local veh = be:getPlayerVehicle(0)
+    if not veh then return nil end
+    local vehPos = veh:getPosition()
+    local closest, closestDist = nil, math.huge
+    for _, marker in pairs(active_markers) do
+        if marker.pos then
+            local d = (vehPos - marker.pos):length()
+            if d < closestDist then
+                closestDist = d
+                closest     = marker.pos
+            end
+        end
+    end
+    return closest
+end
+
+local function updateNavigation()
+    if not nav_enabled then return end
+    if not is_local_wanted and not is_local_police then
+        nav_enabled = false
+        pcall(function() core_groundMarkers.setPath(nil) end)
+        guiTrigger("ECON_NavUpdate", { navEnabled = false })
+        return
+    end
+    if not next(active_markers) then
+        pcall(function() core_groundMarkers.setPath(nil) end)
+        return
+    end
+    local pos = findClosestMarkerPos()
+    if pos then
+        pcall(function() core_groundMarkers.setPath(pos) end)
+    end
+end
+
 local function createMarker(data)
     local decoded = decodePayload(data)
     if not decoded or not decoded.markerId then return end
@@ -553,12 +637,14 @@ local function createMarker(data)
         alpha       = (decoded.a or 200) / 255,
         createdTime = os.clock()
     }
+    if nav_enabled then updateNavigation() end
 end
 
 local function removeMarker(data)
     local decoded = decodePayload(data)
     if decoded and decoded.markerId then
         active_markers[tostring(decoded.markerId)] = nil
+        if nav_enabled then updateNavigation() end
     end
 end
 
@@ -633,7 +719,7 @@ local function performTeleport(vehicleId, targetPos, targetRot, reason)
                 correctedRot.x, correctedRot.y, correctedRot.z, correctedRot.w)
         end)
         if ok then
-            if veh.setVelocity        then pcall(function() veh:setVelocity(vec3(0,0,0)) end) end
+            if veh.setVelocity        then pcall(function() veh:setVelocity(vec3(0,0,0))        end) end
             if veh.setAngularVelocity then pcall(function() veh:setAngularVelocity(vec3(0,0,0)) end) end
             return true
         end
@@ -703,34 +789,64 @@ local function on_receive_translations(payload)
     end
 end
 
-local function on_receive_rank_update(payload)
+
+
+
+local function on_show_rank_panel(payload)
+    guiTrigger("EconomyUI_ShowRankPanel", {})
+end
+
+local function on_ach_rank_update(payload)
     local data = decodePayload(payload)
     if type(data) ~= "table" then return end
     current_rank_data = {
-        rank          = data.rank          or 1,
-        rank_name_key = data.rank_name_key or "rank_1_name",
-        prefix        = data.prefix        or "",
-        percent       = data.percent       or 0,
-        completed     = data.completed     or 0,
-        total         = data.total         or 0,
-        tasks         = data.tasks         or {},
-        max_rank      = data.max_rank      or 5
+        total_points     = data.total_points     or 0,
+        rank             = data.rank             or 1,
+        prefix           = data.prefix           or "[I]",
+        max_rank         = data.max_rank         or 20,
+        percent          = data.progress_pct     or 0,
+        pts_to_next      = data.pts_to_next      or 0,
+        next_prefix      = data.next_prefix,
+        milestones_done  = data.milestones_done  or 0,
+        milestones_total = data.milestones_total or 0,
+        rank_name_key    = "rank_" .. (data.rank or 1) .. "_name",
+        completed        = data.milestones_done  or 0,
+        total            = data.milestones_total or 0,
+        tasks            = {},
+        milestones       = data.milestones or {},
     }
     guiTrigger("EconomyUI_RankUpdate", current_rank_data)
 end
 
-local function on_receive_task_progress(payload)
+local function on_ach_task_progress(payload)
     local data = decodePayload(payload)
-    if type(data) == "table" then guiTrigger("EconomyUI_TaskProgress", data) end
+    if type(data) ~= "table" then return end
+    guiTrigger("EconomyUI_TaskProgress", {
+        task_name_key = data.task_name_key or "",
+        points        = data.points        or 0,
+    })
 end
 
-local function on_receive_rank_up(payload)
+local function on_ach_milestone_earned(payload)
     local data = decodePayload(payload)
-    if type(data) == "table" then guiTrigger("EconomyUI_RankUp", data) end
+    if type(data) ~= "table" then return end
+    guiTrigger("EconomyUI_TaskProgress", {
+        task_id       = data.id       or "",
+        task_name_key = data.name_key or "",
+        points        = data.points   or 0,
+        complete      = true,
+    })
 end
 
-local function on_show_rank_panel(payload)
-    guiTrigger("EconomyUI_ShowRankPanel", {})
+local function on_ach_rank_up(payload)
+    local data = decodePayload(payload)
+    if type(data) ~= "table" then return end
+    guiTrigger("EconomyUI_RankUp", {
+        old_rank   = data.old_rank   or 0,
+        new_rank   = data.new_rank   or 0,
+        reward     = data.reward     or 0,
+        new_prefix = data.new_prefix or "",
+    })
 end
 
 local function on_police_wanted_list_update(payload)
@@ -834,11 +950,23 @@ local function on_receive_playerlist_data(payload)
 
     local was_wanted = is_local_wanted
 
+    local cop_powerups = {}
     for _, player in ipairs(data.players) do
         player_roles[player.id] = player.role
         if player.id == localPID then
             is_local_wanted = player.is_wanted
+            is_local_police = (player.role == "police" or player.role == "blocker")
+            guiTrigger("LocalPlayerIdentity", {
+                beammp_name  = player.beammp_name,
+                display_name = player.display_name
+            })
         end
+        if player.role == "police" and player.powerups then
+            cop_powerups[player.id] = player.powerups
+        end
+    end
+    if extensions.powerUpsClient then
+        extensions.powerUpsClient.onCopInventories(cop_powerups)
     end
 
     if is_local_wanted ~= was_wanted or is_local_wanted then
@@ -855,6 +983,8 @@ local function on_receive_playerlist_data(payload)
                 extensions.MPVehicleGE.setPlayerRole(pid, nil, nil, 255, 0, 0)
             elseif role == "police" then
                 extensions.MPVehicleGE.setPlayerRole(pid, nil, nil, 0, 102, 255)
+            elseif role == "blocker" then
+                extensions.MPVehicleGE.setPlayerRole(pid, nil, nil, 234, 179, 8)
             else
                 extensions.MPVehicleGE.clearPlayerRole(pid)
                 if is_local_wanted and mp_players and mp_players[pid] then
@@ -868,6 +998,17 @@ local function on_receive_playerlist_data(payload)
         if player.beammp_name and player.display_name then
             display_name_map[player.beammp_name] = player.display_name
         end
+        if player.beammp_name and player.role == "blocker" then
+            local pending = tonumber(player.blocker_pending) or 0
+            local text = pending > 0 and (" [$" .. tostring(pending) .. "]") or ""
+            if extensions and extensions.MPVehicleGE and type(extensions.MPVehicleGE.setPlayerNickSuffix) == "function" then
+                extensions.MPVehicleGE.setPlayerNickSuffix(player.beammp_name, "blocker_pending", text)
+            end
+        elseif player.beammp_name and player.role ~= "blocker" then
+            if extensions and extensions.MPVehicleGE and type(extensions.MPVehicleGE.setPlayerNickSuffix) == "function" then
+                extensions.MPVehicleGE.setPlayerNickSuffix(player.beammp_name, "blocker_pending", "")
+            end
+        end
     end
     pcall(function()
         if not (extensions and extensions.MPVehicleGE
@@ -877,7 +1018,11 @@ local function on_receive_playerlist_data(payload)
         for _, v in pairs(vehs) do
             local ok, owner = pcall(function() return v:getOwner() end)
             if ok and owner and owner.name and display_name_map[owner.name] then
-                v.customName = display_name_map[owner.name]
+                if type(v.setDisplayName) == "function" then
+                    pcall(function() v:setDisplayName(display_name_map[owner.name]) end)
+                else
+                    v.customName = display_name_map[owner.name]
+                end
             end
         end
     end)
@@ -986,30 +1131,27 @@ local function try_register()
     AddEventHandler("ECON_RemoveMarker",        removeMarker)
     AddEventHandler("ECON_AdminStatus",         on_receive_admin_status)
     AddEventHandler("ECON_TranslationsUpdate",  on_receive_translations)
-    AddEventHandler("ECON_RankUpdate",          on_receive_rank_update)
-    AddEventHandler("ECON_TaskProgress",        on_receive_task_progress)
-    AddEventHandler("ECON_RankUp",              on_receive_rank_up)
     AddEventHandler("ECON_ShowRankPanel",       on_show_rank_panel)
+    AddEventHandler("ACH_RankUpdate",           on_ach_rank_update)
+    AddEventHandler("ACH_MilestoneEarned",      on_ach_milestone_earned)
+    AddEventHandler("ACH_RankUp",               on_ach_rank_up)
+    AddEventHandler("ACH_TaskProgress",         on_ach_task_progress)
     AddEventHandler("POLICE_WantedListUpdate",  on_police_wanted_list_update)
     AddEventHandler("POLICE_RoleUpdate",        on_police_role_update)
     AddEventHandler("ECON_WantedEnabledUpdate", on_wanted_enabled_update)
     AddEventHandler("ECON_EditingModeUpdate",   on_editing_mode_update)
     AddEventHandler("ECON_SetVehicleSpawned",   on_set_vehicle_spawned)
     AddEventHandler("ECON_PlayerListData",      on_receive_playerlist_data)
-    AddEventHandler("ECON_MinimapUpdate",       on_minimap_update)    
+    AddEventHandler("ECON_MinimapUpdate",       on_minimap_update)
+        
     AddEventHandler("ECON_NotSyncedBy", function(payload)
-        local data = decodePayload(payload)
-        if type(data) == "table" then guiTrigger("PlayerList_NotSyncedBy", data) end
+        local data = decodePayload(payload) if type(data) == "table" then guiTrigger("PlayerList_NotSyncedBy", data) end
     end)
-
     AddEventHandler("ECON_AuthRequired", function(payload)
-        local data = decodePayload(payload)
-        if type(data) == "table" then guiTrigger("ECON_AuthRequired", data) end
+        local data = decodePayload(payload) if type(data) == "table" then guiTrigger("ECON_AuthRequired", data)      end
     end)
-
     AddEventHandler("ECON_AuthResult", function(payload)
-        local data = decodePayload(payload)
-        if type(data) == "table" then guiTrigger("ECON_AuthResult", data) end
+        local data = decodePayload(payload) if type(data) == "table" then guiTrigger("ECON_AuthResult", data)        end
     end)
 
     AddEventHandler("AIRPOLLUTER_SetMarker", function(payload)
@@ -1037,19 +1179,25 @@ local function try_register()
     end)
 
     AddEventHandler("AIRPOLLUTER_MissionStart", function(payload)
-        local data = decodePayload(payload)
-        if type(data) == "table" then guiTrigger("AIRPOLLUTER_MissionStart", data) end
+        local data = decodePayload(payload) if type(data) == "table" then guiTrigger("AIRPOLLUTER_MissionStart", data) end
     end)
-
-    AddEventHandler("AIRPOLLUTER_MissionEnd", function(payload)
-        local data = decodePayload(payload)
-        if type(data) == "table" then guiTrigger("AIRPOLLUTER_MissionEnd", data) end
+    AddEventHandler("AIRPOLLUTER_MissionEnd",   function(payload)
+        local data = decodePayload(payload) if type(data) == "table" then guiTrigger("AIRPOLLUTER_MissionEnd", data)   end
     end)
-
     AddEventHandler("AIRPOLLUTER_StatusUpdate", function(payload)
-        local data = decodePayload(payload)
-        if type(data) == "table" then guiTrigger("AIRPOLLUTER_StatusUpdate", data) end
+        local data = decodePayload(payload) if type(data) == "table" then guiTrigger("AIRPOLLUTER_StatusUpdate", data) end
     end)
+
+    AddEventHandler("POWERUP_InventoryUpdate",    function(payload) if extensions.powerUpsClient then extensions.powerUpsClient.onInventoryUpdate(payload) end end)
+    AddEventHandler("POWERUP_SpikesDeploy",       function(payload) if extensions.powerUpsClient then extensions.powerUpsClient.onSpikesDeploy(payload)    end end)
+    AddEventHandler("POWERUP_SpikesPlaced",       function(payload) if extensions.powerUpsClient then extensions.powerUpsClient.onSpikesPlaced(payload)    end end)
+    AddEventHandler("POWERUP_SpikesRemoved",      function(payload) if extensions.powerUpsClient then extensions.powerUpsClient.onSpikesRemoved(payload)   end end)
+    AddEventHandler("POWERUP_BananaDeploy",       function(payload) if extensions.powerUpsClient then extensions.powerUpsClient.onBananaDeploy(payload)    end end)
+    AddEventHandler("POWERUP_BananaPlaced",       function(payload) if extensions.powerUpsClient then extensions.powerUpsClient.onBananaPlaced(payload)    end end)
+    AddEventHandler("POWERUP_BananaRemoved",      function(payload) if extensions.powerUpsClient then extensions.powerUpsClient.onBananaRemoved(payload)   end end)
+    AddEventHandler("POWERUP_CannonFire",         function(payload) if extensions.powerUpsClient then extensions.powerUpsClient.onCannonFire(payload)      end end)
+    AddEventHandler("POWERUP_CannonHit",          function(payload) if extensions.powerUpsClient then extensions.powerUpsClient.onCannonHit(payload)       end end)
+    AddEventHandler("POWERUP_CannonBallLaunched", function(payload) if extensions.powerUpsClient then extensions.powerUpsClient.onCannonBallLaunched(payload) end end)
 
     registered_events = true
 end
@@ -1107,8 +1255,9 @@ M.onWorldReadyState = function(newState)
             ap_map_default_fog = core_environment.getFogDensity()
         end
 
-        if not network_hook_installed then hookNetworkSend() end
-        if not spawn_hook_installed   then hookOnVehicleSpawned() end
+        if not network_hook_installed  then hookNetworkSend()      end
+        if not spawn_hook_installed    then hookOnVehicleSpawned() end
+        if not recovery_hook_installed then hookRecoveryExploit()  end
 
         M.delay(1,   initializeConfigTracking)
         M.delay(0.5, function()
@@ -1120,26 +1269,42 @@ M.onWorldReadyState = function(newState)
                     end
                     extensions.load("minimap")
                     logI("Loaded economy minimap extension")
+                    extensions.load("powerUpsClient")
+                    logI("Loaded powerUpsClient extension")
+                    extensions.load("PartsDisplay")
+                    logI("Loaded PartsDisplay extension")
                 end
             end)
         end)
 
         local inMP = MPCoreNetwork and type(MPCoreNetwork.isMPSession) == "function" and MPCoreNetwork.isMPSession()
         if inMP then
+            M.delay(3, function()
+                local ok, cur = pcall(extensions.ui_router.getCurrent)
+                local name = ok and type(cur) == "table" and cur.resolved and cur.resolved.name or "?"
+                logI("route watchdog: current route is '" .. tostring(name) .. "' -> navigate(play)")
+                pcall(extensions.ui_router.navigate, "play")
+            end)
             if core_gamestate and core_gamestate.setGameState then
-                pcall(function() core_gamestate.setGameState('multiplayer', 'Pit', 'multiplayer') end)
+                local layout_applied = false
+                local function applyPitLayout()
+                    if layout_applied then return end
+                    layout_applied = true
+                    M.onAfterRouteChange = nil
+                    pcall(function() core_gamestate.setGameState('multiplayer', 'Pit039', 'multiplayer') end)
+                end
+                M.onAfterRouteChange = function(context)
+                    local toRoute = context and context.toRoute
+                    if toRoute and toRoute.name == 'play' then applyPitLayout() end
+                end
+                M.delay(6, applyPitLayout)
             end
 
             local always_blocked_actions = {
-                "vehicleReset", "vehicleRecover", "loadHome", "recover_vehicle",
-                "recover_to_last_road", "recover_vehicle_alt",
-                "nodegrabberAction", "nodegrabberGrab", "nodegrabberRender", "nodegrabberStrength",
-                "pause",
-                "toggleWalkingMode", "toggleBigMap",
-                "funBoost", "funBoostBackwards", "funFling", "funFlingDownward", "forceField", "funBoom",
-                "slower_motion", "faster_motion", "toggle_slow_motion",
-                "dropPlayerAtCamera", "dropPlayerAtCameraNoReset",
-                "reset_physics"
+                "vehicleReset", "vehicleRecover", "loadHome", "recover_vehicle", "recover_to_last_road",
+                "recover_vehicle_alt", "nodegrabberAction", "nodegrabberGrab", "nodegrabberRender", "nodegrabberStrength", "pause",
+                "toggleWalkingMode", "toggleBigMap", "funBoost", "funBoostBackwards", "funFling", "funFlingDownward", "forceField", "funBoom",
+                "slower_motion", "faster_motion", "toggle_slow_motion", "dropPlayerAtCamera", "dropPlayerAtCameraNoReset", "reset_physics"
             }
             extensions.core_input_actionFilter.setGroup("uimpit_economy_permanent", always_blocked_actions)
             core_input_actionFilter.addAction(0, "uimpit_economy_permanent", true)
@@ -1187,6 +1352,9 @@ end
 
 M.onDisconnect = function()
     if is_editing_vehicle then stopEditingMode("disconnect") end
+    if extensions.powerUpsClient then extensions.powerUpsClient.cleanup() end
+    nav_enabled = false
+    pcall(function() core_groundMarkers.setPath(nil) end)
     active_markers        = {}
     vehicles_in_blob_mode = {}
     ap_hidden_marker      = nil
@@ -1197,7 +1365,14 @@ M.onDisconnect = function()
     printDefenseStats()
 end
 
+M.onBeamMPServerLeave = function()
+    if M.onDisconnect then M.onDisconnect() end
+end
+
 M.onExtensionUnloaded = function()
+    if extensions.powerUpsClient then extensions.powerUpsClient.cleanup() end
+    nav_enabled = false
+    pcall(function() core_groundMarkers.setPath(nil) end)
     active_markers        = {}
     vehicles_in_blob_mode = {}
     if is_editing_vehicle then stopEditingMode("unload") end
@@ -1252,12 +1427,13 @@ M.onUpdate = function(dt)
         end
     end
 
-    if not network_hook_installed or not spawn_hook_installed then
+    if not network_hook_installed or not spawn_hook_installed or not recovery_hook_installed then
         hook_retry_timer = hook_retry_timer + dt
         if hook_retry_timer > 1.0 then
             hook_retry_timer = 0
-            if not network_hook_installed then hookNetworkSend() end
-            if not spawn_hook_installed   then hookOnVehicleSpawned() end
+            if not network_hook_installed  then hookNetworkSend()      end
+            if not spawn_hook_installed    then hookOnVehicleSpawned() end
+            if not recovery_hook_installed then hookRecoveryExploit()  end
         end
     end
 
@@ -1287,6 +1463,11 @@ M.onUpdate = function(dt)
         processTeleportQueue(dt)
         drawMarkers(dt)
         drawHiddenMarker()
+        nav_update_timer = nav_update_timer + dt
+        if nav_update_timer >= NAV_UPDATE_INTERVAL then
+            nav_update_timer = 0
+            if nav_enabled then updateNavigation() end
+        end
     end
 
     local inMP = MPCoreNetwork and type(MPCoreNetwork.isMPSession) == "function" and MPCoreNetwork.isMPSession()
@@ -1301,23 +1482,23 @@ M.onInit = function() setExtensionUnloadMode(M, "manual") end
 -- PUBLIC API
 -- =============================================================================
 
-M.getCurrentPrefix      = function() return current_prefix end
-M.isNoRepairEnabled     = function() return noRepairState.enabled end
+M.getCurrentPrefix      = function() return current_prefix           end
+M.isNoRepairEnabled     = function() return noRepairState.enabled    end
 M.getSpawnPoint         = function() return noRepairState.spawnPoint end
 M.isWorldReady          = function()
     if worldReadyState then return worldReadyState == 2 end
     return noRepairState.worldReady
 end
-M.isPoliceNearby        = function() return police_nearby end
-M.getBustProgress       = function() return bust_progress end
-M.getRepairIconsCount   = function() return repair_icons_count end
-M.getActiveMarkers      = function() return active_markers end
-M.getCurrentRankData    = function() return current_rank_data end
-M.getServerTranslations = function() return server_translations end
-M.getCurrentLang        = function() return current_lang end
-M.getWantedEnabled      = function() return wanted_enabled end
-M.isEditingVehicle      = function() return is_editing_vehicle end
-M.getDefenseStats       = function() return DEFENSE_STATS end
+M.isPoliceNearby        = function() return police_nearby         end
+M.getBustProgress       = function() return bust_progress         end
+M.getRepairIconsCount   = function() return repair_icons_count    end
+M.getActiveMarkers      = function() return active_markers        end
+M.getCurrentRankData    = function() return current_rank_data     end
+M.getServerTranslations = function() return server_translations   end
+M.getCurrentLang        = function() return current_lang          end
+M.getWantedEnabled      = function() return wanted_enabled        end
+M.isEditingVehicle      = function() return is_editing_vehicle    end
+M.getDefenseStats       = function() return DEFENSE_STATS         end
 M.getVehiclesInBlobMode = function() return vehicles_in_blob_mode end
 M.printDefenseStats     = printDefenseStats
 
@@ -1353,28 +1534,19 @@ _G.toggleWantedEnabled = function()
     end
 end
 
-_G.setPlayerLanguage = function(langCode)
-    if type(TriggerServerEvent) == "function" then
-        TriggerServerEvent('setPlayerLanguage', langCode)
-    end
-end
+_G.setPlayerLanguage    = function(langCode)     if type(TriggerServerEvent) == "function" then TriggerServerEvent('setPlayerLanguage', langCode)     end end
+_G.requestOptionalSpawn = function(spawn_index)  if type(TriggerServerEvent) == "function" then TriggerServerEvent('ECON_OptionalSpawn', jsonEncode({ spawn_index = spawn_index })) end end
+_G.reportQueueToServer  = function(pidsJson)     if type(TriggerServerEvent) == "function" then TriggerServerEvent('ECON_QueueReport', pidsJson)      end end
+_G.reportPlayerSynced   = function(syncedPidStr) if type(TriggerServerEvent) == "function" then TriggerServerEvent('ECON_PlayerSynced', syncedPidStr) end end
 
-_G.requestOptionalSpawn = function(spawn_index)
-    if type(TriggerServerEvent) == "function" then
-        TriggerServerEvent('ECON_OptionalSpawn', jsonEncode({ spawn_index = spawn_index }))
+_G.toggleMarkerNavigation = function()
+    nav_enabled = not nav_enabled
+    if nav_enabled then
+        updateNavigation()
+    else
+        pcall(function() core_groundMarkers.setPath(nil) end)
     end
-end
-
-_G.reportQueueToServer = function(pidsJson)
-    if type(TriggerServerEvent) == "function" then
-        TriggerServerEvent('ECON_QueueReport', pidsJson)
-    end
-end
-
-_G.reportPlayerSynced = function(syncedPidStr)
-    if type(TriggerServerEvent) == "function" then
-        TriggerServerEvent('ECON_PlayerSynced', syncedPidStr)
-    end
+    guiTrigger("ECON_NavUpdate", { navEnabled = nav_enabled })
 end
 
 _G.debugMinimap = function()
@@ -1393,22 +1565,6 @@ end
 -- =============================================================================
 -- INITIALIZATION
 -- =============================================================================
-
-pcall(function()
-    if type(guihooks) ~= "undefined" and guihooks.on then
-        guihooks.on("EconomyUI_WantedUpdate",       function(payload) end)
-        guihooks.on("EconomyUI_PoliceProximity",    function(p) end)
-        guihooks.on("EconomyUI_BustProgress",       function(p) end)
-        guihooks.on("EconomyUI_RepairIcons",        function(p) end)
-        guihooks.on("EconomyUI_TranslationsUpdate", function(data) end)
-        guihooks.on("EconomyUI_RankUpdate",         function(data) end)
-        guihooks.on("EconomyUI_TaskProgress",       function(data) end)
-        guihooks.on("EconomyUI_RankUp",             function(data) end)
-        guihooks.on("EconomyUI_ShowRankPanel",      function() end)
-        guihooks.on("POLICE_WantedListUpdate",      function(payload) end)
-        guihooks.on("POLICE_RoleUpdate",            function(data) end)
-    end
-end)
 
 try_register()
 

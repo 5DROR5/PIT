@@ -141,6 +141,12 @@ local function try_register()
     AddEventHandler("PartsShop_LanguageUpdate", onLanguageUpdate)
     AddEventHandler("PartsShop_Freeze",         onFreeze)
     AddEventHandler("PartsShop_Unfreeze",       onUnfreeze)
+    AddEventHandler("PartsDisplay_Config", function(payload)
+        local data = parsePayload(payload)
+        if data and extensions.PartsDisplay then
+            extensions.PartsDisplay.setConfig(data)
+        end
+    end)
 
     registered_events = true
     log("Event handlers registered")

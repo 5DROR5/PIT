@@ -1,9 +1,7 @@
 -- =============================================================================
 -- MinimapSystem.lua
--- Manages minimap updates for police/wanted gameplay.
--- Secondary module — loaded by main.lua via dofile()
--- Note: this module has a corresponding client-side component.
--- License: AGPL-3.0 — https://www.gnu.org/licenses/agpl-3.0.html
+-- Manages minimap updates for police/wanted gameplay
+-- License: AGPL-3.0 - https://www.gnu.org/licenses/agpl-3.0.html
 -- =============================================================================
 
 local M = {}
@@ -44,8 +42,8 @@ local function calculatePoliceMode(pid)
     local role      = getRole(uid)
     local is_wanted = isWanted(pid)
 
-    local ok, pos_data = pcall(MP.GetPositionRaw, pid, 0)
-    if not (ok and pos_data and pos_data.pos) then return "disabled" end
+    local pos_data, err = MP.GetPositionRaw(pid, 0)
+    if err ~= "" or not pos_data or not pos_data.pos then return "disabled" end
 
     local player_pos = pos_data.pos
 
@@ -54,8 +52,8 @@ local function calculatePoliceMode(pid)
         for other_pid, _ in pairs(MP.GetPlayers() or {}) do
             if other_pid ~= pid and MP.IsPlayerConnected(other_pid) then
                 if getRole(getUID(other_pid)) == "police" then
-                    local ok_cop, cop_pos = pcall(MP.GetPositionRaw, other_pid, 0)
-                    if ok_cop and cop_pos and cop_pos.pos then
+                    local cop_pos, cop_err = MP.GetPositionRaw(other_pid, 0)
+                    if cop_err == "" and cop_pos and cop_pos.pos then
                         closest_police_dist = math.min(closest_police_dist, distance(player_pos, cop_pos.pos))
                     end
                 end
@@ -77,8 +75,8 @@ local function calculatePoliceMode(pid)
             if other_pid ~= pid and MP.IsPlayerConnected(other_pid) then
                 if isWanted(other_pid) then
                     has_wanted = true
-                    local ok_civ, civ_pos = pcall(MP.GetPositionRaw, other_pid, 0)
-                    if ok_civ and civ_pos and civ_pos.pos then
+                    local civ_pos, civ_err = MP.GetPositionRaw(other_pid, 0)
+                    if civ_err == "" and civ_pos and civ_pos.pos then
                         closest_wanted_dist = math.min(closest_wanted_dist, distance(player_pos, civ_pos.pos))
                     end
                 end
@@ -126,16 +124,16 @@ end
 local function getWantedPidsForPolice(cop_pid)
     if getRole(getUID(cop_pid)) ~= "police" then return {} end
 
-    local ok_cop, cop_pos_data = pcall(MP.GetPositionRaw, cop_pid, 0)
-    if not (ok_cop and cop_pos_data and cop_pos_data.pos) then return {} end
+    local cop_pos_data, err = MP.GetPositionRaw(cop_pid, 0)
+    if err ~= "" or not cop_pos_data or not cop_pos_data.pos then return {} end
 
     local cop_pos    = cop_pos_data.pos
     local wanted_pids = {}
 
     for other_pid, _ in pairs(MP.GetPlayers() or {}) do
         if other_pid ~= cop_pid and MP.IsPlayerConnected(other_pid) and isWanted(other_pid) then
-            local ok_w, w_pos = pcall(MP.GetPositionRaw, other_pid, 0)
-            if ok_w and w_pos and w_pos.pos then
+            local w_pos, w_err = MP.GetPositionRaw(other_pid, 0)
+            if w_err == "" and w_pos and w_pos.pos then
                 if distance(cop_pos, w_pos.pos) <= DISTANCES.WANTED_TRACKING_RANGE then
                     table.insert(wanted_pids, other_pid)
                 end
@@ -151,7 +149,7 @@ end
 -- =============================================================================
 
 function M.sendMinimapUpdate(pid)
-    if not (MP and MP.IsPlayerConnected and MP.IsPlayerConnected(pid)) then return end
+    if not MP.IsPlayerConnected(pid) then return end
 
     local payload = encodeJSON({
         policeMode   = calculatePoliceMode(pid),
@@ -201,7 +199,6 @@ function M.init(dependencies)
     log(string.format("Wanted tracking range: %dm", DISTANCES.WANTED_TRACKING_RANGE))
 end
 
--- Allows runtime adjustment of detection distances without restarting the server.
 function M.setDistances(wanted_visible, wanted_hidden, police_visible, police_hidden, tracking_range)
     DISTANCES.WANTED_VISIBLE        = wanted_visible   or DISTANCES.WANTED_VISIBLE
     DISTANCES.WANTED_HIDDEN         = wanted_hidden    or DISTANCES.WANTED_HIDDEN
@@ -210,7 +207,6 @@ function M.setDistances(wanted_visible, wanted_hidden, police_visible, police_hi
     DISTANCES.WANTED_TRACKING_RANGE = tracking_range   or DISTANCES.WANTED_TRACKING_RANGE
 end
 
--- Allows runtime adjustment of update rates without restarting the server.
 function M.setUpdateRates(fast_ms, slow_ms)
     UPDATE_RATES.FAST = fast_ms or UPDATE_RATES.FAST
     UPDATE_RATES.SLOW = slow_ms or UPDATE_RATES.SLOW
